@@ -4,13 +4,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Проверяем, что переменные есть
-console.log('🔍 DB HOST:', process.env.MYSQLHOST);
-console.log('🔍 DB PORT:', process.env.MYSQLPORT);
-console.log('🔍 DB USER:', process.env.MYSQLUSER);
-console.log('🔍 DB NAME:', process.env.MYSQLDATABASE);
+// Выводим ВСЕ переменные, чтобы понять, что вообще есть
+console.log('🔍 ALL ENV:', Object.keys(process.env).filter(k => k.includes('MYSQL')));
 
-// Используем ТОЛЬКО переменные Railway — без fallback значений!
 const pool = mysql.createPool({
     host: process.env.MYSQLHOST,
     port: parseInt(process.env.MYSQLPORT),
