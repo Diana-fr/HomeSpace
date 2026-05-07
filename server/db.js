@@ -4,20 +4,24 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Создаём пул соединений
-// Railway использует MYSQLHOST, MYSQLPORT, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE
+// Проверяем, что переменные есть
+console.log('🔍 DB HOST:', process.env.MYSQLHOST);
+console.log('🔍 DB PORT:', process.env.MYSQLPORT);
+console.log('🔍 DB USER:', process.env.MYSQLUSER);
+console.log('🔍 DB NAME:', process.env.MYSQLDATABASE);
+
+// Используем ТОЛЬКО переменные Railway — без fallback значений!
 const pool = mysql.createPool({
-    host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306'),
-    user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
-    password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '',
-    database: process.env.MYSQLDATABASE || process.env.DB_NAME || 'homespace',
+    host: process.env.MYSQLHOST,
+    port: parseInt(process.env.MYSQLPORT),
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 });
 
-// Функция для проверки подключения
 export async function testConnection() {
     try {
         const connection = await pool.getConnection();
@@ -30,7 +34,6 @@ export async function testConnection() {
     }
 }
 
-// Функция для выполнения запросов
 export async function query(sql, params = []) {
     try {
         const [results] = await pool.execute(sql, params);
@@ -41,5 +44,4 @@ export async function query(sql, params = []) {
     }
 }
 
-// Экспортируем pool на случай если понадобится
 export { pool };
