@@ -41,18 +41,14 @@ app.use('/uploads', express.static(uploadsDir));
 app.use('/assets/uploads', express.static(uploadsDir));
 
 // ========== РАЗДАЧА СТАТИЧЕСКИХ ФАЙЛОВ ==========
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+// Используем уже существующий path (он должен быть импортирован)
 // Отдаём HTML, CSS, JS из папки docs
-app.use(express.static(path.join(__dirname, '../docs')));
+const docsPath = path.join(__dirname, '../docs');
+app.use(express.static(docsPath));
 
 // Для всех остальных GET запросов — отдаём index.html
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../docs/index.html'));
+    res.sendFile(path.join(docsPath, 'index.html'));
 });
 
 // Почта
