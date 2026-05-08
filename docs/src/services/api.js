@@ -1,6 +1,13 @@
 class ApiService {
     constructor() {
-        this.baseUrl = 'http://localhost:3001/api';
+        // Берём URL из глобальной переменной (объявлена в HTML) или из переменной окружения
+        if (typeof window !== 'undefined' && window.API_URL) {
+            this.baseUrl = window.API_URL;
+        } else if (import.meta.env && import.meta.env.VITE_API_URL) {
+            this.baseUrl = import.meta.env.VITE_API_URL;
+        } else {
+            this.baseUrl = 'http://localhost:3001/api';
+        }
         this.token = localStorage.getItem('homespace_token');
     }
 
