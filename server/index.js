@@ -35,7 +35,15 @@ const voiceStorage = multer.diskStorage({
 });
 const voiceUpload = multer({ storage: voiceStorage, limits: { fileSize: 10 * 1024 * 1024 } });
 
-app.use(cors({ origin: ['http://localhost:3000', 'http://localhost:5173'], credentials: true }));
+app.use(cors({ 
+    origin: [
+        'http://localhost:3000', 
+        'http://localhost:5173',
+        'https://homespace-production.up.railway.app',
+        'https://homespace.up.railway.app'
+    ], 
+    credentials: true 
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(uploadsDir));
 app.use('/assets/uploads', express.static(uploadsDir));
