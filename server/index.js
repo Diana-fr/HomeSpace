@@ -40,6 +40,21 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(uploadsDir));
 app.use('/assets/uploads', express.static(uploadsDir));
 
+// ========== РАЗДАЧА СТАТИЧЕСКИХ ФАЙЛОВ ==========
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Отдаём HTML, CSS, JS из папки docs
+app.use(express.static(path.join(__dirname, '../docs')));
+
+// Для всех остальных GET запросов — отдаём index.html
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../docs/index.html'));
+});
+
 // Почта
 const emailTransporter = nodemailer.createTransport({
     host: '173.194.222.109',
