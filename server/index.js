@@ -13,7 +13,6 @@ import http from 'http';
 import { Server as SocketServer } from 'socket.io';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import { startBot } from './bot-service.js';
 
 dns.setDefaultResultOrder('ipv4first');
 dotenv.config();
@@ -1965,5 +1964,4 @@ async function startServer() {
         console.log(`✅ Комнаты: GET/POST/PUT/DELETE /api/rooms`);
     });
 }
-startBot().catch(console.error);
 startServer();
