@@ -10,7 +10,6 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* ================= BASE ================= */
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #dfefff 0%, #d4e9ff 40%, #eaf4ff 100%);
@@ -20,7 +19,6 @@
             color: #33465d;
         }
 
-        /* мягкие живые блики */
         body::before {
             content: '';
             position: absolute;
@@ -46,14 +44,13 @@
             50% { opacity: 0.6; transform: scale(1.08); }
         }
 
-        /* ================= BACK ================= */
         .back-btn {
             position: fixed;
             top: 12px;
             left: 12px;
             background: rgba(255,255,255,0.65);
             backdrop-filter: blur(14px);
-            border: 1px solid rgba(140, 190, 255, 0.35);
+            border: 1px solid rgba(140,190,255,0.35);
             box-shadow: 0 6px 20px rgba(0,0,0,0.12);
             border-radius: 40px;
             padding: 10px 20px;
@@ -69,15 +66,13 @@
         }
         .back-btn:hover { background: rgba(235,245,255,0.85); transform: translateX(-3px); }
 
-        /* ================= CHAT APP ================= */
         .chat-app { display: flex; height: 100vh; position: relative; z-index: 10; }
 
-        /* ================= SIDEBAR ================= */
         .chat-sidebar {
             width: 300px;
             background: rgba(255,255,255,0.55);
             backdrop-filter: blur(18px);
-            border-right: 1px solid rgba(140, 190, 255, 0.25);
+            border-right: 1px solid rgba(140,190,255,0.25);
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease;
@@ -86,7 +81,7 @@
 
         .sidebar-header {
             padding: 60px 20px 24px 20px;
-            border-bottom: 1px solid rgba(140, 190, 255, 0.2);
+            border-bottom: 1px solid rgba(140,190,255,0.2);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -94,7 +89,6 @@
         .sidebar-header h2 { color: #33465d; font-size: 20px; font-weight: 700; }
         .sidebar-header p { color: rgba(51,70,93,0.6); font-size: 12px; margin-top: 5px; }
 
-        /* Оверлей для мобильного закрытия */
         .sidebar-overlay {
             position: fixed;
             inset: 0;
@@ -105,7 +99,6 @@
         }
         .sidebar-overlay.active { display: block; }
 
-        /* Кнопка бургер-меню */
         .burger-menu {
             display: none;
             background: rgba(255,255,255,0.7);
@@ -120,7 +113,6 @@
             color: #33465d;
         }
 
-        /* user block */
         .user-info {
             padding: 20px;
             background: linear-gradient(135deg, rgba(180,220,255,0.25), rgba(140,190,255,0.15));
@@ -145,7 +137,6 @@
         .user-name { color: #33465d; font-weight: 600; font-size: 16px; }
         .user-role { color: rgba(51,70,93,0.6); font-size: 12px; }
 
-        /* users list */
         .users-list { flex: 1; overflow-y: auto; padding: 10px; }
         .user-item {
             display: flex;
@@ -191,7 +182,6 @@
         .user-item-name { color: #33465d; font-size: 14px; font-weight: 500; }
         .user-item-role { color: rgba(51,70,93,0.6); font-size: 11px; }
 
-        /* ================= MAIN ================= */
         .chat-main {
             flex: 1;
             display: flex;
@@ -200,7 +190,6 @@
             backdrop-filter: blur(10px);
         }
 
-        /* header */
         .chat-header {
             background: rgba(255,255,255,0.6);
             border-bottom: 1px solid rgba(140,190,255,0.25);
@@ -212,7 +201,6 @@
         .chat-title { color: #33465d; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
         .header-actions { display: flex; gap: 10px; }
 
-        /* buttons */
         .notification-btn, .refresh-btn {
             background: rgba(255,255,255,0.8);
             border: 1px solid rgba(140,190,255,0.35);
@@ -231,7 +219,6 @@
         .notification-btn:hover, .refresh-btn:hover { background: rgba(220,240,255,0.9); }
         .notification-btn.active { background: rgba(120,180,255,0.35); color: #2c5a8c; }
 
-        /* ================= MESSAGES ================= */
         .messages-area {
             flex: 1;
             overflow-y: auto;
@@ -245,7 +232,6 @@
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .message.own { align-self: flex-end; flex-direction: row-reverse; }
         
-        /* avatars */
         .message-avatar {
             width: 36px;
             height: 36px;
@@ -264,7 +250,6 @@
         
         .message-content-wrapper { display: flex; flex-direction: column; gap: 4px; }
         
-        /* обычные сообщения */
         .message-content {
             background: rgba(255,255,255,0.75);
             border: 1px solid rgba(140,190,255,0.25);
@@ -272,12 +257,10 @@
             padding: 10px 14px;
             border-radius: 18px;
         }
-        /* свои сообщения */
         .message.own .message-content {
             background: linear-gradient(135deg, #cfe6ff, #e6f3ff);
             box-shadow: 0 6px 14px rgba(120,180,255,0.3);
         }
-        /* бот */
         .message.bot .message-content {
             background: linear-gradient(135deg, #e8f3ff, #d6ebff);
             border-left: 3px solid #6fbaff;
@@ -286,11 +269,10 @@
         .message-text { font-size: 14px; color: #2f3f55; line-height: 1.5; }
         .message-time { font-size: 10px; color: rgba(51,70,93,0.6); margin-top: 4px; text-align: right; }
 
-        /* bot buttons */
         .bot-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .bot-btn {
-            background: rgba(255,255,255,0.8);
-            border: 1px solid rgba(120,180,255,0.5);
+            background: rgba(255,255,255,0.9);
+            border: 1px solid #6fbaff;
             border-radius: 20px;
             padding: 8px 16px;
             color: #33465d;
@@ -298,9 +280,8 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        .bot-btn:hover { background: rgba(220,240,255,0.9); transform: scale(1.02); }
+        .bot-btn:hover { background: #6fbaff; color: white; transform: scale(1.02); }
 
-        /* voice message */
         .voice-message { display: flex; align-items: center; gap: 10px; background: rgba(120,180,255,0.15); border-radius: 20px; padding: 8px 12px; margin-top: 5px; flex-wrap: wrap; }
         .voice-play-btn { background: linear-gradient(135deg, #6fbaff, #a8d8ff); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 14px; color: #fff; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(120,180,255,0.4); }
         .voice-play-btn:hover { transform: scale(1.05); }
@@ -310,7 +291,6 @@
         .speed-btn:hover { background: rgba(120,180,255,0.25); color: #3f5874; border-color: #6fbaff; }
         .speed-btn.active { background: linear-gradient(135deg, #6fbaff, #a8d8ff); color: #fff; border-color: #6fbaff; }
 
-        /* ================= INPUT ================= */
         .chat-input-area {
             padding: 15px 20px;
             background: rgba(255,255,255,0.6);
@@ -353,31 +333,13 @@
         .voice-btn.recording { background: #d8ecff; animation: pulseRecord 1s infinite; }
         @keyframes pulseRecord { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.02); } }
 
-        /* stop audio button */
         #stop-audio-btn {
-            position: fixed;
-            bottom: 100px;
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #6fbaff, #a8d8ff);
-            border: 2px solid white;
-            color: #fff;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 10000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 20px rgba(120,180,255,0.5);
-            transition: all 0.2s ease;
+            position: fixed; bottom: 100px; right: 20px; width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, #6fbaff, #a8d8ff); border: 2px solid white; color: white; font-size: 24px;
+            display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 10000;
         }
-        #stop-audio-btn:hover { transform: scale(1.05); }
-
         .empty-messages { text-align: center; padding: 60px 20px; color: rgba(79, 105, 136, 0.62); }
 
-        /* message actions */
         .message-actions { display: flex; gap: 8px; margin-top: 5px; opacity: 0; transition: opacity 0.2s ease; }
         .message:hover .message-actions { opacity: 1; }
         @media (max-width: 768px) { .message-actions { opacity: 1; } }
@@ -398,12 +360,10 @@
             border-color: #6fbaff;
         }
 
-        /* scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(140,190,255,0.15); }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #6fbaff, #a8d8ff); border-radius: 3px; }
 
-        /* mobile */
         .mobile-back-btn { display: none; background: none; border: none; color: #33465d; font-size: 24px; cursor: pointer; padding: 0 8px; }
         
         @media (max-width: 768px) {
@@ -439,7 +399,6 @@
     <div id="stop-audio-btn" onclick="stopAllAudio()">⏹️</div>
 
     <div class="chat-app">
-        <!-- Оверлей для мобильного закрытия боковой панели -->
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <div class="chat-sidebar" id="chat-sidebar">
@@ -490,6 +449,7 @@
         let userInteracted = false;
         let isSoloMode = false;
         let currentSpeed = parseFloat(localStorage.getItem('voice_speed') || '1.0');
+        let welcomeShown = false; // Флаг для предотвращения дублирования
 
         function escapeHtml(text) { if (!text) return ''; const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
         function formatMessageDate(date) { const d = new Date(date), today = new Date(); if(d.toDateString() === today.toDateString()) return 'Сегодня'; return d.toLocaleDateString('ru-RU', { day:'numeric', month:'long' }); }
@@ -522,13 +482,37 @@
             messages.forEach(msg=>{
                 const dateLabel=formatMessageDate(msg.created_at);
                 if(dateLabel!==lastDate){ const sep=document.createElement('div'); sep.style.cssText='text-align:center;font-size:12px;color:rgba(51,70,93,0.6);margin:6px 0 12px'; sep.textContent=dateLabel; area.appendChild(sep); lastDate=dateLabel; }
-                const isOwn=msg.user_id===currentUser?.id, isBot=msg.user_id===BOT_ID||msg.type==='bot', canDeleteAll=isOwn||currentUser?.role==='parent';
+                const isOwn=msg.user_id===currentUser?.id;
+                const isBot = msg.user_id === BOT_ID;
                 const time=new Date(msg.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
                 const cleanMsg=escapeHtml(msg.message||'');
                 const displayMsg=cleanMsg.replace(/\n/g,'<br>')+(msg.is_edited&&msg.message_type!=='voice'?` <span style="font-size:10px;">(ред.)</span>`:'');
                 const senderAvatar=isBot?'🤖':(isOwn?getAvatarHtml(currentUser?.avatar,currentUser?.name):getAvatarHtml(msg.user_avatar,msg.user_name));
                 const msgDiv=document.createElement('div'); msgDiv.className=`message ${isOwn?'own':''} ${isBot?'bot':''}`;
-                msgDiv.innerHTML=`<div class="message-avatar">${senderAvatar}</div><div class="message-content-wrapper"><div class="message-content">${!isOwn&&!isBot?`<div class="message-sender">${escapeHtml(msg.user_name)}</div>`:''}${isBot?'<div class="message-sender">🤖 Бот-помощник</div>':''}${msg.message_type!=='voice'?`<div class="message-text">${displayMsg}</div>`:''}${msg.message_type==='voice'&&msg.voice_url?`<div class="voice-message"><button class="voice-play-btn" onclick="playVoiceMessage('${msg.voice_url}')">▶️</button><span class="voice-duration">${msg.voice_duration||'Голосовое'}</span><div class="speed-controls"><button class="speed-btn ${currentSpeed===0.5?'active':''}" data-speed="0.5" onclick="setSpeed(0.5)">0.5x</button><button class="speed-btn ${currentSpeed===1.0?'active':''}" data-speed="1.0" onclick="setSpeed(1.0)">1x</button><button class="speed-btn ${currentSpeed===1.5?'active':''}" data-speed="1.5" onclick="setSpeed(1.5)">1.5x</button><button class="speed-btn ${currentSpeed===2.0?'active':''}" data-speed="2.0" onclick="setSpeed(2.0)">2x</button></div></div>`:''}${isBot&&msg.buttons?`<div class="bot-buttons">${msg.buttons.map(btn=>`<button class="bot-btn" onclick="window.botAction('${btn.action}')">${btn.text}</button>`).join('')}</div>`:''}<div class="message-time">${time}</div></div><div class="message-actions">${msg.message_type!=='voice'&&isOwn?`<button class="edit-msg-btn" data-id="${msg.id}" data-message="${cleanMsg.replace(/"/g,'&quot;')}">✏️</button>`:''}${msg.message_type!=='voice'&&!isBot?`<button class="speak-btn" data-message="${cleanMsg.replace(/"/g,'&quot;')}">🔊</button>`:''}${!isBot?`<button class="delete-msg-btn" data-id="${msg.id}" data-delete-for-all="${canDeleteAll}">🗑️</button>`:''}</div></div>`;
+                
+                let buttonsHtml = '';
+                if(isBot && msg.buttons && msg.buttons.length > 0) {
+                    buttonsHtml = `<div class="bot-buttons">${msg.buttons.map(btn => `<button class="bot-btn" onclick="window.botAction('${btn.action}')">${btn.text}</button>`).join('')}</div>`;
+                }
+                
+                msgDiv.innerHTML = `
+                    <div class="message-avatar">${senderAvatar}</div>
+                    <div class="message-content-wrapper">
+                        <div class="message-content">
+                            ${!isOwn && !isBot ? `<div class="message-sender">${escapeHtml(msg.user_name)}</div>` : ''}
+                            ${isBot ? '<div class="message-sender">🤖 Бот-помощник</div>' : ''}
+                            ${msg.message_type !== 'voice' ? `<div class="message-text">${displayMsg}</div>` : ''}
+                            ${msg.message_type === 'voice' && msg.voice_url ? `<div class="voice-message"><button class="voice-play-btn" onclick="playVoiceMessage('${msg.voice_url}')">▶️</button><span class="voice-duration">${msg.voice_duration||'Голосовое'}</span><div class="speed-controls"><button class="speed-btn ${currentSpeed===0.5?'active':''}" data-speed="0.5" onclick="setSpeed(0.5)">0.5x</button><button class="speed-btn ${currentSpeed===1.0?'active':''}" data-speed="1.0" onclick="setSpeed(1.0)">1x</button><button class="speed-btn ${currentSpeed===1.5?'active':''}" data-speed="1.5" onclick="setSpeed(1.5)">1.5x</button><button class="speed-btn ${currentSpeed===2.0?'active':''}" data-speed="2.0" onclick="setSpeed(2.0)">2x</button></div></div>` : ''}
+                            ${buttonsHtml}
+                            <div class="message-time">${time}</div>
+                        </div>
+                        <div class="message-actions">
+                            ${msg.message_type !== 'voice' && isOwn ? `<button class="edit-msg-btn" data-id="${msg.id}" data-message="${cleanMsg.replace(/"/g,'&quot;')}">✏️</button>` : ''}
+                            ${msg.message_type !== 'voice' && !isBot ? `<button class="speak-btn" data-message="${cleanMsg.replace(/"/g,'&quot;')}">🔊</button>` : ''}
+                            ${!isBot ? `<button class="delete-msg-btn" data-id="${msg.id}" data-delete-for-all="${isOwn || currentUser?.role === 'parent'}">🗑️</button>` : ''}
+                        </div>
+                    </div>
+                `;
                 area.appendChild(msgDiv);
             });
             area.querySelectorAll('.edit-msg-btn').forEach(btn=>btn.onclick=async()=>{ const newMsg=prompt('Редактировать:',btn.dataset.message); if(newMsg&&newMsg.trim()) await editMessage(btn.dataset.id,newMsg.trim()); });
@@ -538,8 +522,9 @@
         }
         
         window.botAction = async function(action) {
-            // === ПРИВЕТСТВИЕ (ДОБАВЛЯЕТ КНОПКИ) ===
             if (action === 'help') {
+                if(welcomeShown) return;
+                welcomeShown = true;
                 const welcomeMsg = {
                     id: 'bot_welcome_' + Date.now(),
                     user_id: BOT_ID,
@@ -558,9 +543,7 @@
                 return;
             }
             
-            // === ОСТАЛЬНЫЕ КОМАНДЫ ===
             let response = '', buttons = [];
-            
             if (action === 'stats_personal') {
                 const s = await loadPersonalStats();
                 response = `📊 Твоя статистика:\n📋 Заданий: ${s.totalTasks}\n✅ Выполнено: ${s.completedTasks}\n💰 Баланс: ${s.currentBalance}`;
@@ -584,15 +567,15 @@
                     { text: '👨‍👩‍👧 Семья', action: 'stats_family' }
                 ];
             }
-            
             addBotMessage(response, buttons);
         };
+        
         function addBotMessage(text,buttons=[]){ const msg={ id:'bot_'+Date.now(), user_id:BOT_ID, user_name:'🤖 Бот-помощник', message:text, message_type:'text', type:'bot', created_at:new Date().toISOString(), buttons }; messages.push(msg); renderMessages(); }
         
         async function loadPersonalStats() { try { const r=await fetch(`${API_URL}/tasks?`,{headers:{'Authorization':`Bearer ${token}`}}); const tasks=r.ok?await r.json():[]; const my=tasks.filter(t=>t.assigned_to===currentUser?.id); return { totalTasks:my.length, completedTasks:my.filter(t=>t.status==='completed').length, currentBalance:currentUser?.bonuses||0 }; } catch(e){ return { totalTasks:0, completedTasks:0, currentBalance:0 }; } }
         async function loadFamilyStats() { try { const r=await fetch(`${API_URL}/families/${currentUser.familyId}/members`,{headers:{'Authorization':`Bearer ${token}`}}); const members=r.ok?await r.json():[]; const t=await fetch(`${API_URL}/tasks?`,{headers:{'Authorization':`Bearer ${token}`}}); const tasks=t.ok?await t.json():[]; const sorted=[...members].sort((a,b)=>(b.bonuses||0)-(a.bonuses||0)).slice(0,5); const top=sorted.map((m,i)=>`${i+1}. ${m.name}: ${m.bonuses||0}💰`).join('\n'); return { membersCount:members.length, totalTasks:tasks.length, completedTasks:tasks.filter(t=>t.status==='completed').length, topMembers:top }; } catch(e){ return { membersCount:0, totalTasks:0, completedTasks:0, topMembers:'' }; } }
         
-        async function sendMessage() { const inp=document.getElementById('message-input'); const msg=inp.value.trim(); if(!msg) return; inp.value=''; if(socket?.connected) socket.emit('send-message',{ familyId:currentUser.familyId, userId:currentUser.id, message:msg, type:currentChat.type, recipientId:currentChat.type==='private'?currentChat.userId:null }); else await fetch(`${API_URL}/chat`,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({message:msg, type:currentChat.type, recipientId:currentChat.type==='private'?currentChat.userId:null}) }).then(()=>loadMessages()); if(currentChat.userId===BOT_ID) setTimeout(()=>window.botAction('help'),300); }
+        async function sendMessage() { const inp=document.getElementById('message-input'); const msg=inp.value.trim(); if(!msg) return; inp.value=''; if(socket?.connected) socket.emit('send-message',{ familyId:currentUser.familyId, userId:currentUser.id, message:msg, type:currentChat.type, recipientId:currentChat.type==='private'?currentChat.userId:null }); else await fetch(`${API_URL}/chat`,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({message:msg, type:currentChat.type, recipientId:currentChat.type==='private'?currentChat.userId:null}) }).then(()=>loadMessages()); if(currentChat.userId===BOT_ID && !welcomeShown) setTimeout(()=>window.botAction('help'),300); }
         
         async function editMessage(id,newMsg) { try { await fetch(`${API_URL}/chat/${id}`,{ method:'PATCH', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({message:newMsg}) }); loadMessages(); } catch(e){ alert('Ошибка'); } }
         async function deleteMessage(id,forAll) { try { await fetch(`${API_URL}/chat/${id}`,{ method:'DELETE', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({deleteForAll:forAll}) }); loadMessages(); } catch(e){ alert('Ошибка'); } }
@@ -621,7 +604,17 @@
         }
         
         window.switchToFamilyChat = function() { currentChat={ type:'family', userId:null, userName:null }; document.getElementById('chat-title-text').textContent='Семейный чат'; messages=[]; loadMessages(); markAsRead('family'); closeSidebarOnMobile(); };
-        window.switchToPrivateChat = function(user) { currentChat={ type:'private', userId:user.id, userName:user.name }; document.getElementById('chat-title-text').textContent=`Чат с ${user.name}`; messages=[]; loadMessages(); markAsRead(user.id); if(user.id===BOT_ID) setTimeout(()=>window.botAction('help'),300); closeSidebarOnMobile(); };
+        window.switchToPrivateChat = function(user) { 
+            currentChat={ type:'private', userId:user.id, userName:user.name }; 
+            document.getElementById('chat-title-text').textContent=`Чат с ${user.name}`; 
+            messages=[]; 
+            loadMessages(); 
+            markAsRead(user.id); 
+            if(user.id === BOT_ID && !welcomeShown) {
+                setTimeout(() => window.botAction('help'), 300);
+            }
+            closeSidebarOnMobile(); 
+        };
         
         async function init() {
             await loadCurrentUser(); if(!token||!currentUser){ window.location.href='/'; return; }
@@ -641,7 +634,6 @@
             if(Notification.permission==='granted'){ notificationPermission=true; notifBtn.classList.add('active'); }
             notifBtn.onclick=async()=>{ if(Notification.permission==='granted'){ notificationPermission=true; notifBtn.classList.add('active'); } else if(Notification.permission!=='denied'){ const p=await Notification.requestPermission(); notificationPermission=p==='granted'; if(notificationPermission) notifBtn.classList.add('active'); } };
             
-            // Добавляем обработчики для сворачивания панели
             const burgerBtn = document.getElementById('burger-menu-btn');
             const closeBtn = document.getElementById('mobile-close-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
@@ -651,6 +643,16 @@
             
             if(window.innerWidth<=768) closeSidebarOnMobile();
             else window.switchToFamilyChat();
+            
+            // Автоматически открываем чат с ботом для solo-режима
+            if(isSoloMode && users.length > 0 && !welcomeShown) {
+                setTimeout(() => {
+                    const botUser = users.find(u => u.id === BOT_ID);
+                    if(botUser && currentChat.type !== 'private') {
+                        window.switchToPrivateChat(botUser);
+                    }
+                }, 1000);
+            }
         }
         init();
     </script>
