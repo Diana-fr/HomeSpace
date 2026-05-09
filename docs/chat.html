@@ -116,7 +116,7 @@
         /* Десктоп: сайдбар всегда виден */
         @media (min-width: 769px) {
             .chat-sidebar {
-                transform: translateX(0);
+                transform: translateX(0) !important;
                 position: relative;
             }
             .sidebar-overlay {
@@ -559,7 +559,7 @@
             }); 
         }
         
-        // ========== ФУНКЦИЯ ДЛЯ ВОСПРОИЗВЕДЕНИЯ ГОЛОСОВЫХ С ПОДДЕРЖКОЙ МОБИЛЬНЫХ ==========
+        // ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ==========
         function playVoiceMessage(url, btnElement) {
             stopAllAudio();
             
@@ -785,7 +785,7 @@
                     buttonsHtml = `<div class="bot-buttons">${msg.buttons.map(btn => `<button class="bot-btn" onclick="window.botAction('${btn.action}')">${btn.text}</button>`).join('')}</div>`;
                 }
                 
-                // Для голосовых сообщений используем функцию с передачей кнопки
+                // Для голосовых сообщений используем новую функцию с передачей кнопки
                 const voiceBtnCallback = msg.message_type === 'voice' && msg.voice_url 
                     ? `onclick="playVoiceMessageWithButton('${msg.voice_url}', this)"`
                     : '';
@@ -911,23 +911,22 @@
             } catch(e){} 
         }
         
-        // ========== ИСПРАВЛЕННЫЕ ФУНКЦИИ САЙДБАРА ==========
+        // ========== ФУНКЦИИ САЙДБАРА ==========
         function openSidebar() {
+            if (window.innerWidth > 768) return;
             const sidebar = document.getElementById('chat-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             sidebar.classList.add('open');
-            if (overlay) overlay.classList.add('active');
+            overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
-            console.log('📱 Сайдбар открыт');
         }
 
         function closeSidebar() {
             const sidebar = document.getElementById('chat-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             sidebar.classList.remove('open');
-            if (overlay) overlay.classList.remove('active');
+            overlay.classList.remove('active');
             document.body.style.overflow = '';
-            console.log('📱 Сайдбар закрыт');
         }
 
         function closeSidebarOnMobile() {
@@ -937,11 +936,13 @@
         }
 
         function toggleSidebar() {
-            const sidebar = document.getElementById('chat-sidebar');
-            if (sidebar.classList.contains('open')) {
-                closeSidebar();
-            } else {
-                openSidebar();
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('chat-sidebar');
+                if (sidebar.classList.contains('open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
             }
         }
         
@@ -966,35 +967,12 @@
             closeSidebarOnMobile(); 
         };
         
-        // ========== АКТИВАЦИЯ АУДИО ДЛЯ МОБИЛЬНЫХ ==========
-        function enableAudioOnTouch() {
-            const hiddenAudio = document.getElementById('hidden-audio');
-            if (hiddenAudio) {
-                hiddenAudio.volume = 0;
-                hiddenAudio.play().then(() => {
-                    hiddenAudio.pause();
-                    hiddenAudio.currentTime = 0;
-                    console.log('🎵 Аудио активировано');
-                }).catch(e => console.log('Активация аудио:', e));
-            }
-            
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioContextClass) {
-                const ctx = new AudioContextClass();
-                ctx.resume().then(() => console.log('🎵 AudioContext активирован'));
-            }
-        }
-        
         async function init() {
             await loadCurrentUser(); 
             if(!token||!currentUser){ window.location.href='/'; return; }
             
             // Инициализация аудио для мобильных
             initAudioContext();
-            
-            // Добавляем обработчик первого касания для активации аудио на iOS
-            document.addEventListener('touchstart', enableAudioOnTouch, { once: true });
-            document.addEventListener('click', enableAudioOnTouch, { once: true });
             
             // Синхронизация данных с сервером
             await syncUserData();
@@ -1036,21 +1014,18 @@
                 burgerBtn.onclick = (e) => {
                     e.stopPropagation();
                     toggleSidebar();
-                    console.log('🍔 Бургер нажат');
                 };
             }
             if(closeBtnMobile) {
                 closeBtnMobile.onclick = (e) => {
                     e.stopPropagation();
                     closeSidebar();
-                    console.log('❌ Крестик нажат');
                 };
             }
             if(overlay) {
                 overlay.onclick = (e) => {
                     e.stopPropagation();
                     closeSidebar();
-                    console.log('🌑 Оверлей нажат');
                 };
             }
             
