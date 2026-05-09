@@ -1,13 +1,10 @@
 // server/bot-service.js
-// Семейный бот-помощник HomeSpace (ES Module)
-
 import dotenv from 'dotenv';
 import mysql from 'mysql2/promise';
 import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 
-// ========== КОНФИГУРАЦИЯ ==========
 const config = {
     db: {
         host: process.env.DB_HOST || 'localhost',
@@ -18,46 +15,41 @@ const config = {
     botUserId: '00000000-0000-0000-0000-000000000001',
     botName: '🤖 Бот-помощник',
     botAvatar: '🤖',
-    checkInterval: 5000
+    checkInterval: 10000 // 10 секунд
 };
 
 let db = null;
 let lastCheckTime = new Date();
+let botInterval = null;
 
-// ========== ПОДКЛЮЧЕНИЕ К БД ==========
 async function connectDB() {
     try {
         db = await mysql.createConnection(config.db);
         console.log('✅ [БОТ] Подключен к базе данных');
+        return true;
     } catch (error) {
         console.error('❌ [БОТ] Ошибка подключения к БД:', error.message);
-        process.exit(1);
+        return false;
     }
 }
 
-// ========== СОЗДАНИЕ БОТА ==========
 async function ensureBotExists() {
     try {
         const [existing] = await db.query('SELECT id FROM users WHERE id = ?', [config.botUserId]);
-        
         if (existing.length === 0) {
             await db.query(`
                 INSERT INTO users (id, email, password_hash, name, avatar, role, family_id, bonuses, created_at)
                 VALUES (?, 'bot@homespace.local', '', ?, ?, 'bot', NULL, 0, NOW())
             `, [config.botUserId, config.botName, config.botAvatar]);
             console.log('✅ [БОТ] Виртуальный пользователь создан');
-        } else {
-            console.log('✅ [БОТ] Бот уже существует');
         }
     } catch (error) {
-        console.error(' [БОТ] Ошибка создания бота:', error.message);
+        console.error('❌ [БОТ] Ошибка создания бота:', error.message);
     }
 }
 
-// ========== ПОЛУЧЕНИЕ СОБЫТИЙ ==========
 async function getNewEvents() {
     const events = [];
-    
     try {
         // Новые задания
         const [newTasks] = await db.query(`
@@ -73,7 +65,8 @@ async function getNewEvents() {
         for (const task of newTasks) {
             events.push({
                 familyId: task.family_id,
-                message: `${task.created_name} создал(а) задание "${task.title}" для ${task.assigned_name}\n Награда: ${task.bonus} бонусов`
+                userId: task.assigned_to,
+                message: `${task.created_name} создал(а) задание "${task.title}" для ${task.assigned_name}\n💰 Награда: ${task.bonus} бонусов`
             });
         }
         
@@ -90,7 +83,8 @@ async function getNewEvents() {
         for (const task of completedTasks) {
             events.push({
                 familyId: task.family_id,
-                message: `${task.completed_name} выполнил(а) "${task.title}" и получил(а) ${task.bonus} бонусов! `
+                userId: task.assigned_to,
+                message: `${task.completed_name} выполнил(а) "${task.title}" и получил(а) ${task.bonus} бонусов! 🎉`
             });
         }
         
@@ -103,123 +97,69 @@ async function getNewEvents() {
         `, [lastCheckTime]);
         
         for (const wish of pendingWishes) {
-            events.push({
-                familyId: wish.family_id,
-                message: `${wish.created_name} хочет: "${wish.title}"\n Цена: ${wish.price} бонусов\n Требуется одобрение родителя`
-            });
-        }
-        
-        // Одобренные желания
-        const [approvedWishes] = await db.query(`
-            SELECT w.id, w.title, w.approved_price, w.family_id,
-                   u.name as created_name, a.name as approved_name
-            FROM wishes w
-            JOIN users u ON w.created_by = u.id
-            JOIN users a ON w.approved_by = a.id
-            WHERE w.approved_at > ? AND w.status = 'approved'
-        `, [lastCheckTime]);
-        
-        for (const wish of approvedWishes) {
-            events.push({
-                familyId: wish.family_id,
-                message: `${wish.approved_name} одобрил(а) желание "${wish.title}"!\n Цена: ${wish.approved_price} бонусов`
-            });
-        }
-        
-        // Купленные желания
-        const [purchasedWishes] = await db.query(`
-            SELECT w.id, w.title, w.approved_price, w.family_id,
-                   u.name as created_name, p.name as purchased_name
-            FROM wishes w
-            JOIN users u ON w.created_by = u.id
-            JOIN users p ON w.purchased_by = p.id
-            WHERE w.purchased_at > ? AND w.status = 'purchased'
-        `, [lastCheckTime]);
-        
-        for (const wish of purchasedWishes) {
-            events.push({
-                familyId: wish.family_id,
-                message: `${wish.purchased_name} купил(а) "${wish.title}" за ${wish.approved_price} бонусов!`
-            });
-        }
-        
-        // Новые члены семьи
-        const [newMembers] = await db.query(`
-            SELECT u.id, u.name, u.family_id 
-            FROM users u 
-            WHERE u.created_at > ? AND u.family_id IS NOT NULL
-        `, [lastCheckTime]);
-        
-        for (const member of newMembers) {
-            events.push({
-                familyId: member.family_id,
-                message: `${member.name} присоединился(ась) к семье! Добро пожаловать! `
-            });
+            const [parents] = await db.query(`SELECT id FROM users WHERE family_id = ? AND role = 'parent'`, [wish.family_id]);
+            for (const parent of parents) {
+                events.push({
+                    familyId: wish.family_id,
+                    userId: parent.id,
+                    message: `🎁 ${wish.created_name} хочет: "${wish.title}"\n💰 Цена: ${wish.price} бонусов\n⏳ Требуется одобрение`
+                });
+            }
         }
         
     } catch (error) {
-        console.error(' [БОТ] Ошибка получения событий:', error.message);
+        console.error('❌ [БОТ] Ошибка получения событий:', error.message);
     }
-    
     return events;
 }
 
-// ========== ОТПРАВКА СООБЩЕНИЯ ==========
 async function sendBotMessage(event) {
     try {
         const messageId = uuidv4();
-        
         await db.query(`
-            INSERT INTO chat_messages (id, family_id, user_id, user_name, user_avatar, message, type, message_type, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, 'family', 'text', NOW())
-        `, [messageId, event.familyId, config.botUserId, config.botName, config.botAvatar, event.message]);
-        
-        console.log(`📨 [БОТ] Сообщение отправлено: ${event.message.substring(0, 60)}...`);
-        
+            INSERT INTO chat_messages (id, family_id, user_id, user_name, user_avatar, message, type, recipient_id, is_read, message_type, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'private', ?, 0, 'text', NOW())
+        `, [messageId, event.familyId, null, config.botName, config.botAvatar, event.message, event.userId]);
+        console.log(`📨 [БОТ] Сообщение отправлено пользователю ${event.userId}`);
     } catch (error) {
         console.error('❌ [БОТ] Ошибка отправки:', error.message);
     }
 }
 
-// ========== ОСНОВНОЙ ЦИКЛ ==========
 async function checkAndProcessEvents() {
     const events = await getNewEvents();
-    
     if (events.length > 0) {
         console.log(`📬 [БОТ] Найдено ${events.length} событий`);
         for (const event of events) {
             await sendBotMessage(event);
         }
     }
-    
     lastCheckTime = new Date();
 }
 
-// ========== ЗАПУСК ==========
-async function startBot() {
+export async function startBot() {
     console.log('==========================================');
     console.log('🤖 Семейный бот-помощник HomeSpace');
     console.log('==========================================');
     
-    await connectDB();
+    const connected = await connectDB();
+    if (!connected) return;
+    
     await ensureBotExists();
-    
     await checkAndProcessEvents();
-    setInterval(checkAndProcessEvents, config.checkInterval);
     
-    console.log(`🔄 Интервал проверки: ${config.checkInterval / 1000} сек`);
-    console.log('==========================================');
+    botInterval = setInterval(checkAndProcessEvents, config.checkInterval);
+    console.log(`🔄 Бот работает, интервал: ${config.checkInterval / 1000} сек`);
 }
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-    console.log('\n🛑 [БОТ] Остановка...');
-    if (db) await db.end();
-    process.exit(0);
-});
-
-// Запуск
-startBot().catch(error => {
-    console.error('❌ [БОТ] Критическая ошибка:', error);
-    process.exit(1);
-});
+export function stopBot() {
+    if (botInterval) {
+        clearInterval(botInterval);
+        botInterval = null;
+    }
+    if (db) {
+        db.end();
+        db = null;
+    }
+    console.log('🛑 [БОТ] Остановлен');
+}

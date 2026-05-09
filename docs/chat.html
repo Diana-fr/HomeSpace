@@ -44,6 +44,7 @@
             50% { opacity: 0.6; transform: scale(1.08); }
         }
 
+        /* Кнопка "Назад" */
         .back-btn {
             position: fixed;
             top: 12px;
@@ -68,6 +69,7 @@
 
         .chat-app { display: flex; height: 100vh; position: relative; z-index: 10; }
 
+        /* ========= САЙДБАР С ВОЗМОЖНОСТЬЮ СВОРАЧИВАНИЯ (мобильная версия) ========= */
         .chat-sidebar {
             width: 280px;
             background: rgba(255,255,255,0.6);
@@ -80,11 +82,13 @@
             box-shadow: 4px 0 20px rgba(0,0,0,0.05);
         }
 
+        /* Десктоп: панель всегда открыта */
         @media (min-width: 769px) {
             .chat-sidebar { transform: translateX(0) !important; }
             .sidebar-toggle-mobile { display: none; }
         }
 
+        /* Мобильные стили: панель по умолчанию скрыта, открывается по кнопке */
         @media (max-width: 768px) {
             .chat-sidebar {
                 position: fixed;
@@ -99,6 +103,7 @@
             .chat-sidebar.open {
                 transform: translateX(0);
             }
+            /* Оверлей при открытой панели */
             .sidebar-overlay {
                 position: fixed;
                 inset: 0;
@@ -206,6 +211,7 @@
         .user-item-info { flex: 1; display: flex; align-items: center; gap: 5px; }
         .user-item-name { color: #33465d; font-size: 14px; font-weight: 500; }
 
+        /* ========= ОСНОВНАЯ ОБЛАСТЬ ЧАТА ========= */
         .chat-main {
             flex: 1;
             display: flex;
@@ -224,6 +230,7 @@
             align-items: center;
         }
         .chat-title { color: #33465d; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        /* Кнопка открытия сайдбара на мобилках (бургер) */
         .burger-menu {
             display: none;
             background: rgba(255,255,255,0.7);
@@ -257,6 +264,7 @@
         }
         .notification-btn.active { background: rgba(120,180,255,0.35); color: #2c5a8c; }
 
+        /* Сообщения */
         .messages-area {
             flex: 1;
             overflow-y: auto;
@@ -312,7 +320,10 @@
     <div id="stop-audio-btn" onclick="stopAllAudio()">⏹️</div>
 
     <div class="chat-app">
+        <!-- Оверлей для мобильного закрытия боковой панели -->
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+        <!-- Боковая панель с пользователями -->
         <div class="chat-sidebar" id="chat-sidebar">
             <div class="sidebar-header">
                 <div>
@@ -331,6 +342,7 @@
             <div class="users-list" id="users-list"><div style="padding:20px; text-align:center;">Загрузка...</div></div>
         </div>
 
+        <!-- Основной чат -->
         <div class="chat-main">
             <div class="chat-header">
                 <div class="chat-title">
@@ -366,6 +378,7 @@
         let currentSpeed = parseFloat(localStorage.getItem('voice_speed') || '1.0');
         let isSoloMode = false;
 
+        // ========== Утилиты ==========
         function escapeHtml(text) { if(!text) return ''; const d=document.createElement('div'); d.textContent=text; return d.innerHTML; }
         function formatMessageDate(date) { const d=new Date(date), today=new Date(); return d.toDateString()===today.toDateString() ? 'Сегодня' : d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'}); }
         function getAvatarHtml(avatar, name) {
@@ -403,59 +416,14 @@
             area.scrollTop=area.scrollHeight;
         }
 
-        // ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ botAction ==========
-        window.botAction = async function(action) {
-            // ПРИВЕТСТВИЕ ПРИ ОТКРЫТИИ ЧАТА (ДОБАВЛЕНО)
-            if (action === 'help') {
-                const welcomeMsg = {
-                    id: 'bot_welcome_' + Date.now(),
-                    user_id: BOT_ID,
-                    user_name: '🤖 Бот-помощник',
-                    message: '👋 Привет! Я бот-помощник. Вот что я умею:',
-                    type: 'bot',
-                    created_at: new Date().toISOString(),
-                    buttons: [
-                        { text: '📊 Статистика', action: 'stats_personal' },
-                        { text: '💰 Баланс', action: 'balance' },
-                        { text: '👨‍👩‍👧 Семья', action: 'stats_family' }
-                    ]
-                };
-                messages.push(welcomeMsg);
-                renderMessages();
-                return;
-            }
-            
-            // ОСТАЛЬНЫЕ КОМАНДЫ
-            let response = '', buttons = [];
-            
-            if (action === 'stats_personal') {
-                const s = await loadPersonalStats();
-                response = `📊 Твоя статистика:\n📋 Заданий: ${s.totalTasks}\n✅ Выполнено: ${s.completedTasks}\n💰 Баланс: ${s.currentBalance}`;
-                buttons = [{ text: '🔄 Обновить', action: 'stats_personal' }, { text: '👨‍👩‍👧 Семья', action: 'stats_family' }];
-            } 
-            else if (action === 'stats_family') {
-                const s = await loadFamilyStats();
-                response = `👨‍👩‍👧 Семья:\n👥 Участников: ${s.membersCount}\n📋 Заданий: ${s.totalTasks}\n✅ Выполнено: ${s.completedTasks}`;
-                if (s.topMembers) response += `\n\n🏆 Топ:\n${s.topMembers}`;
-                buttons = [{ text: '📊 Личная', action: 'stats_personal' }];
-            } 
-            else if (action === 'balance') {
-                response = `💰 Твой баланс: ${currentUser?.bonuses || 0} бонусов`;
-                buttons = [{ text: '📊 Статистика', action: 'stats_personal' }];
-            } 
-            else {
-                response = `👋 Привет! Я бот-помощник. Напиши: баланс, статистика, семья`;
-                buttons = [
-                    { text: '📊 Статистика', action: 'stats_personal' },
-                    { text: '💰 Баланс', action: 'balance' },
-                    { text: '👨‍👩‍👧 Семья', action: 'stats_family' }
-                ];
-            }
-            
-            addBotMessage(response, buttons);
+        window.botAction=async function(action){
+            let response='', buttons=[];
+            if(action==='stats_personal'){ const s=await loadPersonalStats(); response=`📊 Твоя статистика:\n📋 Заданий: ${s.totalTasks}\n✅ Выполнено: ${s.completedTasks}\n💰 Баланс: ${s.currentBalance}`; buttons=[{text:'🔄 Обновить',action:'stats_personal'},{text:'👨‍👩‍👧 Семья',action:'stats_family'}]; }
+            else if(action==='stats_family'){ const s=await loadFamilyStats(); response=`👨‍👩‍👧 Семья:\n👥 Участников: ${s.membersCount}\n📋 Заданий: ${s.totalTasks}\n✅ Выполнено: ${s.completedTasks}`; if(s.topMembers) response+=`\n\n🏆 Топ:\n${s.topMembers}`; buttons=[{text:'📊 Личная',action:'stats_personal'}]; }
+            else if(action==='balance'){ response=`💰 Твой баланс: ${currentUser?.bonuses||0} бонусов`; buttons=[{text:'📊 Статистика',action:'stats_personal'}]; }
+            else { response=`👋 Привет! Я бот-помощник. Напиши: баланс, статистика, семья`; buttons=[{text:'📊 Статистика',action:'stats_personal'},{text:'💰 Баланс',action:'balance'},{text:'👨‍👩‍👧 Семья',action:'stats_family'}]; }
+            addBotMessage(response,buttons);
         };
-        // ========== КОНЕЦ ИСПРАВЛЕНИЯ ==========
-        
         function addBotMessage(text,buttons=[]){ const msg={ id:'bot_'+Date.now(), user_id:BOT_ID, user_name:'🤖 Бот-помощник', message:text, message_type:'text', type:'bot', created_at:new Date().toISOString(), buttons }; messages.push(msg); renderMessages(); }
 
         async function loadPersonalStats() { try { const r=await fetch(`${API_URL}/tasks?`,{headers:{'Authorization':`Bearer ${token}`}}); const tasks=r.ok?await r.json():[]; const my=tasks.filter(t=>t.assigned_to===currentUser?.id); return { totalTasks:my.length, completedTasks:my.filter(t=>t.status==='completed').length, currentBalance:currentUser?.bonuses||0 }; } catch(e){ return { totalTasks:0, completedTasks:0, currentBalance:0 }; } }
@@ -495,20 +463,11 @@
             voiceBtn.ontouchstart=e=>{ e.preventDefault(); startVoiceRecording(); }; voiceBtn.ontouchend=e=>{ e.preventDefault(); stopVoiceRecording(); };
             document.getElementById('message-input').addEventListener('keypress',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); } });
             document.getElementById('enable-notifications-btn').onclick=async()=>{ if(Notification.permission==='granted'){ notificationPermission=true; } else if(Notification.permission!=='denied'){ const p=await Notification.requestPermission(); notificationPermission=p==='granted'; } };
+            // Мобильное управление панелью
             document.getElementById('burger-menu-btn').addEventListener('click', openSidebar);
             document.getElementById('close-sidebar-mobile').addEventListener('click', closeSidebarOnMobile);
             document.getElementById('sidebar-overlay').addEventListener('click', closeSidebarOnMobile);
             window.switchToFamilyChat();
-        }
-        
-        // Если пользователь без семьи - автоматически открываем чат с ботом
-        if (currentUser && !currentUser.familyId) {
-            setTimeout(() => {
-                const botUser = users.find(u => u.id === BOT_ID);
-                if (botUser && currentChat.type !== 'private') {
-                    window.switchToPrivateChat(botUser);
-                }
-            }, 500);
         }
         
         init();
