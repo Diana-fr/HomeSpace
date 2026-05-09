@@ -106,6 +106,41 @@ export class SettingsScene extends Phaser.Scene {
         
         // Отображаем текущий режим
         this.displayCurrentMode();
+        
+        // Периодическая синхронизация с сервером (каждые 30 секунд)
+        this.syncInterval = setInterval(() => {
+            this.syncUserFromServer();
+        }, 30000);
+    }
+    
+    // ========== НОВЫЙ МЕТОД: СИНХРОНИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ С СЕРВЕРА ==========
+    async syncUserFromServer() {
+        if (!this.currentUser) return;
+        
+        try {
+            const freshUser = await api.fetchCurrentUser();
+            if (freshUser) {
+                let updated = false;
+                if (this.currentUser.avatar !== freshUser.avatar) {
+                    this.currentUser.avatar = freshUser.avatar;
+                    updated = true;
+                }
+                if (this.currentUser.name !== freshUser.name) {
+                    this.currentUser.name = freshUser.name;
+                    updated = true;
+                }
+                this.currentUser.bonuses = freshUser.bonuses;
+                
+                if (updated) {
+                    localStorage.setItem('homespace_currentUser', JSON.stringify(this.currentUser));
+                    // Перерисовываем текущую вкладку
+                    this.displayCurrentMode();
+                    this.showNotification('Данные обновлены!', '#4ecca3');
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка синхронизации пользователя:', error);
+        }
     }
     
     createModeTabs() {
@@ -149,287 +184,52 @@ export class SettingsScene extends Phaser.Scene {
         }
     }
     
- displayProfileSettings() {
-    if (!this.settingsContainer) return;
-    this.settingsContainer.removeAll(true);
-    
-    if (!this.currentUser) {
-        this.settingsContainer.add(
-            this.add.text(300, 100, 'Сначала войдите в систему', {
-                fontSize: '24px',
-                fill: '#cccccc'
-            })
-        );
-        return;
-    }
-    
-    let y = 0;
-    
-    // Аватар
-    this.settingsContainer.add(
-        this.add.text(200, y, 'Аватар:', { fontSize: '20px', fill: '#cccccc' })
-    );
-    
-    const currentAvatar = this.add.text(350, y, this.currentUser.avatar || '👤', {
-        fontSize: '60px'
-    });
-    this.settingsContainer.add(currentAvatar);
-    
-    const avatars = ['👩', '👨', '👧', '👦', '🧑', '👵', '👴', '🐶', '🐱', '🦊'];
-    let x = 450;
-    
-    avatars.forEach(avatar => {
-        const btn = this.add.text(x, y + 10, avatar, { fontSize: '40px' })
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                this.updateAvatar(avatar);
-                currentAvatar.setText(avatar);
-            });
-        this.settingsContainer.add(btn);
-        x += 60;
-    });
-    
-    y += 80;
-    
-    // Имя
-    this.settingsContainer.add(
-        this.add.text(200, y, 'Имя:', { fontSize: '20px', fill: '#cccccc' })
-    );
-    
-    const nameText = this.add.text(350, y, this.currentUser.name, {
-        fontSize: '24px',
-        fill: '#ffffff',
-        fontStyle: 'bold'
-    });
-    this.settingsContainer.add(nameText);
-    
-    const editBtn = this.add.text(550, y - 10, '✎', {
-        fontSize: '24px',
-        fill: '#4ecca3',
-        backgroundColor: '#2c3e50',
-        padding: { x: 12, y: 8 }
-    })
-    .setInteractive({ useHandCursor: true })
-    .on('pointerdown', () => {
-        this.showNameEditor(nameText);
-    });
-    this.settingsContainer.add(editBtn);
-    
-    y += 60;
-    
-    // Роль
-    this.settingsContainer.add(
-        this.add.text(200, y, 'Роль:', { fontSize: '20px', fill: '#cccccc' })
-    );
-    
-    const roleIcon = this.currentUser.role === 'parent' ? '👑' : this.currentUser.role === 'user' ? '👤' : '🧒';
-    const roleText = this.currentUser.role === 'parent' ? 'Родитель' : this.currentUser.role === 'user' ? 'Обычный пользователь' : 'Ребёнок';
-    this.settingsContainer.add(
-        this.add.text(350, y, `${roleIcon} ${roleText}`, { fontSize: '20px', fill: '#ffffff' })
-    );
-    
-    y += 60;    
-
-    
-    // Статистика
-    this.settingsContainer.add(
-        this.add.text(200, y, 'Статистика', { fontSize: '22px', fill: '#ffffff', fontStyle: 'bold' })
-    );
-    
-    y += 40;
-    
-    const tasks = JSON.parse(localStorage.getItem('homespace_tasks') || '[]');
-    const userTasks = tasks.filter(t => t.assignedTo === this.currentUser.id);
-    const completedTasks = userTasks.filter(t => t.completed);
-    const totalBonuses = completedTasks.reduce((sum, t) => sum + (t.bonus || 0), 0);
-    
-    const stats = [
-        `📋 Всего заданий: ${userTasks.length}`,
-        `✅ Выполнено: ${completedTasks.length}`,
-        `⏳ В ожидании: ${userTasks.length - completedTasks.length}`,
-        `💰 Заработано бонусов: ${totalBonuses}`
-    ];
-    
-    stats.forEach(stat => {
-        this.settingsContainer.add(
-            this.add.text(220, y, stat, { fontSize: '16px', fill: '#dddddd' })
-        );
-        y += 30;
-    });
-    
-    y += 50;
-    
-    // Кнопка выхода
-    const logoutBtn = this.add.text(350, y, 'Выйти', {
-        fontSize: '20px',
-        fill: '#ffffff',
-        backgroundColor: '#e94560',
-        padding: { x: 25, y: 12 }
-    })
-    .setInteractive({ useHandCursor: true })
-    .on('pointerdown', () => {
-        api.logout();
-        this.scene.start('RegistrationScene');
-    });
-    this.settingsContainer.add(logoutBtn);
-}
-
-displayFamilySettings() {
-    if (!this.settingsContainer) return;
-    this.settingsContainer.removeAll(true);
-    
-    if (!this.currentUser) {
-        this.settingsContainer.add(
-            this.add.text(300, 100, 'Сначала войдите в систему', {
-                fontSize: '24px',
-                fill: '#cccccc'
-            })
-        );
-        return;
-    }
-    
-    let y = 0;
-    
-    // Информация о семье
-    if (this.currentUser.familyId) {
-        const family = this.families.find(f => f.id === this.currentUser.familyId);
+    displayProfileSettings() {
+        if (!this.settingsContainer) return;
+        this.settingsContainer.removeAll(true);
         
-        if (family) {
-            // Название семьи
+        if (!this.currentUser) {
             this.settingsContainer.add(
-                this.add.text(200, y, 'Семья:', { fontSize: '24px', fill: '#cccccc' })
-            );
-            this.settingsContainer.add(
-                this.add.text(350, y, family.name, {
-                    fontSize: '28px',
-                    fill: '#ffd700',
-                    fontStyle: 'bold'
+                this.add.text(300, 100, 'Сначала войдите в систему', {
+                    fontSize: '24px',
+                    fill: '#cccccc'
                 })
             );
-            
-            y += 60;
-            
-            // Код приглашения
-            this.settingsContainer.add(
-                this.add.text(200, y + 12, 'Код приглашения:', { fontSize: '20px', fill: '#cccccc' })
-            );
-            
-            const codeText = this.add.text(400, y, family.invite_code || family.code, {
-                fontSize: '24px',
-                fill: '#4ecca3',
-                fontStyle: 'bold',
-                backgroundColor: '#2c3e50',
-                padding: { x: 15, y: 8 }
-            });
-            this.settingsContainer.add(codeText);
-            
-            const copyBtn = this.add.text(500, y , '📋', {
-                fontSize: '24px',
-                fill: '#4ecca3',
-                backgroundColor: '#2c3e50',
-                padding: { x: 12, y: 6 }
-            })
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                navigator.clipboard?.writeText(family.invite_code || family.code);
-                this.showNotification('Код скопирован!', '#4ecca3');
-            });
-            this.settingsContainer.add(copyBtn);
-            
-            y += 70;
-            
-            // Члены семьи - ЗАГРУЖАЕМ С СЕРВЕРА
-            this.settingsContainer.add(
-                this.add.text(200, y, 'Участники:', { fontSize: '22px', fill: '#ffffff', fontStyle: 'bold' })
-            );
-            
-            y += 40;
-            
-            // Показываем индикатор загрузки
-            const loadingText = this.add.text(220, y, 'Загрузка участников...', {
-                fontSize: '14px',
-                fill: '#888888'
-            });
-            this.settingsContainer.add(loadingText);
-            this.membersLoadingText = loadingText;
-            
-            // Загружаем членов семьи
-            this.loadFamilyMembers().then(() => {
-                this.updateMembersDisplay(y);
-            });
-        }
-    } else {
-        // Нет семьи - "Вы не в семье" и кнопка на одном уровне
-        this.settingsContainer.add(
-            this.add.text(200, y, 'Вы не в семье', { fontSize: '24px', fill: '#cccccc' })
-        );
-        
-        // Кнопка создания семьи на том же уровне
-        if (this.isAdmin) {
-            const createBtn = this.add.text(450, y, 'Создать семью', {
-                fontSize: '20px',
-                fill: '#ffffff',
-                backgroundColor: '#4ecca3',
-                padding: { x: 20, y: 10 }
-            })
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                this.createFamily();
-            });
-            this.settingsContainer.add(createBtn);
+            return;
         }
         
-        y += 70;
+        let y = 0;
         
-        // Разделитель
+        // Аватар
         this.settingsContainer.add(
-            this.add.rectangle(200, y, 500, 2, 0x4ecca3, 0.3).setOrigin(0, 0)
+            this.add.text(200, y, 'Аватар:', { fontSize: '20px', fill: '#cccccc' })
         );
         
-        y += 30;
-        
-        // Вопрос о коде приглашения
-        this.settingsContainer.add(
-            this.add.text(200, y, 'Есть код приглашения?', { 
-                fontSize: '20px', 
-                fill: '#ffd700',
-                fontStyle: 'bold'
-            })
-        );
-        
-        y += 50;
-        
-        // Поле ввода кода - БЕЛОЕ
-        const inputBg = this.add.rectangle(200, y, 280, 45, 0xffffff)
-            .setStrokeStyle(2, 0x4ecca3)
-            .setOrigin(0, 0);
-        this.settingsContainer.add(inputBg);
-        
-        const codeInput = this.add.text(215, y + 12, '', {
-            fontSize: '18px',
-            fill: '#000000'
+        // Используем обновленную функцию отображения аватара с кэш-бастером
+        const avatarDisplay = this.getAvatarDisplay(this.currentUser.avatar, this.currentUser.name);
+        const currentAvatar = this.add.text(350, y, avatarDisplay, {
+            fontSize: '60px'
         });
-        codeInput.inputValue = '';
-        this.settingsContainer.add(codeInput);
+        this.settingsContainer.add(currentAvatar);
         
-        const activateCodeInput = () => {
-            this.activeInput = codeInput;
-            inputBg.setStrokeStyle(3, 0xe94560);
-        };
+        const avatars = ['👩', '👨', '👧', '👦', '🧑', '👵', '👴', '🐶', '🐱', '🦊'];
+        let x = 450;
         
-        inputBg.setInteractive({ useHandCursor: true }).on('pointerdown', activateCodeInput);
-        codeInput.setInteractive({ useHandCursor: true }).on('pointerdown', activateCodeInput);
-        
-        // Плейсхолдер для поля ввода
-        const placeholder = this.add.text(215, y + 12, 'Введите код приглашения', {
-            fontSize: '18px',
-            fill: '#999999',
-            fontStyle: 'italic'
+        avatars.forEach(avatar => {
+            const btn = this.add.text(x, y + 10, avatar, { fontSize: '40px' })
+                .setInteractive({ useHandCursor: true })
+                .on('pointerdown', async () => {
+                    await this.updateAvatar(avatar);
+                    currentAvatar.setText(this.getAvatarDisplay(avatar, this.currentUser.name));
+                });
+            this.settingsContainer.add(btn);
+            x += 60;
         });
-        this.settingsContainer.add(placeholder);
         
-        // Кнопка присоединения
-        const joinBtn = this.add.text(500, y + 8, 'Присоединиться', {
+        y += 80;
+        
+        // Кнопка загрузки фото
+        const uploadPhotoBtn = this.add.text(200, y, '📷 Загрузить фото', {
             fontSize: '16px',
             fill: '#ffffff',
             backgroundColor: '#4ecca3',
@@ -437,24 +237,332 @@ displayFamilySettings() {
         })
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => {
-            this.joinFamily(codeInput.inputValue || codeInput.text);
+            this.uploadPhotoAvatar();
         });
-        this.settingsContainer.add(joinBtn);
+        this.settingsContainer.add(uploadPhotoBtn);
         
-        // Обновление текста и плейсхолдера
-        const updateHandler = () => {
-            if (this.activeInput === codeInput) {
-                codeInput.setText(codeInput.inputValue || '');
-                placeholder.setVisible(!codeInput.inputValue);
-            }
-        };
-        this.events.on('update', updateHandler);
-        this.codeInputUpdateHandler = updateHandler;
+        y += 50;
         
-        // Начальное состояние плейсхолдера
-        placeholder.setVisible(true);
+        // Имя
+        this.settingsContainer.add(
+            this.add.text(200, y, 'Имя:', { fontSize: '20px', fill: '#cccccc' })
+        );
+        
+        const nameText = this.add.text(350, y, this.currentUser.name, {
+            fontSize: '24px',
+            fill: '#ffffff',
+            fontStyle: 'bold'
+        });
+        this.settingsContainer.add(nameText);
+        
+        const editBtn = this.add.text(550, y - 10, '✎', {
+            fontSize: '24px',
+            fill: '#4ecca3',
+            backgroundColor: '#2c3e50',
+            padding: { x: 12, y: 8 }
+        })
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => {
+            this.showNameEditor(nameText);
+        });
+        this.settingsContainer.add(editBtn);
+        
+        y += 60;
+        
+        // Роль
+        this.settingsContainer.add(
+            this.add.text(200, y, 'Роль:', { fontSize: '20px', fill: '#cccccc' })
+        );
+        
+        const roleIcon = this.currentUser.role === 'parent' ? '👑' : this.currentUser.role === 'user' ? '👤' : '🧒';
+        const roleText = this.currentUser.role === 'parent' ? 'Родитель' : this.currentUser.role === 'user' ? 'Обычный пользователь' : 'Ребёнок';
+        this.settingsContainer.add(
+            this.add.text(350, y, `${roleIcon} ${roleText}`, { fontSize: '20px', fill: '#ffffff' })
+        );
+        
+        y += 60;    
+
+        
+        // Статистика
+        this.settingsContainer.add(
+            this.add.text(200, y, 'Статистика', { fontSize: '22px', fill: '#ffffff', fontStyle: 'bold' })
+        );
+        
+        y += 40;
+        
+        const tasks = JSON.parse(localStorage.getItem('homespace_tasks') || '[]');
+        const userTasks = tasks.filter(t => t.assignedTo === this.currentUser.id);
+        const completedTasks = userTasks.filter(t => t.completed);
+        const totalBonuses = completedTasks.reduce((sum, t) => sum + (t.bonus || 0), 0);
+        
+        const stats = [
+            `📋 Всего заданий: ${userTasks.length}`,
+            `✅ Выполнено: ${completedTasks.length}`,
+            `⏳ В ожидании: ${userTasks.length - completedTasks.length}`,
+            `💰 Заработано бонусов: ${totalBonuses}`
+        ];
+        
+        stats.forEach(stat => {
+            this.settingsContainer.add(
+                this.add.text(220, y, stat, { fontSize: '16px', fill: '#dddddd' })
+            );
+            y += 30;
+        });
+        
+        y += 50;
+        
+        // Кнопка выхода
+        const logoutBtn = this.add.text(350, y, 'Выйти', {
+            fontSize: '20px',
+            fill: '#ffffff',
+            backgroundColor: '#e94560',
+            padding: { x: 25, y: 12 }
+        })
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => {
+            api.logout();
+            this.scene.start('RegistrationScene');
+        });
+        this.settingsContainer.add(logoutBtn);
     }
-}
+    
+    // ========== НОВЫЙ МЕТОД: ОТОБРАЖЕНИЕ АВАТАРА С КЭШ-БАСТЕРОМ ==========
+    getAvatarDisplay(avatar, name) {
+        if (typeof avatar === 'string' && avatar.trim().length > 0) {
+            const trimmed = avatar.trim();
+            
+            // Эмодзи или простой текст
+            if (trimmed.length <= 2 && !trimmed.includes('/') && !trimmed.includes('http') && !trimmed.includes('uploads')) {
+                return trimmed;
+            }
+            
+            // Для фото возвращаем иконку фото
+            if (trimmed.includes('/uploads/') || trimmed.startsWith('/assets/uploads/') || 
+                trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+                return '🖼️';
+            }
+        }
+        
+        // Инициалы по умолчанию
+        const parts = (name || 'П').trim().split(/\s+/).slice(0, 2);
+        const initials = parts.map(p => p[0]?.toUpperCase() || '').join('') || 'U';
+        return initials;
+    }
+    
+    // ========== НОВЫЙ МЕТОД: ЗАГРУЗКА ФОТО АВАТАРА ==========
+    uploadPhotoAvatar() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/jpeg,image/png,image/webp';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Показываем индикатор загрузки
+            this.showNotification('Загрузка фото...', '#ffd700');
+            
+            // Конвертируем в base64
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const result = await api.uploadAvatar(event.target.result);
+                    if (result && result.avatar) {
+                        this.currentUser.avatar = result.avatar;
+                        localStorage.setItem('homespace_currentUser', JSON.stringify(this.currentUser));
+                        this.showNotification('✅ Фото обновлено!', '#4ecca3');
+                        this.displayCurrentMode();
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки фото:', error);
+                    this.showNotification('❌ Ошибка загрузки фото', '#e94560');
+                }
+            };
+            reader.readAsDataURL(file);
+        };
+        input.click();
+    }
+    
+    displayFamilySettings() {
+        if (!this.settingsContainer) return;
+        this.settingsContainer.removeAll(true);
+        
+        if (!this.currentUser) {
+            this.settingsContainer.add(
+                this.add.text(300, 100, 'Сначала войдите в систему', {
+                    fontSize: '24px',
+                    fill: '#cccccc'
+                })
+            );
+            return;
+        }
+        
+        let y = 0;
+        
+        // Информация о семье
+        if (this.currentUser.familyId) {
+            const family = this.families.find(f => f.id === this.currentUser.familyId);
+            
+            if (family) {
+                // Название семьи
+                this.settingsContainer.add(
+                    this.add.text(200, y, 'Семья:', { fontSize: '24px', fill: '#cccccc' })
+                );
+                this.settingsContainer.add(
+                    this.add.text(350, y, family.name, {
+                        fontSize: '28px',
+                        fill: '#ffd700',
+                        fontStyle: 'bold'
+                    })
+                );
+                
+                y += 60;
+                
+                // Код приглашения
+                this.settingsContainer.add(
+                    this.add.text(200, y + 12, 'Код приглашения:', { fontSize: '20px', fill: '#cccccc' })
+                );
+                
+                const codeText = this.add.text(400, y, family.invite_code || family.code, {
+                    fontSize: '24px',
+                    fill: '#4ecca3',
+                    fontStyle: 'bold',
+                    backgroundColor: '#2c3e50',
+                    padding: { x: 15, y: 8 }
+                });
+                this.settingsContainer.add(codeText);
+                
+                const copyBtn = this.add.text(500, y , '📋', {
+                    fontSize: '24px',
+                    fill: '#4ecca3',
+                    backgroundColor: '#2c3e50',
+                    padding: { x: 12, y: 6 }
+                })
+                .setInteractive({ useHandCursor: true })
+                .on('pointerdown', () => {
+                    navigator.clipboard?.writeText(family.invite_code || family.code);
+                    this.showNotification('Код скопирован!', '#4ecca3');
+                });
+                this.settingsContainer.add(copyBtn);
+                
+                y += 70;
+                
+                // Члены семьи - ЗАГРУЖАЕМ С СЕРВЕРА
+                this.settingsContainer.add(
+                    this.add.text(200, y, 'Участники:', { fontSize: '22px', fill: '#ffffff', fontStyle: 'bold' })
+                );
+                
+                y += 40;
+                
+                // Показываем индикатор загрузки
+                const loadingText = this.add.text(220, y, 'Загрузка участников...', {
+                    fontSize: '14px',
+                    fill: '#888888'
+                });
+                this.settingsContainer.add(loadingText);
+                this.membersLoadingText = loadingText;
+                
+                // Загружаем членов семьи
+                this.loadFamilyMembers().then(() => {
+                    this.updateMembersDisplay(y);
+                });
+            }
+        } else {
+            // Нет семьи - "Вы не в семье" и кнопка на одном уровне
+            this.settingsContainer.add(
+                this.add.text(200, y, 'Вы не в семье', { fontSize: '24px', fill: '#cccccc' })
+            );
+            
+            // Кнопка создания семьи на том же уровне
+            if (this.isAdmin) {
+                const createBtn = this.add.text(450, y, 'Создать семью', {
+                    fontSize: '20px',
+                    fill: '#ffffff',
+                    backgroundColor: '#4ecca3',
+                    padding: { x: 20, y: 10 }
+                })
+                .setInteractive({ useHandCursor: true })
+                .on('pointerdown', () => {
+                    this.createFamily();
+                });
+                this.settingsContainer.add(createBtn);
+            }
+            
+            y += 70;
+            
+            // Разделитель
+            this.settingsContainer.add(
+                this.add.rectangle(200, y, 500, 2, 0x4ecca3, 0.3).setOrigin(0, 0)
+            );
+            
+            y += 30;
+            
+            // Вопрос о коде приглашения
+            this.settingsContainer.add(
+                this.add.text(200, y, 'Есть код приглашения?', { 
+                    fontSize: '20px', 
+                    fill: '#ffd700',
+                    fontStyle: 'bold'
+                })
+            );
+            
+            y += 50;
+            
+            // Поле ввода кода - БЕЛОЕ
+            const inputBg = this.add.rectangle(200, y, 280, 45, 0xffffff)
+                .setStrokeStyle(2, 0x4ecca3)
+                .setOrigin(0, 0);
+            this.settingsContainer.add(inputBg);
+            
+            const codeInput = this.add.text(215, y + 12, '', {
+                fontSize: '18px',
+                fill: '#000000'
+            });
+            codeInput.inputValue = '';
+            this.settingsContainer.add(codeInput);
+            
+            const activateCodeInput = () => {
+                this.activeInput = codeInput;
+                inputBg.setStrokeStyle(3, 0xe94560);
+            };
+            
+            inputBg.setInteractive({ useHandCursor: true }).on('pointerdown', activateCodeInput);
+            codeInput.setInteractive({ useHandCursor: true }).on('pointerdown', activateCodeInput);
+            
+            // Плейсхолдер для поля ввода
+            const placeholder = this.add.text(215, y + 12, 'Введите код приглашения', {
+                fontSize: '18px',
+                fill: '#999999',
+                fontStyle: 'italic'
+            });
+            this.settingsContainer.add(placeholder);
+            
+            // Кнопка присоединения
+            const joinBtn = this.add.text(500, y + 8, 'Присоединиться', {
+                fontSize: '16px',
+                fill: '#ffffff',
+                backgroundColor: '#4ecca3',
+                padding: { x: 15, y: 8 }
+            })
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                this.joinFamily(codeInput.inputValue || codeInput.text);
+            });
+            this.settingsContainer.add(joinBtn);
+            
+            // Обновление текста и плейсхолдера
+            const updateHandler = () => {
+                if (this.activeInput === codeInput) {
+                    codeInput.setText(codeInput.inputValue || '');
+                    placeholder.setVisible(!codeInput.inputValue);
+                }
+            };
+            this.events.on('update', updateHandler);
+            this.codeInputUpdateHandler = updateHandler;
+            
+            // Начальное состояние плейсхолдера
+            placeholder.setVisible(true);
+        }
+    }
     
     
     showNameEditor(nameText) {
@@ -494,10 +602,10 @@ displayFamilySettings() {
             fontSize: '18px', fill: '#ffffff', backgroundColor: '#4ecca3', padding: { x: 20, y: 10 }
         })
         .setInteractive({ useHandCursor: true }).setDepth(2001)
-        .on('pointerdown', () => {
+        .on('pointerdown', async () => {
             const newName = inputText.inputValue?.trim() || inputText.text.trim();
             if (newName) {
-                this.updateName(newName);
+                await this.updateName(newName);
                 nameText.setText(newName);
                 modalElements.forEach(el => el.destroy());
                 this.activeInput = null;
@@ -524,19 +632,54 @@ displayFamilySettings() {
         modalElements.push({ destroy: () => this.events.off('update', updateHandler) });
     }
     
-    updateAvatar(newAvatar) {
+    async updateAvatar(newAvatar) {
         if (!this.currentUser) return;
+        
+        const oldAvatar = this.currentUser.avatar;
         this.currentUser.avatar = newAvatar;
         localStorage.setItem('homespace_currentUser', JSON.stringify(this.currentUser));
-        this.showNotification('Аватар обновлён!', '#4ecca3');
+        
+        // Если это не эмодзи, а фото - пробуем сохранить на сервер
+        if (newAvatar !== oldAvatar && !this.isEmoji(newAvatar)) {
+            try {
+                // Для эмодзи не отправляем на сервер
+                if (this.isEmoji(newAvatar)) {
+                    this.showNotification('Аватар обновлён!', '#4ecca3');
+                } else {
+                    // Здесь можно добавить отправку на сервер если нужно
+                    this.showNotification('Аватар обновлён!', '#4ecca3');
+                }
+            } catch (error) {
+                console.error('Ошибка сохранения аватара:', error);
+            }
+        } else {
+            this.showNotification('Аватар обновлён!', '#4ecca3');
+        }
+        
+        // Обновляем отображение
+        this.displayCurrentMode();
     }
     
-    updateName(newName) {
+    // Вспомогательный метод для проверки эмодзи
+    isEmoji(str) {
+        const emojiRegex = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+        return emojiRegex.test(str);
+    }
+    
+    async updateName(newName) {
         if (!this.currentUser) return;
+        
         const oldName = this.currentUser.name;
         this.currentUser.name = newName;
         localStorage.setItem('homespace_currentUser', JSON.stringify(this.currentUser));
+        
+        // TODO: Отправить на сервер если есть API для обновления имени
+        // await api.updateUserName(newName);
+        
         this.showNotification('Имя обновлено!', '#4ecca3');
+        
+        // Обновляем отображение
+        this.displayCurrentMode();
     }
     
     async createFamily() {
@@ -728,73 +871,75 @@ displayFamilySettings() {
         }
     }
     
-async loadFamilyMembers() {
-    if (!this.currentUser?.familyId) return;
-    
-    try {
-        const response = await fetch(`${API_URL}/families/${this.currentUser.familyId}/members`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('homespace_token')}`
+    async loadFamilyMembers() {
+        if (!this.currentUser?.familyId) return;
+        
+        try {
+            const response = await fetch(`${API_URL}/families/${this.currentUser.familyId}/members`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('homespace_token')}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.users = data;
+                // Сохраняем в localStorage для совместимости
+                localStorage.setItem('homespace_users', JSON.stringify(this.users));
             }
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            this.users = data;
-            // Сохраняем в localStorage для совместимости
-            localStorage.setItem('homespace_users', JSON.stringify(this.users));
+        } catch (error) {
+            console.error('Ошибка загрузки членов семьи:', error);
         }
-    } catch (error) {
-        console.error('Ошибка загрузки членов семьи:', error);
-    }
-}
-
-// Добавь этот метод для обновления отображения участников
-updateMembersDisplay(startY) {
-    // Удаляем индикатор загрузки
-    if (this.membersLoadingText) {
-        this.membersLoadingText.destroy();
-        this.membersLoadingText = null;
     }
     
-    let y = startY;
-    
-    if (!this.users || this.users.length === 0) {
-        this.settingsContainer.add(
-            this.add.text(220, y, 'Нет участников', {
-                fontSize: '14px',
-                fill: '#888888'
-            })
-        );
-        return;
+    updateMembersDisplay(startY) {
+        // Удаляем индикатор загрузки
+        if (this.membersLoadingText) {
+            this.membersLoadingText.destroy();
+            this.membersLoadingText = null;
+        }
+        
+        let y = startY;
+        
+        if (!this.users || this.users.length === 0) {
+            this.settingsContainer.add(
+                this.add.text(220, y, 'Нет участников', {
+                    fontSize: '14px',
+                    fill: '#888888'
+                })
+            );
+            return;
+        }
+        
+        this.users.forEach(member => {
+            const roleIcon = member.role === 'parent' ? '👑' : '🧒';
+            const roleText = member.role === 'parent' ? 'Родитель' : 'Ребёнок';
+            const isYou = member.id === this.currentUser?.id ? ' (вы)' : '';
+            
+            this.settingsContainer.add(
+                this.add.text(220, y, `${roleIcon} ${member.name}${isYou} - ${roleText}`, {
+                    fontSize: '16px',
+                    fill: member.role === 'parent' ? '#4ecca3' : '#dddddd'
+                })
+            );
+            
+            // Статус онлайн
+            const online = member.last_login && (new Date() - new Date(member.last_login)) < 5 * 60 * 1000;
+            this.settingsContainer.add(
+                this.add.circle(520, y + 8, 6, online ? 0x4ecca3 : 0x888888)
+            );
+            
+            y += 35;
+        });
     }
-    
-    this.users.forEach(member => {
-        const roleIcon = member.role === 'parent' ? '👑' : '🧒';
-        const roleText = member.role === 'parent' ? 'Родитель' : 'Ребёнок';
-        const isYou = member.id === this.currentUser?.id ? ' (вы)' : '';
-        
-        this.settingsContainer.add(
-            this.add.text(220, y, `${roleIcon} ${member.name}${isYou} - ${roleText}`, {
-                fontSize: '16px',
-                fill: member.role === 'parent' ? '#4ecca3' : '#dddddd'
-            })
-        );
-        
-        // Статус онлайн
-        const online = member.last_login && (new Date() - new Date(member.last_login)) < 5 * 60 * 1000;
-        this.settingsContainer.add(
-            this.add.circle(520, y + 8, 6, online ? 0x4ecca3 : 0x888888)
-        );
-        
-        y += 35;
-    });
-}
     
     destroy() {
         if (this.codeInputUpdateHandler) {
             this.events.off('update', this.codeInputUpdateHandler);
+        }
+        if (this.syncInterval) {
+            clearInterval(this.syncInterval);
         }
         this._disposables.run();
         super.destroy();

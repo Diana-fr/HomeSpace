@@ -113,6 +113,69 @@
             color: #33465d;
         }
 
+        /* Десктоп: сайдбар всегда виден */
+        @media (min-width: 769px) {
+            .chat-sidebar {
+                transform: translateX(0) !important;
+                position: relative;
+            }
+            .sidebar-overlay {
+                display: none !important;
+            }
+            .mobile-back-btn {
+                display: none !important;
+            }
+            .burger-menu {
+                display: none !important;
+            }
+        }
+
+        /* Мобильные устройства */
+        @media (max-width: 768px) {
+            .chat-sidebar { 
+                position: fixed; 
+                left: 0; 
+                top: 0; 
+                bottom: 0; 
+                transform: translateX(-100%);
+                z-index: 200;
+                width: 280px;
+                box-shadow: 4px 0 25px rgba(0,0,0,0.2);
+            }
+            .chat-sidebar.open { 
+                transform: translateX(0); 
+            }
+            .chat-main { 
+                width: 100%; 
+            }
+            .burger-menu { 
+                display: flex; 
+            }
+            .message { 
+                max-width: 85%; 
+            }
+            .chat-header { 
+                padding: 12px 16px; 
+                padding-top: 56px; 
+            }
+            .chat-input-area { 
+                padding: 12px 14px; 
+            }
+            .send-btn, .voice-btn { 
+                width: 42px; 
+                height: 42px; 
+                font-size: 18px; 
+            }
+        }
+
+        @media (max-width: 360px) {
+            .chat-header { padding: 10px 12px; padding-top: 46px; }
+            .messages-area { padding: 14px; }
+            .chat-input-area { padding: 10px 12px; gap: 10px; }
+            .chat-input { padding: 10px 14px; font-size: 13px; }
+            .speed-btn { padding: 2px 5px; font-size: 9px; }
+        }
+
         .user-info {
             padding: 20px;
             background: linear-gradient(135deg, rgba(180,220,255,0.25), rgba(140,190,255,0.15));
@@ -364,34 +427,20 @@
         ::-webkit-scrollbar-track { background: rgba(140,190,255,0.15); }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #6fbaff, #a8d8ff); border-radius: 3px; }
 
-        .mobile-back-btn { display: none; background: none; border: none; color: #33465d; font-size: 24px; cursor: pointer; padding: 0 8px; }
-        
-        @media (max-width: 768px) {
-            .chat-sidebar { 
-                position: fixed; 
-                left: 0; 
-                top: 0; 
-                bottom: 0; 
-                transform: translateX(-100%);
-                z-index: 200;
-                width: 280px;
-                box-shadow: 4px 0 25px rgba(0,0,0,0.2);
-            }
-            .chat-sidebar.open { transform: translateX(0); }
-            .chat-main { width: 100%; }
-            .burger-menu { display: flex; }
-            .message { max-width: 85%; }
-            .chat-header { padding: 12px 16px; padding-top: 56px; }
-            .chat-input-area { padding: 12px 14px; }
-            .send-btn, .voice-btn { width: 42px; height: 42px; font-size: 18px; }
+        .mobile-back-btn { 
+            background: rgba(140,190,255,0.2); 
+            border-radius: 30px; 
+            width: 32px; 
+            height: 32px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 18px;
+            color: #33465d;
         }
-        @media (max-width: 360px) {
-            .chat-header { padding: 10px 12px; padding-top: 46px; }
-            .messages-area { padding: 14px; }
-            .chat-input-area { padding: 10px 12px; gap: 10px; }
-            .chat-input { padding: 10px 14px; font-size: 13px; }
-            .speed-btn { padding: 2px 5px; font-size: 9px; }
-        }
+        .mobile-back-btn:hover { background: rgba(140,190,255,0.4); }
     </style>
 </head>
 <body>
@@ -402,16 +451,23 @@
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <div class="chat-sidebar" id="chat-sidebar">
-            <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="sidebar-header">
                 <div>
                     <h2>Семейный чат</h2>
                     <p>Общайтесь всей семьёй</p>
                 </div>
-                <button class="mobile-back-btn" id="mobile-close-sidebar" style="display: flex; background: rgba(140,190,255,0.2); border-radius: 30px; width: 32px; height: 32px; align-items: center; justify-content: center;">✕</button>
+                <button class="mobile-back-btn" id="mobile-close-sidebar">✕</button>
             </div>
-            <div class="user-info" id="user-info"><div class="user-avatar" id="user-avatar"></div><div class="user-details"><div class="user-name" id="user-name">Загрузка...</div><div class="user-role" id="user-role"></div></div></div>
+            <div class="user-info" id="user-info">
+                <div class="user-avatar" id="user-avatar"></div>
+                <div class="user-details">
+                    <div class="user-name" id="user-name">Загрузка...</div>
+                    <div class="user-role" id="user-role"></div>
+                </div>
+            </div>
             <div class="users-list" id="users-list"><div style="text-align:center;padding:20px;">Загрузка...</div></div>
         </div>
+        
         <div class="chat-main">
             <div class="chat-header">
                 <div class="chat-title">
@@ -449,31 +505,144 @@
         let userInteracted = false;
         let isSoloMode = false;
         let currentSpeed = parseFloat(localStorage.getItem('voice_speed') || '1.0');
-        let welcomeShown = false; // Флаг для предотвращения дублирования
+        let welcomeShown = false;
 
         function escapeHtml(text) { if (!text) return ''; const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
-        function formatMessageDate(date) { const d = new Date(date), today = new Date(); if(d.toDateString() === today.toDateString()) return 'Сегодня'; return d.toLocaleDateString('ru-RU', { day:'numeric', month:'long' }); }
+        
+        function formatMessageDate(date) { 
+            const d = new Date(date), today = new Date(); 
+            if(d.toDateString() === today.toDateString()) return 'Сегодня'; 
+            return d.toLocaleDateString('ru-RU', { day:'numeric', month:'long' }); 
+        }
+        
+        function stopAllAudio() { 
+            if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; currentAudio=null; } 
+            if(currentUtterance){ speechSynthesis.cancel(); currentUtterance=null; } 
+            document.getElementById('stop-audio-btn').style.display='none'; 
+        }
+        
+        function speakText(text, btn) { 
+            if(!speechSynthesis) return; 
+            stopAllAudio(); 
+            const utterance = new SpeechSynthesisUtterance(text); 
+            utterance.lang='ru-RU'; 
+            utterance.rate=1.0; 
+            currentUtterance=utterance; 
+            if(btn) btn.textContent='⏸️'; 
+            document.getElementById('stop-audio-btn').style.display='flex'; 
+            utterance.onend=()=>{ 
+                if(btn) btn.textContent='🔊'; 
+                currentUtterance=null; 
+                document.getElementById('stop-audio-btn').style.display='none'; 
+            }; 
+            speechSynthesis.speak(utterance); 
+        }
+        
+        function setSpeed(speed) { 
+            currentSpeed=speed; 
+            if(currentAudio) currentAudio.playbackRate=currentSpeed; 
+            localStorage.setItem('voice_speed',speed); 
+            document.querySelectorAll('.speed-btn').forEach(btn=>{ 
+                btn.classList.remove('active'); 
+                if(btn.dataset.speed===String(speed)) btn.classList.add('active'); 
+            }); 
+        }
+        
+        function playVoiceMessage(url) { 
+            stopAllAudio(); 
+            currentAudio=new Audio(window.BASE_URL+url); 
+            currentAudio.playbackRate=currentSpeed; 
+            currentAudio.play(); 
+            document.getElementById('stop-audio-btn').style.display='flex'; 
+            currentAudio.onended=()=>{ 
+                document.getElementById('stop-audio-btn').style.display='none'; 
+                currentAudio=null; 
+            }; 
+        }
+
+        // ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ АВАТАРА С КЭШ-БАСТЕРОМ ==========
         function getAvatarHtml(avatar, name) {
             if (typeof avatar === 'string' && avatar.trim().length > 0) {
                 const trimmed = avatar.trim();
-                if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-                    return `<img class="avatar-image" src="${escapeHtml(trimmed)}" alt="">`;
+                
+                // Эмодзи или простой текст
+                if (trimmed.length <= 2 && !trimmed.includes('/') && !trimmed.includes('http') && !trimmed.includes('uploads')) {
+                    return `<span style="font-size:20px;">${escapeHtml(trimmed)}</span>`;
                 }
-                if (trimmed.startsWith('/uploads/') || trimmed.startsWith('/assets/uploads/') || trimmed.includes('/uploads/')) {
-                    const src = trimmed.startsWith('/') ? window.BASE_URL + escapeHtml(trimmed) : window.BASE_URL + '/' + escapeHtml(trimmed);
-                    return `<img class="avatar-image" src="${src}" alt="">`;
+                
+                // Ссылка на фото с кэш-бастером
+                if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+                    const cacheBuster = `?t=${Date.now()}`;
+                    return `<img class="avatar-image" src="${escapeHtml(trimmed)}${cacheBuster}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E👤%3C/text%3E%3C/svg%3E'">`;
+                }
+                
+                // Локальный путь с кэш-бастером
+                if (trimmed.includes('/uploads/') || trimmed.startsWith('/assets/uploads/')) {
+                    let baseUrl = window.BASE_URL || '';
+                    let src = trimmed.startsWith('/') ? baseUrl + escapeHtml(trimmed) : baseUrl + '/' + escapeHtml(trimmed);
+                    const cacheBuster = `?t=${Date.now()}`;
+                    return `<img class="avatar-image" src="${src}${cacheBuster}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E👤%3C/text%3E%3C/svg%3E'">`;
                 }
             }
-            const parts = (name || 'П').trim().split(/\s+/).slice(0,2);
+            
+            // Инициалы по умолчанию
+            const parts = (name || '👤').trim().split(/\s+/).slice(0, 2);
             const initials = parts.map(p => p[0]?.toUpperCase() || '').join('') || 'U';
-            return `<span class="avatar-initials">${escapeHtml(initials)}</span>`;
+            return `<span class="avatar-initials" style="font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;width:100%;height:100%;">${escapeHtml(initials)}</span>`;
         }
-        function stopAllAudio() { if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; currentAudio=null; } if(currentUtterance){ speechSynthesis.cancel(); currentUtterance=null; } document.getElementById('stop-audio-btn').style.display='none'; }
-        function speakText(text, btn) { if(!speechSynthesis) return; stopAllAudio(); const utterance = new SpeechSynthesisUtterance(text); utterance.lang='ru-RU'; utterance.rate=1.0; currentUtterance=utterance; if(btn) btn.textContent='⏸️'; document.getElementById('stop-audio-btn').style.display='flex'; utterance.onend=()=>{ if(btn) btn.textContent='🔊'; currentUtterance=null; document.getElementById('stop-audio-btn').style.display='none'; }; speechSynthesis.speak(utterance); }
-        function setSpeed(speed) { currentSpeed=speed; if(currentAudio) currentAudio.playbackRate=currentSpeed; localStorage.setItem('voice_speed',speed); document.querySelectorAll('.speed-btn').forEach(btn=>{ btn.classList.remove('active'); if(btn.dataset.speed===String(speed)) btn.classList.add('active'); }); }
-        function playVoiceMessage(url) { stopAllAudio(); currentAudio=new Audio(window.BASE_URL+url); currentAudio.playbackRate=currentSpeed; currentAudio.play(); document.getElementById('stop-audio-btn').style.display='flex'; currentAudio.onended=()=>{ document.getElementById('stop-audio-btn').style.display='none'; currentAudio=null; }; }
 
-        async function loadCurrentUser() { const saved = localStorage.getItem('homespace_currentUser'); if(saved){ currentUser=JSON.parse(saved); token=localStorage.getItem('homespace_token'); document.getElementById('user-name').textContent=currentUser.name||'Пользователь'; document.getElementById('user-avatar').innerHTML=getAvatarHtml(currentUser.avatar,currentUser.name); document.getElementById('user-role').textContent=currentUser.role==='parent'?'Родитель':'Ребёнок'; } }
+        // ========== СИНХРОНИЗАЦИЯ ДАННЫХ ПОЛЬЗОВАТЕЛЯ ==========
+        async function syncUserData() {
+            if (!token || !currentUser) return;
+            try {
+                const response = await fetch(`${API_URL}/users/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const freshUser = await response.json();
+                    if (currentUser) {
+                        let updated = false;
+                        if (currentUser.avatar !== freshUser.avatar) {
+                            currentUser.avatar = freshUser.avatar;
+                            updated = true;
+                        }
+                        if (currentUser.name !== freshUser.name) {
+                            currentUser.name = freshUser.name;
+                            updated = true;
+                        }
+                        currentUser.bonuses = freshUser.bonuses;
+                        
+                        if (updated) {
+                            localStorage.setItem('homespace_currentUser', JSON.stringify(currentUser));
+                            
+                            // Обновляем отображение
+                            const avatarEl = document.getElementById('user-avatar');
+                            if (avatarEl) {
+                                avatarEl.innerHTML = getAvatarHtml(currentUser.avatar, currentUser.name);
+                            }
+                            const nameEl = document.getElementById('user-name');
+                            if (nameEl) nameEl.textContent = currentUser.name;
+                            
+                            // Перезагружаем список пользователей для обновления их аватаров
+                            await loadUsers();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка синхронизации пользователя:', error);
+            }
+        }
+
+        async function loadCurrentUser() { 
+            const saved = localStorage.getItem('homespace_currentUser'); 
+            if(saved){ 
+                currentUser=JSON.parse(saved); 
+                token=localStorage.getItem('homespace_token'); 
+                document.getElementById('user-name').textContent=currentUser.name||'Пользователь'; 
+                document.getElementById('user-avatar').innerHTML=getAvatarHtml(currentUser.avatar,currentUser.name); 
+                document.getElementById('user-role').textContent=currentUser.role==='parent'?'Родитель':(currentUser.role==='user'?'Пользователь':'Ребёнок'); 
+            } 
+        }
         
         function renderMessages() {
             const area = document.getElementById('messages-area'); if(!area) return;
@@ -589,21 +758,72 @@
         function stopVoiceRecording() { if(mediaRecorder&&isRecording){ mediaRecorder.stop(); isRecording=false; document.getElementById('voice-record-btn').classList.remove('recording'); } }
         
         async function loadMessages() { if(!currentUser?.familyId) return; try { let url=`${API_URL}/chat?`; if(currentChat.type==='private') url+=`type=private&withUserId=${currentChat.userId}`; else url+='type=family'; const r=await fetch(url,{ headers:{'Authorization':`Bearer ${token}`} }); if(r.ok){ messages=await r.json(); renderMessages(); } } catch(e){} }
-        async function loadUsers() { if(!currentUser?.familyId) return; try { const r=await fetch(`${API_URL}/families/${currentUser.familyId}/members`,{ headers:{'Authorization':`Bearer ${token}`} }); users=r.ok?await r.json():[]; users.push({ id:BOT_ID, name:'🤖 Бот-помощник', avatar:'🤖', role:'bot' }); const c=document.getElementById('users-list'); if(!c) return; c.innerHTML=`<div class="user-item" data-chat-id="family" onclick="window.switchToFamilyChat()"><div class="user-item-avatar">👨‍👩‍👧</div><div class="user-item-info"><div class="user-item-name">Семейный чат</div></div></div>`; users.filter(u=>u.id!==currentUser?.id).forEach(u=>{ const d=document.createElement('div'); d.className='user-item'; d.dataset.chatId=u.id; d.innerHTML=`<div class="user-item-avatar">${u.id===BOT_ID?'🤖':getAvatarHtml(u.avatar,u.name)}</div><div class="user-item-info"><div class="user-item-name">${escapeHtml(u.name)}</div></div>`; d.onclick=()=>window.switchToPrivateChat(u); c.appendChild(d); }); updateUnreadIndicators(); } catch(e){} }
         
-        function openSidebar() {
-            document.getElementById('chat-sidebar').classList.add('open');
-            document.getElementById('sidebar-overlay').classList.add('active');
+        async function loadUsers() { 
+            if(!currentUser?.familyId) return; 
+            try { 
+                const r=await fetch(`${API_URL}/families/${currentUser.familyId}/members`,{ headers:{'Authorization':`Bearer ${token}`} }); 
+                users=r.ok?await r.json():[]; 
+                users.push({ id:BOT_ID, name:'🤖 Бот-помощник', avatar:'🤖', role:'bot' }); 
+                const c=document.getElementById('users-list'); 
+                if(!c) return; 
+                c.innerHTML=`<div class="user-item" data-chat-id="family" onclick="window.switchToFamilyChat()"><div class="user-item-avatar">👨‍👩‍👧</div><div class="user-item-info"><div class="user-item-name">Семейный чат</div></div></div>`; 
+                users.filter(u=>u.id!==currentUser?.id).forEach(u=>{ 
+                    const d=document.createElement('div'); 
+                    d.className='user-item'; 
+                    d.dataset.chatId=u.id; 
+                    d.innerHTML=`<div class="user-item-avatar">${u.id===BOT_ID?'🤖':getAvatarHtml(u.avatar,u.name)}</div><div class="user-item-info"><div class="user-item-name">${escapeHtml(u.name)}</div></div>`; 
+                    d.onclick=()=>window.switchToPrivateChat(u); 
+                    c.appendChild(d); 
+                }); 
+                updateUnreadIndicators(); 
+            } catch(e){} 
         }
         
+        // ========== ИСПРАВЛЕННЫЕ ФУНКЦИИ САЙДБАРА ==========
+        function openSidebar() {
+            if (window.innerWidth > 768) return;
+            const sidebar = document.getElementById('chat-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('chat-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
         function closeSidebarOnMobile() {
-            if(window.innerWidth <= 768) {
-                document.getElementById('chat-sidebar').classList.remove('open');
-                document.getElementById('sidebar-overlay').classList.remove('active');
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        }
+
+        function toggleSidebar() {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('chat-sidebar');
+                if (sidebar.classList.contains('open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
             }
         }
         
-        window.switchToFamilyChat = function() { currentChat={ type:'family', userId:null, userName:null }; document.getElementById('chat-title-text').textContent='Семейный чат'; messages=[]; loadMessages(); markAsRead('family'); closeSidebarOnMobile(); };
+        window.switchToFamilyChat = function() { 
+            currentChat={ type:'family', userId:null, userName:null }; 
+            document.getElementById('chat-title-text').textContent='Семейный чат'; 
+            messages=[]; 
+            loadMessages(); 
+            markAsRead('family'); 
+            closeSidebarOnMobile(); 
+        };
+        
         window.switchToPrivateChat = function(user) { 
             currentChat={ type:'private', userId:user.id, userName:user.name }; 
             document.getElementById('chat-title-text').textContent=`Чат с ${user.name}`; 
@@ -617,34 +837,84 @@
         };
         
         async function init() {
-            await loadCurrentUser(); if(!token||!currentUser){ window.location.href='/'; return; }
+            await loadCurrentUser(); 
+            if(!token||!currentUser){ window.location.href='/'; return; }
+            
+            // Синхронизация данных с сервером
+            await syncUserData();
+            
             isSoloMode=!currentUser.familyId;
-            if(isSoloMode){ document.querySelector('.sidebar-header h2').textContent='Чат с ботом'; document.querySelector('.sidebar-header p').textContent='Вы без семьи — доступен только бот'; document.getElementById('voice-record-btn').style.display='none'; }
+            if(isSoloMode){ 
+                document.querySelector('.sidebar-header h2').textContent='Чат с ботом'; 
+                document.querySelector('.sidebar-header p').textContent='Вы без семьи — доступен только бот'; 
+                document.getElementById('voice-record-btn').style.display='none'; 
+            }
             try{ const saved=localStorage.getItem(`homespace_unread_${currentUser.id}`); if(saved) unreadCounts=JSON.parse(saved); }catch(e){ unreadCounts={}; }
-            if(!isSoloMode) connectSocket(); await loadUsers(); await loadMessages();
+            if(!isSoloMode) connectSocket(); 
+            await loadUsers(); 
+            await loadMessages();
+            
             document.getElementById('send-btn').onclick=sendMessage;
             document.getElementById('refresh-btn').onclick=()=>loadMessages();
             document.getElementById('stop-audio-btn').onclick=stopAllAudio;
+            
             const voiceBtn=document.getElementById('voice-record-btn');
-            voiceBtn.onmousedown=startVoiceRecording; voiceBtn.onmouseup=stopVoiceRecording; voiceBtn.onmouseleave=stopVoiceRecording;
+            voiceBtn.onmousedown=startVoiceRecording; 
+            voiceBtn.onmouseup=stopVoiceRecording; 
+            voiceBtn.onmouseleave=stopVoiceRecording;
             voiceBtn.ontouchstart=e=>{ e.preventDefault(); startVoiceRecording(); };
             voiceBtn.ontouchend=e=>{ e.preventDefault(); stopVoiceRecording(); };
+            
             document.getElementById('message-input').addEventListener('keypress',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); } });
+            
             const notifBtn=document.getElementById('enable-notifications-btn');
             if(Notification.permission==='granted'){ notificationPermission=true; notifBtn.classList.add('active'); }
             notifBtn.onclick=async()=>{ if(Notification.permission==='granted'){ notificationPermission=true; notifBtn.classList.add('active'); } else if(Notification.permission!=='denied'){ const p=await Notification.requestPermission(); notificationPermission=p==='granted'; if(notificationPermission) notifBtn.classList.add('active'); } };
             
+            // Настройка сайдбара
             const burgerBtn = document.getElementById('burger-menu-btn');
-            const closeBtn = document.getElementById('mobile-close-sidebar');
+            const closeBtnMobile = document.getElementById('mobile-close-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            if(burgerBtn) burgerBtn.addEventListener('click', openSidebar);
-            if(closeBtn) closeBtn.addEventListener('click', closeSidebarOnMobile);
-            if(overlay) overlay.addEventListener('click', closeSidebarOnMobile);
             
-            if(window.innerWidth<=768) closeSidebarOnMobile();
+            if(burgerBtn) {
+                burgerBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleSidebar();
+                };
+            }
+            if(closeBtnMobile) {
+                closeBtnMobile.onclick = (e) => {
+                    e.stopPropagation();
+                    closeSidebar();
+                };
+            }
+            if(overlay) {
+                overlay.onclick = (e) => {
+                    e.stopPropagation();
+                    closeSidebar();
+                };
+            }
+            
+            // Закрытие по ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+            
+            // При изменении размера окна
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    closeSidebar();
+                }
+            });
+            
+            // Периодическая синхронизация (каждые 30 секунд)
+            setInterval(syncUserData, 30000);
+            
+            if(window.innerWidth<=768) closeSidebar();
             else window.switchToFamilyChat();
             
-            // Автоматически открываем чат с ботом для solo-режима
             if(isSoloMode && users.length > 0 && !welcomeShown) {
                 setTimeout(() => {
                     const botUser = users.find(u => u.id === BOT_ID);
@@ -655,6 +925,14 @@
             }
         }
         init();
+        
+        // Для отладки
+        window.debugSidebar = {
+            open: () => openSidebar(),
+            close: () => closeSidebar(),
+            toggle: () => toggleSidebar(),
+            state: () => document.getElementById('chat-sidebar')?.classList.contains('open')
+        };
     </script>
 </body>
 </html>

@@ -1637,6 +1637,46 @@ app.get('/api/families/:id/members', authenticate, async (req, res) => {
     }
 });
 
+// GET /api/users/me - получение актуального пользователя с сервера
+app.get('/api/users/me', authenticate, async (req, res) => {
+    try {
+        const users = await query(
+            'SELECT id, name, email, role, avatar, family_id, bonuses, last_login FROM users WHERE id = ?',
+            [req.user.id]
+        );
+        if (users.length === 0) {
+            return res.status(404).json({ error: 'Пользователь не найден' });
+        }
+        res.json(users[0]);
+    } catch (error) {
+        console.error('Ошибка получения пользователя:', error);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// GET /api/users/:userId/avatar - получение аватара конкретного пользователя
+app.get('/api/users/:userId/avatar', async (req, res) => {
+    try {
+        const users = await query('SELECT avatar FROM users WHERE id = ?', [req.params.userId]);
+        if (users.length === 0 || !users[0].avatar) {
+            return res.status(404).json({ error: 'Аватар не найден' });
+        }
+        
+        const avatarPath = users[0].avatar;
+        // Если аватар — это путь к файлу
+        if (avatarPath && (avatarPath.startsWith('/uploads/') || avatarPath.startsWith('/assets/uploads/'))) {
+            const fullPath = path.join(__dirname, avatarPath);
+            if (fs.existsSync(fullPath)) {
+                return res.sendFile(fullPath);
+            }
+        }
+        res.status(404).json({ error: 'Файл не найден' });
+    } catch (error) {
+        console.error('Ошибка получения аватара:', error);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
 app.post('/api/users/avatar', authenticate, async (req, res) => {
     try {
         const { imageData } = req.body;
@@ -1662,6 +1702,7 @@ app.post('/api/users/avatar', authenticate, async (req, res) => {
         return res.status(500).json({ error: 'Ошибка загрузки аватара' });
     }
 });
+
 
 // =====================================================
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ КОМНАТ

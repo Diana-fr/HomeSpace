@@ -147,6 +147,71 @@ constructor() {
         return await this.handleResponse(response);
     }
 
+    // ========== НОВЫЙ МЕТОД: ПОЛУЧЕНИЕ АКТУАЛЬНОГО ПОЛЬЗОВАТЕЛЯ ==========
+    async fetchCurrentUser() {
+        try {
+            const response = await fetch(`${this.baseUrl}/users/me`, {
+                method: 'GET',
+                headers: this.getHeaders()
+            });
+            
+            if (!response.ok) {
+                throw new Error('Ошибка получения пользователя');
+            }
+            
+            const userData = await response.json();
+            
+            // Обновляем localStorage
+            const currentUser = this.getCurrentUser();
+            if (currentUser) {
+                const updatedUser = { ...currentUser, ...userData };
+                localStorage.setItem('homespace_currentUser', JSON.stringify(updatedUser));
+            }
+            
+            return userData;
+        } catch (error) {
+            console.error('Ошибка получения пользователя с сервера:', error);
+            return this.getCurrentUser();
+        }
+    }
+
+    // ========== НОВЫЙ МЕТОД: ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ АВАТАРОВ СЕМЬИ ==========
+    async refreshFamilyAvatars() {
+        const user = this.getCurrentUser();
+        if (!user?.familyId) return [];
+        
+        try {
+            const members = await this.getFamilyMembers();
+            // Обновляем кэш членов семьи
+            localStorage.setItem('homespace_family_members', JSON.stringify(members));
+            return members;
+        } catch (error) {
+            console.error('Ошибка обновления аватаров семьи:', error);
+            return [];
+        }
+    }
+
+    // ========== НОВЫЙ МЕТОД: ПОЛУЧЕНИЕ АВАТАРА ПОЛЬЗОВАТЕЛЯ ПО ID ==========
+    async getUserAvatar(userId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/users/${userId}/avatar`, {
+                method: 'GET',
+                headers: this.getHeaders()
+            });
+            
+            if (!response.ok) {
+                return null;
+            }
+            
+            // Возвращаем blob или URL
+            const blob = await response.blob();
+            return URL.createObjectURL(blob);
+        } catch (error) {
+            console.error('Ошибка получения аватара пользователя:', error);
+            return null;
+        }
+    }
+
     async verifyToken() {
         if (!this.token) {
             return null;
