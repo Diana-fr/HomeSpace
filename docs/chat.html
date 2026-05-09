@@ -75,8 +75,20 @@
             border-right: 1px solid rgba(140,190,255,0.25);
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
             z-index: 200;
+            flex-shrink: 0;
+        }
+
+        /* СВОРАЧИВАНИЕ САЙДБАРА НА ДЕСКТОПЕ */
+        .chat-sidebar.collapsed {
+            width: 0;
+            overflow: hidden;
+            border-right: none;
+            padding: 0;
+            margin: 0;
+            opacity: 0;
+            visibility: hidden;
         }
 
         .sidebar-header {
@@ -99,6 +111,52 @@
         }
         .sidebar-overlay.active { display: block; }
 
+        /* Кнопка сворачивания на десктопе */
+        .collapse-sidebar-btn {
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(140,190,255,0.5);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #33465d;
+        }
+        .collapse-sidebar-btn:hover {
+            background: rgba(140,190,255,0.2);
+            transform: scale(1.05);
+        }
+
+        /* Кнопка РАЗВОРАЧИВАНИЯ (когда сайдбар свернут) */
+        .expand-sidebar-btn {
+            position: fixed;
+            left: 12px;
+            top: 80px;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(140,190,255,0.5);
+            border-radius: 30px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            z-index: 210;
+            font-size: 14px;
+            font-weight: 500;
+            color: #33465d;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .expand-sidebar-btn:hover {
+            background: rgba(255,255,255,0.95);
+            transform: translateX(3px);
+        }
+
         .burger-menu {
             display: none;
             background: rgba(255,255,255,0.7);
@@ -113,7 +171,7 @@
             color: #33465d;
         }
 
-        /* Десктоп: сайдбар всегда виден */
+        /* ДЕСКТОП */
         @media (min-width: 769px) {
             .chat-sidebar {
                 transform: translateX(0) !important;
@@ -128,9 +186,16 @@
             .burger-menu {
                 display: none !important;
             }
+            /* Когда сайдбар свернут на десктопе - показываем кнопку разворачивания */
+            .chat-sidebar.collapsed ~ .expand-sidebar-btn {
+                display: flex;
+            }
+            .expand-sidebar-btn {
+                display: none;
+            }
         }
 
-        /* Мобильные устройства */
+        /* МОБИЛЬНЫЕ УСТРОЙСТВА - сайдбар выезжает поверх */
         @media (max-width: 768px) {
             .chat-sidebar { 
                 position: fixed; 
@@ -138,12 +203,22 @@
                 top: 0; 
                 bottom: 0; 
                 transform: translateX(-100%);
+                transition: transform 0.3s ease;
                 z-index: 200;
                 width: 280px;
                 box-shadow: 4px 0 25px rgba(0,0,0,0.2);
+                opacity: 1;
+                visibility: visible;
             }
             .chat-sidebar.open { 
                 transform: translateX(0); 
+            }
+            /* На мобильных сворачивание через класс collapsed не используется */
+            .chat-sidebar.collapsed {
+                transform: translateX(-100%) !important;
+                width: 280px;
+                opacity: 1;
+                visibility: visible;
             }
             .chat-main { 
                 width: 100%; 
@@ -165,6 +240,9 @@
                 width: 42px; 
                 height: 42px; 
                 font-size: 18px; 
+            }
+            .expand-sidebar-btn {
+                display: none !important;
             }
         }
 
@@ -251,6 +329,7 @@
             flex-direction: column;
             background: rgba(255,255,255,0.45);
             backdrop-filter: blur(10px);
+            min-width: 0;
         }
 
         .chat-header {
@@ -441,25 +520,59 @@
             color: #33465d;
         }
         .mobile-back-btn:hover { background: rgba(140,190,255,0.4); }
+        
+        /* Стиль для заголовка сайдбара с кнопкой сворачивания */
+        .sidebar-header-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 60px 20px 20px 20px;
+            border-bottom: 1px solid rgba(140,190,255,0.2);
+        }
+        .sidebar-header-text h2 { color: #33465d; font-size: 20px; font-weight: 700; margin: 0; }
+        .sidebar-header-text p { color: rgba(51,70,93,0.6); font-size: 12px; margin-top: 5px; }
+        .collapse-btn-desktop {
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(140,190,255,0.5);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #33465d;
+        }
+        .collapse-btn-desktop:hover {
+            background: rgba(140,190,255,0.2);
+            transform: scale(1.05);
+        }
+        @media (max-width: 768px) {
+            .collapse-btn-desktop {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
     <button class="back-btn" onclick="window.location.href='/'">← Назад в меню</button>
     <div id="stop-audio-btn" onclick="stopAllAudio()">⏹️</div>
 
-    <!-- Скрытый аудио элемент для мобильных устройств -->
     <audio id="hidden-audio" preload="auto" style="display: none;"></audio>
 
     <div class="chat-app">
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <div class="chat-sidebar" id="chat-sidebar">
-            <div class="sidebar-header">
-                <div>
+            <div class="sidebar-header-wrapper">
+                <div class="sidebar-header-text">
                     <h2>Семейный чат</h2>
                     <p>Общайтесь всей семьёй</p>
                 </div>
-                <button class="mobile-back-btn" id="mobile-close-sidebar">✕</button>
+                <button class="collapse-btn-desktop" id="collapse-sidebar-btn" title="Свернуть панель">◀</button>
+                <button class="mobile-back-btn" id="mobile-close-sidebar" style="display: none;">✕</button>
             </div>
             <div class="user-info" id="user-info">
                 <div class="user-avatar" id="user-avatar"></div>
@@ -470,6 +583,9 @@
             </div>
             <div class="users-list" id="users-list"><div style="text-align:center;padding:20px;">Загрузка...</div></div>
         </div>
+        
+        <!-- Кнопка разворачивания сайдбара (когда он свернут на десктопе) -->
+        <button class="expand-sidebar-btn" id="expand-sidebar-btn" title="Показать панель пользователей">👥 Показать чаты</button>
         
         <div class="chat-main">
             <div class="chat-header">
@@ -510,6 +626,7 @@
         let currentSpeed = parseFloat(localStorage.getItem('voice_speed') || '1.0');
         let welcomeShown = false;
         let audioContextInitialized = false;
+        let isSidebarCollapsed = false; // для десктопа
 
         function escapeHtml(text) { if (!text) return ''; const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
         
@@ -559,27 +676,22 @@
             }); 
         }
         
-        // ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ==========
         function playVoiceMessage(url, btnElement) {
             stopAllAudio();
             
-            // Получаем полный URL
             let audioUrl = url;
             if (url.startsWith('/uploads/')) {
                 audioUrl = (window.BASE_URL || '') + url;
             }
             
-            // Добавляем кэш-бастер
             audioUrl = audioUrl + (audioUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
             
             console.log('🎵 Воспроизведение:', audioUrl);
             
-            // Меняем кнопку на "загрузка" если передан элемент
             if (btnElement) {
                 btnElement.textContent = '⏳';
             }
             
-            // Используем скрытый аудио элемент для лучшей совместимости с мобильными
             const audioEl = document.getElementById('hidden-audio');
             if (audioEl) {
                 audioEl.src = audioUrl;
@@ -596,7 +708,6 @@
                         console.error('❌ Ошибка воспроизведения:', error);
                         if (btnElement) btnElement.textContent = '▶️';
                         
-                        // Показываем кнопку для ручного запуска на iOS
                         if (error.name === 'NotAllowedError') {
                             const resumeBtn = document.createElement('button');
                             resumeBtn.textContent = '🔊 Нажмите для прослушивания';
@@ -625,7 +736,6 @@
                     currentAudio = null;
                 };
             } else {
-                // Fallback на обычный Audio
                 currentAudio = new Audio(audioUrl);
                 currentAudio.playbackRate = currentSpeed;
                 currentAudio.play().then(() => {
@@ -642,21 +752,17 @@
                 };
             }
         }
-        
-        // Обёртка для вызова из onclick (без передачи кнопки)
+
         function playVoiceMessageSimple(url) {
             playVoiceMessage(url, null);
         }
 
-        // ========== ИНИЦИАЛИЗАЦИЯ АУДИО КОНТЕКСТА ДЛЯ МОБИЛЬНЫХ ==========
         function initAudioContext() {
             if (audioContextInitialized) return;
             
-            // Создаём пустой AudioContext для активации аудио на iOS
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
             if (AudioContextClass) {
                 const audioCtx = new AudioContextClass();
-                // Создаём тихий звук для активации
                 const buffer = audioCtx.createBuffer(1, 1, 22050);
                 const source = audioCtx.createBufferSource();
                 source.buffer = buffer;
@@ -664,7 +770,6 @@
                 source.start();
                 audioCtx.suspend();
                 
-                // Активируем при первом касании
                 const activateAudio = () => {
                     audioCtx.resume();
                     document.removeEventListener('touchstart', activateAudio);
@@ -677,29 +782,24 @@
                 audioContextInitialized = true;
             }
             
-            // Также пробуем воспроизвести тишину через обычный Audio
             const silentAudio = new Audio();
             silentAudio.volume = 0;
             silentAudio.play().catch(() => {});
         }
 
-        // ========== ФУНКЦИЯ АВАТАРА С КЭШ-БАСТЕРОМ ==========
         function getAvatarHtml(avatar, name) {
             if (typeof avatar === 'string' && avatar.trim().length > 0) {
                 const trimmed = avatar.trim();
                 
-                // Эмодзи или простой текст
                 if (trimmed.length <= 2 && !trimmed.includes('/') && !trimmed.includes('http') && !trimmed.includes('uploads')) {
                     return `<span style="font-size:20px;">${escapeHtml(trimmed)}</span>`;
                 }
                 
-                // Ссылка на фото с кэш-бастером
                 if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
                     const cacheBuster = `?t=${Date.now()}`;
                     return `<img class="avatar-image" src="${escapeHtml(trimmed)}${cacheBuster}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E👤%3C/text%3E%3C/svg%3E'">`;
                 }
                 
-                // Локальный путь с кэш-бастером
                 if (trimmed.includes('/uploads/') || trimmed.startsWith('/assets/uploads/')) {
                     let baseUrl = window.BASE_URL || '';
                     let src = trimmed.startsWith('/') ? baseUrl + escapeHtml(trimmed) : baseUrl + '/' + escapeHtml(trimmed);
@@ -708,13 +808,11 @@
                 }
             }
             
-            // Инициалы по умолчанию
             const parts = (name || '👤').trim().split(/\s+/).slice(0, 2);
             const initials = parts.map(p => p[0]?.toUpperCase() || '').join('') || 'U';
             return `<span class="avatar-initials" style="font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;width:100%;height:100%;">${escapeHtml(initials)}</span>`;
         }
 
-        // ========== СИНХРОНИЗАЦИЯ ДАННЫХ ПОЛЬЗОВАТЕЛЯ ==========
         async function syncUserData() {
             if (!token || !currentUser) return;
             try {
@@ -785,7 +883,6 @@
                     buttonsHtml = `<div class="bot-buttons">${msg.buttons.map(btn => `<button class="bot-btn" onclick="window.botAction('${btn.action}')">${btn.text}</button>`).join('')}</div>`;
                 }
                 
-                // Для голосовых сообщений используем новую функцию с передачей кнопки
                 const voiceBtnCallback = msg.message_type === 'voice' && msg.voice_url 
                     ? `onclick="playVoiceMessageWithButton('${msg.voice_url}', this)"`
                     : '';
@@ -816,7 +913,6 @@
             area.scrollTop=area.scrollHeight;
         }
         
-        // Глобальная функция для воспроизведения голосовых с кнопкой
         window.playVoiceMessageWithButton = function(url, btn) {
             playVoiceMessage(url, btn);
         };
@@ -912,37 +1008,68 @@
         }
         
         // ========== ФУНКЦИИ САЙДБАРА ==========
-        function openSidebar() {
-            if (window.innerWidth > 768) return;
-            const sidebar = document.getElementById('chat-sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.add('open');
-            overlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
+        function collapseSidebarDesktop() {
+            if (window.innerWidth > 768) {
+                const sidebar = document.getElementById('chat-sidebar');
+                sidebar.classList.add('collapsed');
+                isSidebarCollapsed = true;
+                localStorage.setItem('sidebar_collapsed', 'true');
+            }
         }
 
-        function closeSidebar() {
-            const sidebar = document.getElementById('chat-sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
-            document.body.style.overflow = '';
+        function expandSidebarDesktop() {
+            if (window.innerWidth > 768) {
+                const sidebar = document.getElementById('chat-sidebar');
+                sidebar.classList.remove('collapsed');
+                isSidebarCollapsed = false;
+                localStorage.setItem('sidebar_collapsed', 'false');
+            }
+        }
+
+        function toggleSidebarDesktop() {
+            if (window.innerWidth > 768) {
+                if (isSidebarCollapsed) {
+                    expandSidebarDesktop();
+                } else {
+                    collapseSidebarDesktop();
+                }
+            }
+        }
+
+        function openSidebarMobile() {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('chat-sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeSidebarMobile() {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('chat-sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function toggleSidebarMobile() {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('chat-sidebar');
+                if (sidebar.classList.contains('open')) {
+                    closeSidebarMobile();
+                } else {
+                    openSidebarMobile();
+                }
+            }
         }
 
         function closeSidebarOnMobile() {
             if (window.innerWidth <= 768) {
-                closeSidebar();
-            }
-        }
-
-        function toggleSidebar() {
-            if (window.innerWidth <= 768) {
-                const sidebar = document.getElementById('chat-sidebar');
-                if (sidebar.classList.contains('open')) {
-                    closeSidebar();
-                } else {
-                    openSidebar();
-                }
+                closeSidebarMobile();
             }
         }
         
@@ -971,16 +1098,23 @@
             await loadCurrentUser(); 
             if(!token||!currentUser){ window.location.href='/'; return; }
             
-            // Инициализация аудио для мобильных
             initAudioContext();
-            
-            // Синхронизация данных с сервером
             await syncUserData();
+            
+            // Загружаем состояние сворачивания сайдбара для десктопа
+            const savedCollapsed = localStorage.getItem('sidebar_collapsed');
+            if (savedCollapsed === 'true' && window.innerWidth > 768) {
+                isSidebarCollapsed = true;
+                document.getElementById('chat-sidebar').classList.add('collapsed');
+            } else {
+                isSidebarCollapsed = false;
+                document.getElementById('chat-sidebar').classList.remove('collapsed');
+            }
             
             isSoloMode=!currentUser.familyId;
             if(isSoloMode){ 
-                document.querySelector('.sidebar-header h2').textContent='Чат с ботом'; 
-                document.querySelector('.sidebar-header p').textContent='Вы без семьи — доступен только бот'; 
+                document.querySelector('.sidebar-header-text h2').textContent='Чат с ботом'; 
+                document.querySelector('.sidebar-header-text p').textContent='Вы без семьи — доступен только бот'; 
                 document.getElementById('voice-record-btn').style.display='none'; 
             }
             try{ const saved=localStorage.getItem(`homespace_unread_${currentUser.id}`); if(saved) unreadCounts=JSON.parse(saved); }catch(e){ unreadCounts={}; }
@@ -1005,48 +1139,70 @@
             if(Notification.permission==='granted'){ notificationPermission=true; notifBtn.classList.add('active'); }
             notifBtn.onclick=async()=>{ if(Notification.permission==='granted'){ notificationPermission=true; notifBtn.classList.add('active'); } else if(Notification.permission!=='denied'){ const p=await Notification.requestPermission(); notificationPermission=p==='granted'; if(notificationPermission) notifBtn.classList.add('active'); } };
             
-            // Настройка сайдбара
+            // Настройка кнопок сайдбара
             const burgerBtn = document.getElementById('burger-menu-btn');
             const closeBtnMobile = document.getElementById('mobile-close-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
+            const collapseBtn = document.getElementById('collapse-sidebar-btn');
+            const expandBtn = document.getElementById('expand-sidebar-btn');
             
             if(burgerBtn) {
                 burgerBtn.onclick = (e) => {
                     e.stopPropagation();
-                    toggleSidebar();
+                    toggleSidebarMobile();
                 };
             }
             if(closeBtnMobile) {
                 closeBtnMobile.onclick = (e) => {
                     e.stopPropagation();
-                    closeSidebar();
+                    closeSidebarMobile();
                 };
             }
             if(overlay) {
                 overlay.onclick = (e) => {
                     e.stopPropagation();
-                    closeSidebar();
+                    closeSidebarMobile();
+                };
+            }
+            if(collapseBtn) {
+                collapseBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    collapseSidebarDesktop();
+                };
+            }
+            if(expandBtn) {
+                expandBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    expandSidebarDesktop();
                 };
             }
             
-            // Закрытие по ESC
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && window.innerWidth <= 768) {
-                    closeSidebar();
+                    closeSidebarMobile();
                 }
             });
             
-            // При изменении размера окна
             window.addEventListener('resize', () => {
                 if (window.innerWidth > 768) {
-                    closeSidebar();
+                    closeSidebarMobile();
+                    // Восстанавливаем состояние сворачивания при изменении размера
+                    const saved = localStorage.getItem('sidebar_collapsed');
+                    if (saved === 'true') {
+                        document.getElementById('chat-sidebar').classList.add('collapsed');
+                    } else {
+                        document.getElementById('chat-sidebar').classList.remove('collapsed');
+                    }
+                } else {
+                    // На мобильных убираем collapsed класс
+                    document.getElementById('chat-sidebar').classList.remove('collapsed');
+                    closeSidebarMobile();
                 }
             });
             
-            // Периодическая синхронизация (каждые 30 секунд)
             setInterval(syncUserData, 30000);
             
-            if(window.innerWidth<=768) closeSidebar();
+            if(window.innerWidth<=768) closeSidebarMobile();
             else window.switchToFamilyChat();
             
             if(isSoloMode && users.length > 0 && !welcomeShown) {
@@ -1059,13 +1215,6 @@
             }
         }
         init();
-        
-        window.debugSidebar = {
-            open: () => openSidebar(),
-            close: () => closeSidebar(),
-            toggle: () => toggleSidebar(),
-            state: () => document.getElementById('chat-sidebar')?.classList.contains('open')
-        };
     </script>
 </body>
 </html>
