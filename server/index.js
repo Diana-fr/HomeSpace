@@ -696,7 +696,6 @@ app.get('/api/task-schedules', authenticate, async (req, res) => {
         res.status(500).json({ error: error?.message || 'Ошибка сервера' });
     }
 });
-// POST /api/task-schedules (СОЗДАНИЕ АВТОЗАДАНИЯ - ИСПРАВЛЕНА ВЕРСИЯ)
 app.post('/api/task-schedules', authenticate, async (req, res) => {
     try {
         if (req.user.role === 'child') {
@@ -719,37 +718,59 @@ app.post('/api/task-schedules', authenticate, async (req, res) => {
 
         console.log('📥 СОЗДАНИЕ АВТОЗАДАНИЯ:', { title, scheduleType, timeOfDay, daysOfWeek, runAt, itemKey, itemInstanceId });
 
-        // Вычисляем next_run_at
         let nextRunAt = null;
-        let runAtValue = null;  // ← ДЛЯ once — дата, для daily/weekly — NULL
+        let runAtValue = null;
+        
+        // Получаем смещение часового пояса пользователя (в минутах)
+        const tzOffset = timezoneOffsetMin || 0;
         
         if (scheduleType === 'once') {
             if (!runAt) {
                 return res.status(400).json({ error: 'Для once требуется runAt' });
             }
-            nextRunAt = new Date(runAt);
-            if (isNaN(nextRunAt.getTime())) {
+            
+            // Парсим локальную дату от пользователя
+            const localRunAt = new Date(runAt);
+            if (isNaN(localRunAt.getTime())) {
                 return res.status(400).json({ error: 'Неверный формат runAt' });
             }
+            
+            // Конвертируем локальную дату в UTC для хранения в БД
+            const utcRunAt = new Date(localRunAt.getTime() - (tzOffset * 60000));
+            nextRunAt = utcRunAt;
+            runAtValue = nextRunAt;
+            
             if (nextRunAt <= new Date()) {
                 return res.status(400).json({ error: 'Дата и время не могут быть в прошлом' });
             }
-            runAtValue = nextRunAt;  // ← для once сохраняем дату
+            
         } else if (scheduleType === 'daily') {
             if (!timeOfDay || !timeOfDay.match(/^(\d{1,2}):(\d{2})$/)) {
                 return res.status(400).json({ error: 'Для daily требуется корректное timeOfDay (HH:MM)' });
             }
+            
             const [hours, minutes] = timeOfDay.split(':').map(Number);
-            nextRunAt = new Date();
+            
+            // Получаем текущее UTC время
+            const nowUTC = new Date();
+            
+            // Создаём дату в локальном времени пользователя
+            const localNow = new Date(nowUTC.getTime() + (tzOffset * 60000));
+            nextRunAt = new Date(localNow);
             nextRunAt.setHours(hours, minutes, 0, 0);
-            if (nextRunAt <= new Date()) {
-                nextRunAt.setDate(nextRunAt.getDate() + 1);
+            
+            // Конвертируем обратно в UTC для хранения
+            nextRunAt = new Date(nextRunAt.getTime() - (tzOffset * 60000));
+            
+            if (nextRunAt <= nowUTC) {
+                nextRunAt = new Date(nextRunAt.getTime() + 24 * 60 * 60 * 1000);
             }
-            // runAtValue остаётся NULL для daily
+            
         } else if (scheduleType === 'weekly') {
             if (!timeOfDay || !timeOfDay.match(/^(\d{1,2}):(\d{2})$/)) {
                 return res.status(400).json({ error: 'Для weekly требуется корректное timeOfDay (HH:MM)' });
             }
+            
             let days = [];
             if (Array.isArray(daysOfWeek)) {
                 days = daysOfWeek;
@@ -761,15 +782,23 @@ app.post('/api/task-schedules', authenticate, async (req, res) => {
             }
             
             const [hours, minutes] = timeOfDay.split(':').map(Number);
-            nextRunAt = new Date();
-            nextRunAt.setHours(hours, minutes, 0, 0);
             
-            const currentDay = new Date().getDay();
+            // Получаем текущее UTC время
+            const nowUTC = new Date();
+            
+            // Вычисляем локальное время пользователя
+            const localNow = new Date(nowUTC.getTime() + (tzOffset * 60000));
+            let targetLocal = new Date(localNow);
+            targetLocal.setHours(hours, minutes, 0, 0);
+            
+            const currentDayLocal = localNow.getDay();
+            
+            // Ищем следующий подходящий день в локальной временной зоне
             let daysToAdd = 0;
             let found = false;
             
             for (let i = 1; i <= 7; i++) {
-                const nextDay = (currentDay + i) % 7;
+                const nextDay = (currentDayLocal + i) % 7;
                 if (days.includes(nextDay)) {
                     daysToAdd = i;
                     found = true;
@@ -777,25 +806,28 @@ app.post('/api/task-schedules', authenticate, async (req, res) => {
                 }
             }
             
-            if (!found && days.includes(currentDay)) {
-                if (nextRunAt <= new Date()) {
+            if (!found && days.includes(currentDayLocal)) {
+                if (targetLocal <= localNow) {
                     daysToAdd = 7;
+                } else {
+                    daysToAdd = 0;
                 }
             } else if (!found) {
                 const sortedDays = [...days].sort();
                 for (const d of sortedDays) {
-                    daysToAdd = (d - currentDay + 7) % 7;
+                    daysToAdd = (d - currentDayLocal + 7) % 7;
                     if (daysToAdd > 0) break;
                     if (daysToAdd === 0) daysToAdd = 7;
                 }
             }
             
-            nextRunAt.setDate(nextRunAt.getDate() + daysToAdd);
-            
-            if (nextRunAt <= new Date()) {
-                nextRunAt.setDate(nextRunAt.getDate() + 7);
+            if (daysToAdd > 0) {
+                targetLocal.setDate(targetLocal.getDate() + daysToAdd);
             }
-            // runAtValue остаётся NULL для weekly
+            
+            // Конвертируем обратно в UTC для хранения
+            nextRunAt = new Date(targetLocal.getTime() - (tzOffset * 60000));
+            
         } else {
             return res.status(400).json({ error: 'Неверный тип расписания' });
         }
@@ -809,7 +841,6 @@ app.post('/api/task-schedules', authenticate, async (req, res) => {
         
         const daysOfWeekJson = scheduleType === 'weekly' && daysOfWeek ? JSON.stringify(daysOfWeek) : null;
 
-        // ВАЖНО: run_at = runAtValue (NULL для daily/weekly)
         await query(
             `INSERT INTO task_schedules_v2 
              (id, family_id, created_by, assigned_to, title, description, bonus, 
@@ -821,20 +852,14 @@ app.post('/api/task-schedules', authenticate, async (req, res) => {
                 title, description || '', bonus || 10,
                 itemKey || null, itemInstanceId || null,
                 scheduleType,
-                scheduleType === 'once' ? null : timeOfDay,  // ← для once time_of_day = NULL
+                scheduleType === 'once' ? null : timeOfDay,
                 daysOfWeekJson,
-                runAtValue,  // ← для once — дата, для daily/weekly — NULL
+                runAtValue,
                 nextRunAt,
-                timezoneOffsetMin || 0
+                tzOffset
             ]
-            
         );
-console.log('📥 СОЗДАНИЕ АВТОЗАДАНИЯ:', { 
-    title, scheduleType, timeOfDay, 
-    daysOfWeek: daysOfWeek, 
-    daysOfWeekJson: daysOfWeek ? JSON.stringify(daysOfWeek) : null,
-    runAt 
-});
+
         console.log(`✅ Автозадание создано: ${title}, next_run_at: ${nextRunAt}, run_at: ${runAtValue}`);
 
         const rows = await query('SELECT * FROM task_schedules_v2 WHERE id = ?', [scheduleId]);
