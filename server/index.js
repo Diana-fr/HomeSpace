@@ -1875,56 +1875,7 @@ app.get('/api/users/stats', authenticate, async (req, res) => {
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
-// =====================================================
-// БОТ-ПОМОЩНИК - ПРИВЕТСТВИЕ
-// =====================================================
 
-async function sendBotWelcomeMessage(userId, familyId) {
-    try {
-        // Проверяем, есть ли уже приветствие от бота в этом чате
-        const existing = await query(
-            `SELECT id FROM chat_messages 
-             WHERE user_id IS NULL 
-               AND user_name = '🤖 Бот-помощник'
-               AND (recipient_id = ? OR (family_id = ? AND type = 'private' AND recipient_id = ?))
-               AND created_at > DATE_SUB(NOW(), INTERVAL 1 DAY)`,
-            [userId, familyId, userId]
-        );
-        
-        if (existing.length > 0) return; // Уже отправляли сегодня
-        
-        const botMessageId = generateUUID();
-        const welcomeText = `👋 Привет! Я бот-помощник HomeSpace!
-
-Вот что я умею:
-📊 **Статистика** - покажу твои задания и бонусы
-💰 **Баланс** - сколько бонусов накопилось
-👨‍👩‍👧 **Семья** - статистика всех членов семьи
-
-Просто нажми на кнопку ниже или напиши команду!`;
-        
-        await query(
-            `INSERT INTO chat_messages (id, family_id, user_id, user_name, user_avatar, message, type, recipient_id, is_read, message_type, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, 'private', ?, 0, 'text', NOW())`,
-            [botMessageId, familyId, null, '🤖 Бот-помощник', '🤖', welcomeText, userId]
-        );
-        
-        console.log(`🤖 Приветствие отправлено пользователю ${userId}`);
-    } catch (error) {
-        console.error('❌ Ошибка отправки приветствия бота:', error);
-    }
-}
-
-// Отправляем приветствие при первом открытии чата с ботом
-app.post('/api/bot/welcome', authenticate, async (req, res) => {
-    try {
-        const { userId } = req.body;
-        await sendBotWelcomeMessage(userId, req.user.familyId);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
 // =====================================================
 // ЗАПУСК СЕРВЕРА
