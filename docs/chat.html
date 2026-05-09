@@ -469,6 +469,34 @@
             document.getElementById('sidebar-overlay').addEventListener('click', closeSidebarOnMobile);
             window.switchToFamilyChat();
         }
+            // ФИКС ДЛЯ БОТА
+    const originalSwitch = window.switchToPrivateChat;
+    window.switchToPrivateChat = function(user) {
+        if (originalSwitch) originalSwitch(user);
+        if (user.id === BOT_ID) {
+            setTimeout(() => {
+                const hasBotMsgs = messages.some(m => m.user_id === BOT_ID);
+                if (!hasBotMsgs && messages.length < 5) {
+                    messages.push({
+                        id: 'bot_welcome_' + Date.now(),
+                        user_id: BOT_ID,
+                        user_name: '🤖 Бот-помощник',
+                        message: '👋 Привет! Я бот-помощник. Вот что я умею:',
+                        type: 'bot',
+                        created_at: new Date().toISOString(),
+                        buttons: [
+                            { text: '📊 Статистика', action: 'stats_personal' },
+                            { text: '💰 Баланс', action: 'balance' },
+                            { text: '👨‍👩‍👧 Семья', action: 'stats_family' }
+                        ]
+                    });
+                    renderMessages();
+                }
+            }, 200);
+        }
+    };
+    
+    init();
         init();
     </script>
 </body>
