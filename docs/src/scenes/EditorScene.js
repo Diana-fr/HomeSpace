@@ -524,7 +524,7 @@ console.log('✅ Стрелки ↑↓ для слоёв');
         const avatarHtml = (member) => {
             const a = member?.avatar;
             if (a && typeof a === 'string' && (a.startsWith('/assets/uploads/') || a.startsWith('/uploads/'))) {
-                const url = `http://localhost:3001${a}`;
+                const url = window.BASE_URL + a;
                 return `<img src="${this.escapeHtml(url)}" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.25);">`;
             }
             if (a && typeof a === 'string' && a.startsWith('http')) {

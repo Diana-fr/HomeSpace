@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <script src="/config.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>HomeSpace - Семейный органайзер</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -763,7 +764,7 @@
     </div>
 
     <script>
-        const API_URL = '/api';
+        const API_URL = window.API_URL;
         let currentUser = null;
         let unreadCounts = {};
         let selectedRole = 'user';
@@ -1477,7 +1478,7 @@ async function loadFloatingAvatars() {
         img.className = 'floating-avatar';
 let userAvatarUrl = currentUser.avatar;
 if (userAvatarUrl && userAvatarUrl.startsWith('/assets/')) {
-    userAvatarUrl = 'http://localhost:3001' + userAvatarUrl;
+    userAvatarUrl = window.BASE_URL + userAvatarUrl;
 }
 img.src = userAvatarUrl;
 img.style.cssText = 'width:65px; height:65px; top:25%; left:15%; --duration:8s; --delay:1.5s;';
@@ -1508,7 +1509,7 @@ img.style.cssText = 'width:65px; height:65px; top:25%; left:15%; --duration:8s; 
                     img.className = 'floating-avatar';
                     let avatarUrl = member.avatar;
                         if (avatarUrl && avatarUrl.startsWith('/assets/')) {
-                        avatarUrl = 'http://localhost:3001' + avatarUrl;
+                        avatarUrl = window.BASE_URL + avatarUrl;
 }
 img.src = avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=4ecca3&color=fff&size=100`;                    img.style.cssText = `
                         width:${pos.size}px; height:${pos.size}px; 

@@ -3,6 +3,11 @@ import { api } from '../services/api.js';
 import { createRoundedTextButton } from '../utils/ui.js';
 import { createDisposables, createNotificationManager, createScrollArea } from '../utils/sceneUi.js';
 
+// Получаем API_URL из глобальной переменной
+const API_URL = typeof window !== 'undefined' && window.API_URL 
+    ? window.API_URL 
+    : 'http://localhost:3001/api';
+
 export class WishScene extends Phaser.Scene {
     constructor() {
         super('WishScene');
@@ -599,7 +604,7 @@ export class WishScene extends Phaser.Scene {
     
     async rejectWish(wish) {
         try {
-            await fetch(`http://localhost:3001/api/wishes/${wish.id}/reject`, {
+            await fetch(`${API_URL}/wishes/${wish.id}/reject`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('homespace_token')}`

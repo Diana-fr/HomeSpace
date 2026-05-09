@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <script src="/config.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>HomeSpace - Магазин желаний</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -599,7 +600,7 @@
 
     <script>
         let cropperState = null;
-        const API_URL = '/api';
+        const API_URL = window.API_URL;
         let token = localStorage.getItem('homespace_token');
         let currentUser = null;
         let wishes = [];
@@ -1271,7 +1272,7 @@ function previewWishImage(input) {
                     return `<img src="${escapeHtml(trimmed)}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;" alt="avatar">`;
                 }
                 if (trimmed.startsWith('/uploads/') || trimmed.startsWith('/assets/uploads/') || trimmed.includes('/uploads/')) {
-                    const fullUrl = trimmed.startsWith('/') ? 'http://localhost:3001' + trimmed : 'http://localhost:3001/' + trimmed;
+                    const fullUrl = trimmed.startsWith('/') ? window.BASE_URL + trimmed : window.BASE_URL + '/' + trimmed;
                     return `<img src="${escapeHtml(fullUrl)}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;" alt="avatar">`;
                 }
             }

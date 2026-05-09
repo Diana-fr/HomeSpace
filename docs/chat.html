@@ -3,6 +3,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <script src="/config.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>HomeSpace - Семейный чат</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -431,7 +432,7 @@
     </div>
 
     <script>
-        const API_URL = '/api';
+        const API_URL = window.API_URL;
         const BOT_ID = '00000000-0000-0000-0000-000000000001';
         let token = localStorage.getItem('homespace_token');
         let currentUser = null;
@@ -457,7 +458,7 @@
                     return `<img class="avatar-image" src="${escapeHtml(trimmed)}" alt="">`;
                 }
                 if (trimmed.startsWith('/uploads/') || trimmed.startsWith('/assets/uploads/') || trimmed.includes('/uploads/')) {
-                    const src = trimmed.startsWith('/') ? `http://localhost:3001${escapeHtml(trimmed)}` : `http://localhost:3001/${escapeHtml(trimmed)}`;
+                    const src = trimmed.startsWith('/') ? window.BASE_URL + escapeHtml(trimmed) : window.BASE_URL + '/' + escapeHtml(trimmed);
                     return `<img class="avatar-image" src="${src}" alt="">`;
                 }
             }
@@ -468,7 +469,7 @@
         function stopAllAudio() { if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; currentAudio=null; } if(currentUtterance){ speechSynthesis.cancel(); currentUtterance=null; } document.getElementById('stop-audio-btn').style.display='none'; }
         function speakText(text, btn) { if(!speechSynthesis) return; stopAllAudio(); const utterance = new SpeechSynthesisUtterance(text); utterance.lang='ru-RU'; utterance.rate=1.0; currentUtterance=utterance; if(btn) btn.textContent='⏸️'; document.getElementById('stop-audio-btn').style.display='flex'; utterance.onend=()=>{ if(btn) btn.textContent='🔊'; currentUtterance=null; document.getElementById('stop-audio-btn').style.display='none'; }; speechSynthesis.speak(utterance); }
         function setSpeed(speed) { currentSpeed=speed; if(currentAudio) currentAudio.playbackRate=currentSpeed; localStorage.setItem('voice_speed',speed); document.querySelectorAll('.speed-btn').forEach(btn=>{ btn.classList.remove('active'); if(btn.dataset.speed===String(speed)) btn.classList.add('active'); }); }
-        function playVoiceMessage(url) { stopAllAudio(); currentAudio=new Audio('http://localhost:3001'+url); currentAudio.playbackRate=currentSpeed; currentAudio.play(); document.getElementById('stop-audio-btn').style.display='flex'; currentAudio.onended=()=>{ document.getElementById('stop-audio-btn').style.display='none'; currentAudio=null; }; }
+        function playVoiceMessage(url) { stopAllAudio(); currentAudio=new Audio(window.BASE_URL+url); currentAudio.playbackRate=currentSpeed; currentAudio.play(); document.getElementById('stop-audio-btn').style.display='flex'; currentAudio.onended=()=>{ document.getElementById('stop-audio-btn').style.display='none'; currentAudio=null; }; }
 
         async function loadCurrentUser() { const saved = localStorage.getItem('homespace_currentUser'); if(saved){ currentUser=JSON.parse(saved); token=localStorage.getItem('homespace_token'); document.getElementById('user-name').textContent=currentUser.name||'Пользователь'; document.getElementById('user-avatar').innerHTML=getAvatarHtml(currentUser.avatar,currentUser.name); document.getElementById('user-role').textContent=currentUser.role==='parent'?'Родитель':'Ребёнок'; } }
         
@@ -515,7 +516,7 @@
         function updateUnreadIndicators() { document.querySelectorAll('.user-item').forEach(item=>{ const chatId=item.dataset.chatId; const count=unreadCounts[chatId]||0; const badge=item.querySelector('.unread-badge'); if(count>0){ item.classList.add('has-unread'); if(badge) badge.textContent=count>99?'99+':count; else{ const b=document.createElement('span'); b.className='unread-badge'; b.textContent=count; item.querySelector('.user-item-info')?.appendChild(b); } } else{ item.classList.remove('has-unread'); if(badge) badge.remove(); } }); if(currentUser?.id) localStorage.setItem(`homespace_unread_${currentUser.id}`,JSON.stringify(unreadCounts)); }
         function markAsRead(chatId){ unreadCounts[chatId]=0; updateUnreadIndicators(); if(currentUser?.id) localStorage.setItem(`homespace_unread_${currentUser.id}`,JSON.stringify(unreadCounts)); }
         
-        function connectSocket() { if(!currentUser?.familyId) return; socket=io('http://localhost:3001',{ withCredentials:true }); socket.on('connect',()=>socket.emit('join-family',{ familyId:currentUser.familyId, userId:currentUser.id, userName:currentUser.name, userAvatar:currentUser.avatar, token })); socket.on('new-message',msg=>{ const chatId=msg.type==='family'?'family':(msg.user_id===currentUser.id?msg.recipient_id:msg.user_id); const isRelevant=(currentChat.type==='family'&&(msg.type==='family'||msg.type==='bot'))||(currentChat.type==='private'&&((msg.user_id===currentUser.id&&msg.recipient_id===currentChat.userId)||(msg.user_id===currentChat.userId&&msg.recipient_id===currentUser.id))); if(isRelevant){ messages.push(msg); renderMessages(); } else if(msg.user_id!==currentUser.id){ unreadCounts[chatId]=(unreadCounts[chatId]||0)+1; updateUnreadIndicators(); if(document.hidden) new Notification('💬 Новое сообщение',{ body:msg.message }); } if(msg.user_id!==currentUser?.id&&userInteracted) speakText(msg.message,null); }); }
+        function connectSocket() { if(!currentUser?.familyId) return; socket=io(window.WS_URL,{ withCredentials:true }); socket.on('connect',()=>socket.emit('join-family',{ familyId:currentUser.familyId, userId:currentUser.id, userName:currentUser.name, userAvatar:currentUser.avatar, token })); socket.on('new-message',msg=>{ const chatId=msg.type==='family'?'family':(msg.user_id===currentUser.id?msg.recipient_id:msg.user_id); const isRelevant=(currentChat.type==='family'&&(msg.type==='family'||msg.type==='bot'))||(currentChat.type==='private'&&((msg.user_id===currentUser.id&&msg.recipient_id===currentChat.userId)||(msg.user_id===currentChat.userId&&msg.recipient_id===currentUser.id))); if(isRelevant){ messages.push(msg); renderMessages(); } else if(msg.user_id!==currentUser.id){ unreadCounts[chatId]=(unreadCounts[chatId]||0)+1; updateUnreadIndicators(); if(document.hidden) new Notification('💬 Новое сообщение',{ body:msg.message }); } if(msg.user_id!==currentUser?.id&&userInteracted) speakText(msg.message,null); }); }
         
         async function startVoiceRecording() { try { const stream=await navigator.mediaDevices.getUserMedia({ audio:true }); mediaRecorder=new MediaRecorder(stream); audioChunks=[]; mediaRecorder.ondataavailable=e=>audioChunks.push(e.data); mediaRecorder.onstop=async()=>{ const blob=new Blob(audioChunks,{type:'audio/webm'}); const fd=new FormData(); fd.append('audio',blob,'voice.webm'); fd.append('type',currentChat.type); if(currentChat.type==='private') fd.append('recipientId',currentChat.userId); try{ await fetch(`${API_URL}/chat/voice`,{ method:'POST', headers:{'Authorization':`Bearer ${token}`}, body:fd }); loadMessages(); }catch(e){} stream.getTracks().forEach(t=>t.stop()); }; mediaRecorder.start(); isRecording=true; recordStartTime=Date.now(); document.getElementById('voice-record-btn').classList.add('recording'); } catch(e){ alert('Нет доступа к микрофону'); } }
         function stopVoiceRecording() { if(mediaRecorder&&isRecording){ mediaRecorder.stop(); isRecording=false; document.getElementById('voice-record-btn').classList.remove('recording'); } }

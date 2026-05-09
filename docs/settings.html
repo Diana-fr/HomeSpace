@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <script src="/config.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>HomeSpace - Настройки</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -133,7 +134,7 @@ button:focus-visible,
 <div class="modal" id="join-modal"><div class="modal-content"><h3>Присоединиться к семье</h3><input type="text" id="join-code" placeholder="Код приглашения" style="text-transform:uppercase;"><div class="modal-buttons"><button class="modal-cancel" id="join-cancel" style="background:rgba(201,228,255,0.6);border:1px solid #72bde8;padding:10px 25px;border-radius:30px;color:#33465d;cursor:pointer;">Отмена</button><button class="modal-save" id="join-save" style="background:#89cff0;border:none;padding:10px 25px;border-radius:30px;color:#33465d;cursor:pointer;">Присоединиться</button></div></div></div>
 <div class="modal" id="avatar-crop-modal"><div class="modal-content" style="max-width:440px;"><h3>Обрезка фото</h3><div style="display:flex; justify-content:center;"><canvas id="cropper-canvas" width="280" height="280" style="width: 280px; height: 280px; border-radius: 22px; background: rgba(211,231,255,0.7); border: 1px solid rgba(137, 207, 240, 0.45); touch-action: none;"></canvas></div><div style="margin-top: 16px;"><label style="display:block; color: rgba(51,70,93,0.8); font-size: 13px; font-weight: 500; margin-bottom: 8px;">Масштаб</label><input id="cropper-zoom" type="range" min="1" max="3" step="0.01" value="1" style="width: 100%;"></div><div class="modal-buttons" style="margin-top: 18px;"><button class="modal-cancel" id="crop-cancel" style="background:rgba(201,228,255,0.6);border:1px solid #72bde8;padding:10px 20px;border-radius:30px;color:#33465d;cursor:pointer;">Отмена</button><button class="modal-save" id="crop-save" style="background:#89cff0;border:none;padding:10px 20px;border-radius:30px;color:#33465d;cursor:pointer;">Готово</button></div></div></div>
 <script>
-const API_URL = '/api';
+const API_URL = window.API_URL;
 let token = localStorage.getItem('homespace_token');
 let currentUser = null, family = null, familyMembers = [], currentTab = 'profile';
 
@@ -274,7 +275,7 @@ function getAvatarHtml(avatar,name){
             return `<img src="${escapeHtml(trimmed)}" alt="avatar" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">`;
         }
         if (trimmed.startsWith('/uploads/') || trimmed.startsWith('/assets/uploads/') || trimmed.includes('/uploads/')) {
-            const src = trimmed.startsWith('/') ? `http://localhost:3001${escapeHtml(trimmed)}` : `http://localhost:3001/${escapeHtml(trimmed)}`;
+            const src = trimmed.startsWith('/') ? window.BASE_URL + escapeHtml(trimmed) : window.BASE_URL + '/' + escapeHtml(trimmed);
             return `<img src="${src}" alt="avatar" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">`;
         }
     }
@@ -463,7 +464,7 @@ function initAvatarCropper(file) {
 
 async function uploadCroppedAvatar(imageData) {
     try {
-        const r = await fetch('http://localhost:3001/api/users/avatar', {
+        const r = await fetch(`${API_URL}/users/avatar`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

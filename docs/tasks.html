@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <script src="/config.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>HomeSpace - Задания</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -580,7 +581,7 @@
     </div>
 
     <script>
-        const API_URL = '/api';
+        const API_URL = window.API_URL;
         let token = localStorage.getItem('homespace_token');
         let currentUser = null;
         let tasks = [];
@@ -594,7 +595,7 @@
         
         function connectNotificationSocket() {
             if (!token) return;
-            socket = io('http://localhost:3001', { withCredentials: true });
+            socket = io(window.WS_URL, { withCredentials: true });
             socket.on('connect', () => {
                 console.log('🔌 Подключен к серверу уведомлений');
                 if (currentUser?.id) {

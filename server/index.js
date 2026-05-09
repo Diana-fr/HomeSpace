@@ -51,12 +51,27 @@ app.use('/assets/uploads', express.static(uploadsDir));
 // ========== РАЗДАЧА СТАТИЧЕСКИХ ФАЙЛОВ ==========
 // Используем уже существующий path (он должен быть импортирован)
 // Отдаём HTML, CSS, JS из папки docs
-const docsPath = path.join(__dirname, '../docs');
-app.use(express.static(docsPath));
+// Определяем где лежат HTML файлы
+let publicPath;
 
-// Для всех остальных GET запросов — отдаём index.html
-app.get('*', (req, res) => {
-    res.sendFile(path.join(docsPath, 'index.html'));
+// Сначала проверяем docs
+const docsPath = path.join(__dirname, '../docs');
+if (fs.existsSync(docsPath)) {
+    publicPath = docsPath;
+    console.log('📁 Использую папку docs для статики');
+} else {
+    // Если нет - ищем в корне (ваш случай?)
+    publicPath = path.join(__dirname, '..');
+    console.log('📁 Использую корневую папку для статики');
+}
+
+// Раздаём статику
+app.use(express.static(publicPath));
+
+// Для всех GET запросов, кроме /api
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 // Почта

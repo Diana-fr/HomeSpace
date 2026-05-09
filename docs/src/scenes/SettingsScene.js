@@ -4,6 +4,11 @@ import { createRoundedTextButton } from '../utils/ui.js';
 import { api } from '../services/api.js';
 import { createDisposables, createNotificationManager } from '../utils/sceneUi.js';
 
+// Получаем API_URL из глобальной переменной
+const API_URL = typeof window !== 'undefined' && window.API_URL 
+    ? window.API_URL 
+    : 'http://localhost:3001/api';
+
 export class SettingsScene extends Phaser.Scene {
     constructor() {
         super('SettingsScene');
@@ -594,7 +599,7 @@ displayFamilySettings() {
             }
             
             try {
-                const response = await fetch('http://localhost:3001/api/family/create', {
+                const response = await fetch(`${API_URL}/family/create`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -652,7 +657,7 @@ displayFamilySettings() {
         }
         
         try {
-            const response = await fetch('http://localhost:3001/api/family/join', {
+            const response = await fetch(`${API_URL}/family/join`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -681,7 +686,7 @@ displayFamilySettings() {
     
     async loadFamilies() {
         try {
-            const response = await fetch('http://localhost:3001/api/family', {
+            const response = await fetch(`${API_URL}/family`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('homespace_token')}` }
             });
             const data = await response.json();
@@ -727,7 +732,7 @@ async loadFamilyMembers() {
     if (!this.currentUser?.familyId) return;
     
     try {
-        const response = await fetch(`http://localhost:3001/api/families/${this.currentUser.familyId}/members`, {
+        const response = await fetch(`${API_URL}/families/${this.currentUser.familyId}/members`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('homespace_token')}`
             }

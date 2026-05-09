@@ -1,15 +1,18 @@
 class ApiService {
-    constructor() {
-        // Берём URL из глобальной переменной (объявлена в HTML) или из переменной окружения
-        if (typeof window !== 'undefined' && window.API_URL) {
-            this.baseUrl = window.API_URL;
-        } else if (import.meta.env && import.meta.env.VITE_API_URL) {
-            this.baseUrl = import.meta.env.VITE_API_URL;
-        } else {
-            this.baseUrl = 'http://localhost:3001/api';
-        }
-        this.token = localStorage.getItem('homespace_token');
+constructor() {
+    // Берём URL из глобальной переменной (объявлена в HTML)
+    if (typeof window !== 'undefined' && window.API_URL) {
+        this.baseUrl = window.API_URL;
+    } else if (import.meta.env && import.meta.env.VITE_API_URL) {
+        this.baseUrl = import.meta.env.VITE_API_URL;
+    } else {
+        // ❌ Лучше убрать этот fallback, чтобы не было ошибок
+        // this.baseUrl = 'http://localhost:3001/api';
+        console.error('❌ API_URL не определён! Убедитесь, что config.js загружен.');
+        this.baseUrl = '/api'; // относительный путь как запасной вариант
     }
+    this.token = localStorage.getItem('homespace_token');
+}
 
     // ========== БАЗОВЫЕ МЕТОДЫ ==========
     setToken(token) {
