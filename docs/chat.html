@@ -44,7 +44,6 @@
             50% { opacity: 0.6; transform: scale(1.08); }
         }
 
-        /* Кнопка "Назад" */
         .back-btn {
             position: fixed;
             top: 12px;
@@ -69,7 +68,6 @@
 
         .chat-app { display: flex; height: 100vh; position: relative; z-index: 10; }
 
-        /* ========= САЙДБАР С ВОЗМОЖНОСТЬЮ СВОРАЧИВАНИЯ (мобильная версия) ========= */
         .chat-sidebar {
             width: 280px;
             background: rgba(255,255,255,0.6);
@@ -82,13 +80,11 @@
             box-shadow: 4px 0 20px rgba(0,0,0,0.05);
         }
 
-        /* Десктоп: панель всегда открыта */
         @media (min-width: 769px) {
             .chat-sidebar { transform: translateX(0) !important; }
             .sidebar-toggle-mobile { display: none; }
         }
 
-        /* Мобильные стили: панель по умолчанию скрыта, открывается по кнопке */
         @media (max-width: 768px) {
             .chat-sidebar {
                 position: fixed;
@@ -103,7 +99,6 @@
             .chat-sidebar.open {
                 transform: translateX(0);
             }
-            /* Оверлей при открытой панели */
             .sidebar-overlay {
                 position: fixed;
                 inset: 0;
@@ -211,7 +206,6 @@
         .user-item-info { flex: 1; display: flex; align-items: center; gap: 5px; }
         .user-item-name { color: #33465d; font-size: 14px; font-weight: 500; }
 
-        /* ========= ОСНОВНАЯ ОБЛАСТЬ ЧАТА ========= */
         .chat-main {
             flex: 1;
             display: flex;
@@ -230,7 +224,6 @@
             align-items: center;
         }
         .chat-title { color: #33465d; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-        /* Кнопка открытия сайдбара на мобилках (бургер) */
         .burger-menu {
             display: none;
             background: rgba(255,255,255,0.7);
@@ -264,7 +257,6 @@
         }
         .notification-btn.active { background: rgba(120,180,255,0.35); color: #2c5a8c; }
 
-        /* Сообщения */
         .messages-area {
             flex: 1;
             overflow-y: auto;
@@ -320,10 +312,7 @@
     <div id="stop-audio-btn" onclick="stopAllAudio()">⏹️</div>
 
     <div class="chat-app">
-        <!-- Оверлей для мобильного закрытия боковой панели -->
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
-
-        <!-- Боковая панель с пользователями -->
         <div class="chat-sidebar" id="chat-sidebar">
             <div class="sidebar-header">
                 <div>
@@ -342,7 +331,6 @@
             <div class="users-list" id="users-list"><div style="padding:20px; text-align:center;">Загрузка...</div></div>
         </div>
 
-        <!-- Основной чат -->
         <div class="chat-main">
             <div class="chat-header">
                 <div class="chat-title">
@@ -378,7 +366,6 @@
         let currentSpeed = parseFloat(localStorage.getItem('voice_speed') || '1.0');
         let isSoloMode = false;
 
-        // ========== Утилиты ==========
         function escapeHtml(text) { if(!text) return ''; const d=document.createElement('div'); d.textContent=text; return d.innerHTML; }
         function formatMessageDate(date) { const d=new Date(date), today=new Date(); return d.toDateString()===today.toDateString() ? 'Сегодня' : d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'}); }
         function getAvatarHtml(avatar, name) {
@@ -443,8 +430,42 @@
         async function loadUsers() { if(!currentUser?.familyId) return; try { const r=await fetch(`${API_URL}/families/${currentUser.familyId}/members`,{ headers:{'Authorization':`Bearer ${token}`} }); users=r.ok?await r.json():[]; users.push({ id:BOT_ID, name:'🤖 Бот-помощник', avatar:'🤖', role:'bot' }); const c=document.getElementById('users-list'); if(!c) return; c.innerHTML=`<div class="user-item" data-chat-id="family" onclick="window.switchToFamilyChat()"><div class="user-item-avatar">👨‍👩‍👧</div><div class="user-item-info"><div class="user-item-name">Семейный чат</div></div></div>`; users.filter(u=>u.id!==currentUser?.id).forEach(u=>{ const d=document.createElement('div'); d.className='user-item'; d.dataset.chatId=u.id; d.innerHTML=`<div class="user-item-avatar">${u.id===BOT_ID?'🤖':getAvatarHtml(u.avatar,u.name)}</div><div class="user-item-info"><div class="user-item-name">${escapeHtml(u.name)}</div></div>`; d.onclick=()=>window.switchToPrivateChat(u); c.appendChild(d); }); updateUnreadIndicators(); } catch(e){} }
 
         window.switchToFamilyChat = function() { currentChat={ type:'family', userId:null, userName:null }; document.getElementById('chat-title-text').textContent='Семейный чат'; loadMessages(); markAsRead('family'); closeSidebarOnMobile(); };
-        window.switchToPrivateChat = function(user) { currentChat={ type:'private', userId:user.id, userName:user.name }; document.getElementById('chat-title-text').textContent=`Чат с ${user.name}`; loadMessages(); markAsRead(user.id); if(user.id===BOT_ID) setTimeout(()=>window.botAction('help'),300); closeSidebarOnMobile(); };
-
+        
+        // ========== ФИКС ДЛЯ БОТА - ОТПРАВЛЯЕМ ПРИВЕТСТВИЕ В БД ==========
+        const originalSwitch = window.switchToPrivateChat;
+        window.switchToPrivateChat = async function(user) {
+            if (originalSwitch) originalSwitch(user);
+            if (user.id === BOT_ID && currentUser) {
+                // Отправляем приветствие на сервер, чтобы оно сохранилось в БД
+                setTimeout(async () => {
+                    const welcomeMessage = '👋 Привет! Я бот-помощник. Вот что я умею:';
+                    
+                    // Проверяем, есть ли уже приветствие сегодня
+                    const today = new Date().toISOString().split('T')[0];
+                    const hasTodayWelcome = messages.some(m => 
+                        m.user_id === BOT_ID && 
+                        m.created_at?.startsWith(today)
+                    );
+                    
+                    if (!hasTodayWelcome) {
+                        try {
+                            await fetch(`${API_URL}/chat`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({
+                                    message: welcomeMessage,
+                                    type: 'private',
+                                    recipientId: BOT_ID
+                                })
+                            });
+                            // Перезагружаем сообщения через секунду
+                            setTimeout(() => loadMessages(), 500);
+                        } catch(e) { console.error('Ошибка отправки приветствия бота:', e); }
+                    }
+                }, 300);
+            }
+        };
+        
         function openSidebar() { document.getElementById('chat-sidebar').classList.add('open'); document.getElementById('sidebar-overlay').classList.add('active'); }
         function closeSidebarOnMobile() { if(window.innerWidth<=768){ document.getElementById('chat-sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active'); } }
 
@@ -463,40 +484,13 @@
             voiceBtn.ontouchstart=e=>{ e.preventDefault(); startVoiceRecording(); }; voiceBtn.ontouchend=e=>{ e.preventDefault(); stopVoiceRecording(); };
             document.getElementById('message-input').addEventListener('keypress',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); } });
             document.getElementById('enable-notifications-btn').onclick=async()=>{ if(Notification.permission==='granted'){ notificationPermission=true; } else if(Notification.permission!=='denied'){ const p=await Notification.requestPermission(); notificationPermission=p==='granted'; } };
-            // Мобильное управление панелью
             document.getElementById('burger-menu-btn').addEventListener('click', openSidebar);
             document.getElementById('close-sidebar-mobile').addEventListener('click', closeSidebarOnMobile);
             document.getElementById('sidebar-overlay').addEventListener('click', closeSidebarOnMobile);
             window.switchToFamilyChat();
         }
-                // ФИКС ДЛЯ БОТА - ДОЛЖЕН БЫТЬ ДО init()
-        const originalSwitch = window.switchToPrivateChat;
-        window.switchToPrivateChat = function(user) {
-            if (originalSwitch) originalSwitch(user);
-            if (user.id === BOT_ID) {
-                setTimeout(() => {
-                    const hasBotMsgs = messages.some(m => m.user_id === BOT_ID);
-                    if (!hasBotMsgs) {
-                        messages.push({
-                            id: 'bot_welcome_' + Date.now(),
-                            user_id: BOT_ID,
-                            user_name: '🤖 Бот-помощник',
-                            message: '👋 Привет! Я бот-помощник. Вот что я умею:',
-                            type: 'bot',
-                            created_at: new Date().toISOString(),
-                            buttons: [
-                                { text: '📊 Статистика', action: 'stats_personal' },
-                                { text: '💰 Баланс', action: 'balance' },
-                                { text: '👨‍👩‍👧 Семья', action: 'stats_family' }
-                            ]
-                        });
-                        renderMessages();
-                    }
-                }, 200);
-            }
-        };
         
-        // Автоматически открываем чат с ботом, если пользователь без семьи
+        // Если пользователь без семьи - автоматически открываем чат с ботом
         if (currentUser && !currentUser.familyId) {
             setTimeout(() => {
                 const botUser = users.find(u => u.id === BOT_ID);
@@ -505,6 +499,7 @@
                 }
             }, 500);
         }
+        
         init();
     </script>
 </body>
