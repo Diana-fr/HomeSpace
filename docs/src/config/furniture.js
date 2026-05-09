@@ -1,7 +1,7 @@
 // src/config/furniture.js
 // ПОЛНЫЙ КОНФИГ ВСЕЙ МЕБЕЛИ
 
-export const furnitureData = {
+window.furnitureData  = {
     // ============ БАЗОВЫЕ ЭЛЕМЕНТЫ (base) ============
     doorway: {
         name: 'Дверной проем',
@@ -1056,7 +1056,7 @@ export const furnitureData = {
 };
 
 // Пути к папкам
-export const paths = {
+window.paths = {
     base: 'base',
     bathroom: 'bathroom',
     bedroom: 'bedroom',
@@ -1068,7 +1068,7 @@ export const paths = {
 };
 
 // Получить все предметы категории
-export function getItemsByCategory(category) {
+window.getItemsByCategory = function(category) {
     return Object.entries(furnitureData)
         .filter(([_, data]) => data.category === category)
         .map(([key, data]) => ({ key, ...data }));

@@ -1,10 +1,16 @@
 // src/scenes/EditorScene.js
-import { furnitureData } from '../config/furniture.js';
-import { api } from '../services/api.js';
+//import { furnitureData } from '../config/furniture.js';
+//import { api } from '../services/api.js';
 
 export class EditorScene extends Phaser.Scene {
     constructor() {
         super({ key: 'EditorScene' });
+        const furnitureData = window.furnitureData || {};
+        const api = window.api;
+        
+        if (!api) {
+            console.error('❌ API не загружен! Проверьте подключение api.js');
+        }
         
         this.furnitureGroup = null;
         this.selectedItem = null;
@@ -1747,4 +1753,5 @@ createInstruction() {
     }
 }
 
-export default EditorScene;
+// Делаем класс доступным глобально
+window.EditorScene = EditorScene;

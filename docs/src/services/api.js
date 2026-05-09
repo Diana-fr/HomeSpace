@@ -614,4 +614,4 @@ async createTask(taskData) {
     }
 }
 
-export const api = new ApiService();
+window.api = new ApiService();

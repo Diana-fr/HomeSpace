@@ -624,6 +624,56 @@ app.get('/api/tasks', authenticate, async (req, res) => {
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
+// ========== СОЗДАНИЕ ОБЫЧНОГО ЗАДАНИЯ ==========
+app.post('/api/tasks', authenticate, async (req, res) => {
+    try {
+        const { title, description, bonus, assignedTo, itemKey, itemInstanceId } = req.body;
+        
+        console.log('📝 СОЗДАНИЕ ЗАДАНИЯ:', { title, description, bonus, assignedTo, itemKey, itemInstanceId });
+        
+        if (!title) {
+            return res.status(400).json({ error: 'Название задания обязательно' });
+        }
+        
+        const taskId = generateUUID();
+        const familyId = req.user.familyId || null;
+        
+        await query(
+            `INSERT INTO tasks (id, family_id, created_by, assigned_to, title, description, bonus, 
+              item_key, item_instance_id, status, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+            [taskId, familyId, req.user.id, assignedTo || null,
+             title, description || '', bonus || 10, itemKey || null, itemInstanceId || null]
+        );
+        
+        // Получаем созданное задание с именами
+        const [newTask] = await query(
+            `SELECT t.*, 
+                    u.name as assigned_to_name, 
+                    u.avatar as assigned_to_avatar,
+                    creator.name as created_by_name
+             FROM tasks t
+             LEFT JOIN users u ON t.assigned_to = u.id
+             LEFT JOIN users creator ON t.created_by = creator.id
+             WHERE t.id = ?`,
+            [taskId]
+        );
+        
+        console.log(`✅ Задание создано: ${title}, ID: ${taskId}`);
+        
+        // Отправляем уведомление если задание назначено кому-то кроме создателя
+        if (assignedTo && assignedTo !== req.user.id && familyId) {
+            const notificationMessage = `📋 Новое задание!\n\n**${title}**\n💰 Бонус: ${bonus || 10}\n\nЗадание появилось в твоём списке!`;
+            await sendBotNotification(assignedTo, familyId, title, notificationMessage, taskId);
+        }
+        
+        res.status(201).json(newTask);
+        
+    } catch (error) {
+        console.error('❌ Ошибка создания задания:', error);
+        res.status(500).json({ error: error.message || 'Ошибка сервера' });
+    }
+});
 // GET /api/task-schedules - ПОЛУЧЕНИЕ ВСЕХ АВТОЗАДАНИЙ
 app.get('/api/task-schedules', authenticate, async (req, res) => {
     try {

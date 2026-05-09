@@ -1,22 +1,13 @@
-// ❌ УДАЛИТЬ эту строку
-// import Phaser from 'phaser';
-
-// ❌ УДАЛИТЬ эту строку  
-// import { EditorScene } from './scenes/EditorScene.js';
-
-// Phaser уже глобальный, EditorScene будет доступна через window
+// Никаких import — всё через глобальные переменные
 
 console.log('Starting HomeSpace editor bootstrap');
-
-// EditorScene должна быть определена глобально
-// Убедитесь, что EditorScene загружена перед этим скриптом
 
 const config = {
     type: Phaser.AUTO,
     width: 1280,
     height: 800,
     parent: 'game',
-    scene: [EditorScene], // EditorScene должна быть в глобальной области
+    scene: [window.EditorScene], // ← используем window.EditorScene
     backgroundColor: '#cfe3fb',
     scale: {
         mode: Phaser.Scale.FIT,
@@ -38,8 +29,6 @@ try {
         const s = window.getEditorScene?.();
         if (s) {
             console.log('EditorScene is ready', s);
-            const debugText = s.add.text(20, 46, 'Scene check: OK', { fontSize: '16px', fill: '#00ff00' }).setDepth(9999);
-            setTimeout(() => debugText.destroy(), 5000);
         } else {
             console.warn('EditorScene is not available yet');
         }
