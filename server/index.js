@@ -35,6 +35,10 @@ const voiceStorage = multer.diskStorage({
 });
 const voiceUpload = multer({ storage: voiceStorage, limits: { fileSize: 10 * 1024 * 1024 } });
 
+app.get('/api/test', (req, res) => {
+    res.json({ status: 'ok' });
+});
+
 app.use(cors({ 
     origin: [
         'http://localhost:3000', 
@@ -1120,8 +1124,23 @@ app.delete('/api/wishes/:id', authenticate, async (req, res) => {
 // ЧАТ (CHAT) - сокращено для краткости
 // =====================================================
 
-app.get('/api/chat', authenticate, async (req, res) => {
+// Временно закомментируйте authenticate для отладки
+app.get('/api/chat', async (req, res) => {  // ← убрали authenticate
+    console.log('📨 CHAT REQUEST params:', req.query);
+    console.log('📨 HEADERS:', req.headers.authorization);
+    
     try {
+        // Временно создайте тестового пользователя для отладки
+        const testUser = {
+            id: 'test-user-id',
+            familyId: 'test-family-id',
+            role: 'parent'
+        };
+        
+        // Временно замените req.user на testUser
+        req.user = testUser;
+        
+        // --- ДАЛЬШЕ ВЕСЬ ВАШ СУЩЕСТВУЮЩИЙ КОД ---
         const { type, withUserId, limit = 100 } = req.query;
         
         if (!req.user.familyId) return res.json([]);
@@ -1157,8 +1176,9 @@ app.get('/api/chat', authenticate, async (req, res) => {
         res.json(filteredMessages);
         
     } catch (error) {
-        console.error('❌ Ошибка получения сообщений:', error);
-        res.status(500).json({ error: error.message });
+        console.error('❌ CHAT ERROR:', error);
+        console.error('❌ STACK:', error.stack);
+        res.status(500).json({ error: error.message, stack: error.stack });
     }
 });
 
