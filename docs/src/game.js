@@ -1,15 +1,22 @@
-// src/game.js
-import Phaser from 'phaser';
-import { EditorScene } from './scenes/EditorScene.js';
+// ❌ УДАЛИТЬ эту строку
+// import Phaser from 'phaser';
+
+// ❌ УДАЛИТЬ эту строку  
+// import { EditorScene } from './scenes/EditorScene.js';
+
+// Phaser уже глобальный, EditorScene будет доступна через window
 
 console.log('Starting HomeSpace editor bootstrap');
+
+// EditorScene должна быть определена глобально
+// Убедитесь, что EditorScene загружена перед этим скриптом
 
 const config = {
     type: Phaser.AUTO,
     width: 1280,
     height: 800,
     parent: 'game',
-    scene: [EditorScene],
+    scene: [EditorScene], // EditorScene должна быть в глобальной области
     backgroundColor: '#cfe3fb',
     scale: {
         mode: Phaser.Scale.FIT,
@@ -24,11 +31,9 @@ try {
     const game = new Phaser.Game(config);
     console.log('Phaser editor instance created');
 
-    // Экспортируем сцену в глобальную область для отладки
     window.homespaceGame = game;
     window.getEditorScene = () => game?.scene?.getScene('EditorScene');
 
-    // Проверяем, что сцена действительно загрузилась
     setTimeout(() => {
         const s = window.getEditorScene?.();
         if (s) {
@@ -43,5 +48,4 @@ try {
     console.error('Failed to initialize editor', error);
     const errorNode = document.getElementById('editor-error');
     if (errorNode) errorNode.style.display = 'flex';
-    
 }

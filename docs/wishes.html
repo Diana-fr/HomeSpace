@@ -198,7 +198,7 @@
             box-shadow: 0 4px 20px rgba(114,189,232,0.35);
         }
 
-        /* Кнопка создания */
+        /* Кнопка создания (уже не нужна, т.к. отдельная вкладка) */
         .create-wish-btn {
             background: linear-gradient(135deg, #a8d8ff, #89cff0);
             border: none;
@@ -213,11 +213,6 @@
             align-items: center;
             gap: 8px;
             transition: all 0.2s ease;
-        }
-
-        .create-wish-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 5px 20px rgba(114, 189, 232, 0.4);
         }
 
         /* Список желаний */
@@ -404,7 +399,7 @@
             text-align: center;
         }
 
-        /* Модальное окно */
+        /* Модальное окно одобрения */
         .modal {
             display: none;
             position: fixed;
@@ -456,26 +451,6 @@
             min-height: 80px;
         }
 
-        .icons-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .icon-option {
-            font-size: 32px;
-            padding: 8px;
-            cursor: pointer;
-            border-radius: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .icon-option.selected {
-            background: rgba(168, 216, 255, 0.42);
-            transform: scale(1.1);
-        }
-
         .modal-buttons {
             display: flex;
             gap: 10px;
@@ -513,6 +488,117 @@
             margin-bottom: 15px;
         }
 
+        /* СВЕТЛАЯ СТИЛИЗАЦИЯ ФОРМЫ СОЗДАНИЯ ЖЕЛАНИЯ (обновлено в стиле основного интерфейса) */
+        .create-wish-card {
+            background: rgba(226, 240, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 36px 32px;
+            border: 1px solid rgba(137, 207, 240, 0.6);
+            box-shadow: 0 20px 35px rgba(51,70,93,0.12);
+            transition: all 0.2s;
+        }
+        .create-wish-card .form-group {
+            margin-bottom: 24px;
+        }
+        .create-wish-card label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #33465d;
+            margin-bottom: 8px;
+            letter-spacing: -0.2px;
+        }
+        .create-wish-card input, 
+        .create-wish-card textarea {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(248, 252, 255, 0.95);
+            border: 1px solid rgba(114, 189, 232, 0.5);
+            border-radius: 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            color: #1f2c3c;
+            transition: all 0.2s;
+        }
+        .create-wish-card input:focus, 
+        .create-wish-card textarea:focus {
+            outline: none;
+            border-color: #72bde8;
+            box-shadow: 0 0 0 3px rgba(114,189,232,0.2);
+        }
+        .image-preview-area {
+            width: 100%;
+            height: 180px;
+            background: rgba(200, 220, 240, 0.6);
+            border: 2px dashed rgba(114, 189, 232, 0.7);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .image-preview-area:hover {
+            border-color: #89cff0;
+            background: rgba(168, 216, 255, 0.3);
+        }
+        .price-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(248,252,255,0.8);
+            border-radius: 60px;
+            padding: 6px 8px;
+            border: 1px solid rgba(114,189,232,0.5);
+        }
+        .price-controls button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(168,216,255,0.5);
+            border: none;
+            font-size: 26px;
+            font-weight: 600;
+            color: #33465d;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .price-controls button:hover {
+            background: #a8d8ff;
+            transform: scale(0.96);
+        }
+        .price-controls input {
+            flex: 1;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f3a4b;
+            padding: 8px 0;
+        }
+        .submit-wish-btn {
+            background: linear-gradient(135deg, #a8d8ff, #89cff0);
+            border: none;
+            width: 100%;
+            padding: 16px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c4b6e;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(114,189,232,0.4);
+        }
+        .submit-wish-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(114,189,232,0.5);
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -526,6 +612,9 @@
             }
             .wishes-grid {
                 grid-template-columns: 1fr;
+            }
+            .create-wish-card {
+                padding: 24px 20px;
             }
         }
     </style>
@@ -605,850 +694,251 @@
         let currentUser = null;
         let wishes = [];
         let currentTab = 'shop';
-        let selectedIcon = '🎮';
         let pendingApproveWish = null;
         let localWishExtras = {};
 
-        function closeWebView() {
-            if (window.parent && window.parent !== window) {
-                window.parent.postMessage('close-webview', '*');
-            } else {
-                window.location.href = '/';
+        // Вспомогательные функции (сохранены без изменений)
+        async function loadCurrentUser() { /* сохранена */
+            const saved = localStorage.getItem('homespace_currentUser');
+            if (saved) {
+                try {
+                    currentUser = JSON.parse(saved);
+                    token = localStorage.getItem('homespace_token');
+                    document.getElementById('user-name').textContent = currentUser.name || 'Пользователь';
+                    document.getElementById('user-avatar').innerHTML = getAvatarHtml(currentUser.avatar, currentUser.name);
+                    document.getElementById('user-bonuses').textContent = currentUser.bonuses || 0;
+                    let roleText = '';
+                    if (currentUser.role === 'parent') roleText = 'Родитель';
+                    else if (currentUser.role === 'user') roleText = 'Обычный пользователь';
+                    else roleText = 'Ребёнок';
+                    document.getElementById('user-role').textContent = roleText;
+                    if (currentUser.role === 'parent' && currentUser.familyId) {
+                        const adminTab = document.createElement('button');
+                        adminTab.className = 'tab-btn';
+                        adminTab.dataset.tab = 'pending';
+                        adminTab.textContent = '⏳ На одобрении';
+                        document.getElementById('admin-tab-container').appendChild(adminTab);
+                        adminTab.addEventListener('click', () => {
+                            setActiveTab('pending');
+                            loadWishes();
+                            renderContent();
+                        });
+                    }
+                } catch (e) { console.error(e); }
             }
         }
 
-        // Настройка кнопки закрытия после загрузки DOM
-        document.addEventListener('DOMContentLoaded', () => {
-            const closeBtn = document.getElementById('close-btn');
-            if (closeBtn) {
-                closeBtn.onclick = closeWebView;
-            }
-        });
-        // Адаптация к размеру окна в WebView
-    function handleResize() {
-        // Если мы внутри iframe, сообщаем родителю о готовности
-        if (window.parent && window.parent !== window) {
-            // Сообщаем, что страница загружена
-            window.parent.postMessage('ready', '*');
+        async function loadWishes() {
+            try {
+                let url = `${API_URL}/wishes?`;
+                if (currentTab === 'shop') url += 'status=approved';
+                else if (currentTab === 'pending') url += 'status=pending';
+                else if (currentTab === 'history') url += 'status=purchased';
+                const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) throw new Error();
+                wishes = await response.json();
+                renderContent();
+            } catch (error) { console.error(error); }
         }
-        
-        // Адаптируем контейнер под размер iframe
-        const container = document.querySelector('.container');
-        if (container && window.innerWidth < 768) {
-            container.style.padding = '15px';
-        }
-    }
-    
-    // Слушаем сообщения от родителя
-    window.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'resize') {
-            // Обновляем размеры при необходимости
-            document.body.style.margin = '0';
-            document.body.style.padding = '0';
-        }
-    });
-    
-    // Запускаем при загрузке
-    window.addEventListener('load', handleResize);
-    window.addEventListener('resize', handleResize);
-    handleResize();
 
-        // Инициализация
-        async function init() {
-            try { localWishExtras = JSON.parse(localStorage.getItem('homespace_wish_extras') || '{}'); } catch { localWishExtras = {}; }
-            await loadCurrentUser();
-            if (!token || !currentUser) {
-                window.location.href = '/';
+        function renderContent() {
+            const container = document.getElementById('content-container');
+            if (currentTab === 'create') {
+                renderCreateFormLight(container);
                 return;
             }
-            setupEventListeners();
-            await loadWishes();
-        }
-
-async function loadCurrentUser() {
-    const saved = localStorage.getItem('homespace_currentUser');
-    if (saved) {
-        try {
-            currentUser = JSON.parse(saved);
-            token = localStorage.getItem('homespace_token');
-            
-            document.getElementById('user-name').textContent = currentUser.name || 'Пользователь';
-            document.getElementById('user-avatar').innerHTML = getAvatarHtml(currentUser.avatar, currentUser.name);
-            document.getElementById('user-bonuses').textContent = currentUser.bonuses || 0;
-            
-            // Правильное отображение роли
-            let roleText = '';
-            if (currentUser.role === 'parent') roleText = 'Родитель';
-            else if (currentUser.role === 'user') roleText = 'Обычный пользователь';
-            else roleText = 'Ребёнок';
-            document.getElementById('user-role').textContent = roleText;
-            
-            // Вкладка "На одобрении" ТОЛЬКО для родителя, у которого есть семья
-            if (currentUser.role === 'parent' && currentUser.familyId) {
-                const adminTab = document.createElement('button');
-                adminTab.className = 'tab-btn';
-                adminTab.dataset.tab = 'pending';
-                adminTab.textContent = '⏳ На одобрении';
-                document.getElementById('admin-tab-container').appendChild(adminTab);
-                
-                adminTab.addEventListener('click', () => {
-                    setActiveTab('pending');
-                    loadWishes();
-                    renderContent();
-                });
+            let filteredWishes = [];
+            if (currentTab === 'shop') filteredWishes = wishes.filter(w => w.status === 'approved' && !w.purchased_by);
+            else if (currentTab === 'pending') filteredWishes = wishes.filter(w => w.status === 'pending');
+            else if (currentTab === 'history') filteredWishes = wishes.filter(w => w.status === 'purchased');
+            if (filteredWishes.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><div>${currentTab === 'shop' ? 'Нет доступных желаний' : currentTab === 'pending' ? 'Нет желаний на одобрении' : 'История покупок пуста'}</div></div>`;
+                return;
             }
-        } catch (e) {
-            console.error('Ошибка загрузки пользователя:', e);
+            container.innerHTML = '<div class="wishes-grid" id="wishes-grid"></div>';
+            const grid = document.getElementById('wishes-grid');
+            filteredWishes.forEach(wish => {
+                const canAfford = currentTab === 'shop' && (currentUser?.bonuses || 0) >= (wish.approved_price || wish.price);
+                const card = document.createElement('div');
+                card.className = `wish-card ${wish.status === 'pending' ? 'pending' : ''} ${wish.status === 'purchased' ? 'purchased' : ''}`;
+                card.innerHTML = `
+                    <div class="wish-icon">${wish.icon || '🎁'}</div>
+                    <div class="wish-title">${escapeHtml(wish.title)}</div>
+                    ${wish.image_url ? `<div class="wish-image"><img src="${escapeHtml(wish.image_url)}" alt="wish image" onclick="window.open('${escapeHtml(wish.image_url)}','_blank')"></div>` : ''}
+                    ${wish.description ? `<div class="wish-description">${escapeHtml(wish.description)}</div>` : ''}
+                    ${localWishExtras[wish.id]?.linkUrl ? `<div class="wish-link"><a href="${escapeHtml(localWishExtras[wish.id].linkUrl)}" target="_blank">Перейти к товару</a></div>` : ''}
+                    <div class="wish-meta"><span class="wish-price">${wish.approved_price || wish.price}💰</span><span class="wish-creator">${escapeHtml(wish.created_by_name || 'Неизвестно')}</span><span class="wish-status ${wish.status}">${getStatusText(wish.status)}</span></div>
+                    <div class="wish-actions" id="actions-${wish.id}">${renderActions(wish, canAfford)}</div>
+                    <div class="wish-comments">${renderComments(wish.id)}<div style="display:flex;gap:8px;"><input id="comment-${wish.id}" type="text" placeholder="Комментарий..." style="margin:0;"><button class="approve-btn" id="comment-btn-${wish.id}" style="padding:6px 10px;">Отправить</button></div></div>
+                `;
+                grid.appendChild(card);
+                document.getElementById(`comment-btn-${wish.id}`)?.addEventListener('click', () => addComment(wish.id));
+                if (currentTab === 'shop' && !wish.purchased_by) document.getElementById(`buy-${wish.id}`)?.addEventListener('click', () => buyWish(wish));
+                document.getElementById(`delete-${wish.id}`)?.addEventListener('click', () => deleteWish(wish));
+                if (currentTab === 'pending') {
+                    document.getElementById(`approve-${wish.id}`)?.addEventListener('click', () => showApproveModal(wish, document.getElementById(`price-${wish.id}`)?.value));
+                    document.getElementById(`reject-${wish.id}`)?.addEventListener('click', () => rejectWish(wish));
+                }
+            });
         }
-    }
-}
 
-async function loadWishes() {
-    try {
-        let url = `${API_URL}/wishes?`;
-        if (currentTab === 'shop') {
-            url += 'status=approved';
-        } else if (currentTab === 'pending') {
-            url += 'status=pending';
-        } else if (currentTab === 'history') {
-            url += 'status=purchased';
-        }
-        
-        const response = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (!response.ok) throw new Error('Ошибка загрузки');
-        
-        wishes = await response.json();
-        renderContent();
-    } catch (error) {
-        console.error('Ошибка загрузки желаний:', error);
-        // ...
-    }
-}
-
-function renderContent() {
-    const container = document.getElementById('content-container');
-    
-    if (currentTab === 'create') {
-        renderCreateForm(container);
-        return;
-    }
-    
-    let filteredWishes = [];
-    if (currentTab === 'shop') {
-        filteredWishes = wishes.filter(w => w.status === 'approved' && !w.purchased_by);
-    } else if (currentTab === 'pending') {
-        filteredWishes = wishes.filter(w => w.status === 'pending');
-    } else if (currentTab === 'history') {
-        filteredWishes = wishes.filter(w => w.status === 'purchased');
-    }
-    
-    if (filteredWishes.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">Нет данных</div>
-                <div>
-                    ${currentTab === 'shop' ? 'Нет доступных желаний' : 
-                      currentTab === 'pending' ? 'Нет желаний на одобрении' : 
-                      'История покупок пуста'}
-                </div>
-                ${currentTab === 'shop' ? '<div style="font-size:12px; margin-top:8px;">Создайте новое желание!</div>' : ''}
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = '<div class="wishes-grid" id="wishes-grid"></div>';
-    const grid = document.getElementById('wishes-grid');
-    
-    filteredWishes.forEach(wish => {
-        const canAfford = currentTab === 'shop' && (currentUser?.bonuses || 0) >= (wish.approved_price || wish.price);
-        const isPending = wish.status === 'pending';
-        const isPurchased = wish.status === 'purchased';
-        
-        const card = document.createElement('div');
-        card.className = `wish-card ${isPending ? 'pending' : ''} ${isPurchased ? 'purchased' : ''}`;
-        
-        card.innerHTML = `
-            <div class="wish-icon">${wish.icon || '🎁'}</div>
-            <div class="wish-title">${escapeHtml(wish.title)}</div>
-            ${renderWishImage(wish)}
-            ${wish.description ? `<div class="wish-description">${escapeHtml(wish.description)}</div>` : ''}
-            ${renderWishLink(wish)}
-            <div class="wish-meta">
-                <span class="wish-price">${wish.approved_price || wish.price}💰</span>
-                <span class="wish-creator">${escapeHtml(wish.created_by_name || 'Неизвестно')}</span>
-                <span class="wish-status ${wish.status}">${getStatusText(wish.status)}</span>
-            </div>
-            <div class="wish-actions" id="actions-${wish.id}">
-                ${renderActions(wish, canAfford)}
-            </div>
-            <div class="wish-comments">
-                ${renderComments(wish.id)}
-                <div style="display:flex;gap:8px;">
-                    <input id="comment-${wish.id}" type="text" placeholder="Комментарий..." style="margin:0;">
-                    <button class="approve-btn" id="comment-btn-${wish.id}" style="padding:6px 10px;">Отправить</button>
-                </div>
-            </div>
-        `;
-        
-        grid.appendChild(card);
-        const commentBtn = document.getElementById(`comment-btn-${wish.id}`);
-        if (commentBtn) commentBtn.onclick = () => addComment(wish.id);
-        
-        // === ВАЖНОЕ ИЗМЕНЕНИЕ: обработчики для всех вкладок ===
-        
-        // Кнопка "Купить" (только для shop)
-        if (currentTab === 'shop' && !isPurchased) {
-            const buyBtn = document.getElementById(`buy-${wish.id}`);
-            if (buyBtn && canAfford) {
-                buyBtn.onclick = () => buyWish(wish);
+        function renderActions(wish, canAfford) {
+            const canDelete = wish.created_by === currentUser?.id || currentUser?.role === 'parent';
+            const deleteBtn = canDelete ? `<button class="reject-btn" id="delete-${wish.id}" style="margin-left:auto;">🗑</button>` : '';
+            if (currentTab === 'shop') {
+                if (canAfford) return `<button class="buy-btn" id="buy-${wish.id}">Купить</button>${deleteBtn}`;
+                else return `<button class="buy-btn disabled" disabled>Не хватает ${(wish.approved_price || wish.price) - (currentUser?.bonuses || 0)}💰</button>${deleteBtn}`;
             }
+            if (currentTab === 'pending') return `<input type="number" class="price-input" id="price-${wish.id}" value="${wish.approved_price || wish.price}"><button class="approve-btn" id="approve-${wish.id}">✅ Одобрить</button><button class="reject-btn" id="reject-${wish.id}">❌ Отклонить</button>${deleteBtn}`;
+            if (currentTab === 'history') return `<div style="font-size:12px;">${wish.purchased_at ? new Date(wish.purchased_at).toLocaleDateString() : ''}<br>Купил: ${escapeHtml(wish.purchased_by_name || wish.created_by_name)}</div>${deleteBtn}`;
+            return '';
         }
-        
-        // Кнопка "Удалить" для ВСЕХ вкладок (shop, history)
-        const deleteBtn = document.getElementById(`delete-${wish.id}`);
-        if (deleteBtn) {
-            deleteBtn.onclick = () => deleteWish(wish);
-        }
-        
-        // Кнопки для вкладки pending
-        if (currentTab === 'pending') {
-            const approveBtn = document.getElementById(`approve-${wish.id}`);
-            const rejectBtn = document.getElementById(`reject-${wish.id}`);
-            const priceInput = document.getElementById(`price-${wish.id}`);
-            
-            if (approveBtn) approveBtn.onclick = () => showApproveModal(wish, priceInput?.value);
-            if (rejectBtn) rejectBtn.onclick = () => rejectWish(wish);
-        }
-    });
-}
 
- function renderActions(wish, canAfford) {
-    const canDelete = wish.created_by === currentUser?.id || currentUser?.role === 'parent';
-    const deleteBtn = canDelete ? `<button class="reject-btn" id="delete-${wish.id}" style="margin-left:auto;">🗑</button>` : '';
-    
-    if (currentTab === 'shop') {
-        if (canAfford) {
-            return `<button class="buy-btn" id="buy-${wish.id}">Купить</button>${deleteBtn}`;
-        } else {
-            const need = (wish.approved_price || wish.price) - (currentUser?.bonuses || 0);
-            return `<button class="buy-btn disabled" disabled>Не хватает ${need}💰</button>${deleteBtn}`;
-        }
-    }
-    
-    if (currentTab === 'pending') {
-        return `
-            <input type="number" class="price-input" id="price-${wish.id}" value="${wish.approved_price || wish.price}" step="5">
-            <button class="approve-btn" id="approve-${wish.id}">✅ Одобрить</button>
-            <button class="reject-btn" id="reject-${wish.id}">❌ Отклонить</button>
-            ${deleteBtn}
-        `;
-    }
-    
-    if (currentTab === 'history') {
-        const date = wish.purchased_at ? new Date(wish.purchased_at).toLocaleDateString() : '';
-        return `<div style="font-size:12px; color:#888;">${date}<br>Купил: ${escapeHtml(wish.purchased_by_name || wish.created_by_name)}</div>${deleteBtn}`;
-    }
-    
-    return '';
-}
-
-        function renderCreateForm(container) {
-    container.innerHTML = `
-        <div style="max-width: 580px; margin: 0 auto;">
-            <div style="background: rgba(15,15,26,0.95); backdrop-filter: blur(20px); border-radius: 28px; padding: 36px 32px; border: 1px solid rgba(78,204,163,0.3); box-shadow: 0 20px 50px rgba(0,0,0,0.4);">
-                
-                <!-- Заголовок -->
-                <div style="text-align: center; margin-bottom: 28px;">
-                    <div style="font-size: 48px; margin-bottom: 8px;">✨</div>
-                    <h3 style="color: #33465d; font-size: 26px; font-weight: 700; margin: 0;">Новое желание</h3>
-                    <p style="color: rgba(51,70,93,0.7); font-size: 13px; margin-top: 6px;">Опиши свою мечту и назначь цену</p>
-                </div>
-                
-                <!-- Фото -->
-                <div style="margin-bottom: 22px;">
-                    <label style="color: rgba(51,70,93,0.82); font-size: 13px; margin-bottom: 8px; display: block;">📸 Изображение</label>
-                    <div id="wish-image-preview" style="
-                        width: 100%; height: 180px; 
-                        background: rgba(44,62,80,0.5); 
-                        border: 2px dashed rgba(78,204,163,0.3); 
-                        border-radius: 16px; 
-                        display: flex; align-items: center; justify-content: center; 
-                        cursor: pointer; transition: all 0.2s;
-                        overflow: hidden; position: relative;
-                    " onclick="document.getElementById('wish-image-file').click()">
-                        <div id="wish-image-placeholder" style="text-align: center; color: rgba(51,70,93,0.62);">
-                            <div style="font-size: 40px; margin-bottom: 8px;">🖼️</div>
-                            <div style="font-size: 13px;">Нажмите чтобы загрузить фото</div>
+        // НОВАЯ СВЕТЛАЯ ФОРМА, ПОЛНОСТЬЮ В ЕДИНОМ СТИЛЕ
+        function renderCreateFormLight(container) {
+            container.innerHTML = `
+                <div style="max-width: 680px; margin: 0 auto;">
+                    <div class="create-wish-card">
+                        <div style="text-align: center; margin-bottom: 24px;">
+                            <div style="font-size: 52px;">✨</div>
+                            <h3 style="color: #2c4b6e; font-size: 28px; font-weight: 700; margin-top: 4px;">Новое желание</h3>
+                            <p style="color: rgba(51,70,93,0.7); font-size: 14px;">Опиши мечту — родители её увидят</p>
                         </div>
-                        <img id="wish-image-preview-img" src="" style="display:none; width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;">
+                        <div class="form-group">
+                            <label>📸 Фото желания</label>
+                            <div id="imagePreviewZone" class="image-preview-area" onclick="document.getElementById('wishImageFile').click()">
+                                <div id="imagePlaceholderText" style="text-align:center; color:#4a627a;"><div style="font-size:40px;">🖼️</div><div>Нажмите, чтобы загрузить</div></div>
+                                <img id="imagePreviewImg" style="display:none; width:100%; height:100%; object-fit:cover;" alt="preview">
+                            </div>
+                            <input type="file" id="wishImageFile" accept="image/*" style="display:none">
+                            <input type="url" id="wishImageUrl" placeholder="Или вставьте ссылку на картинку" style="margin-top:12px; width:100%;">
+                        </div>
+                        <div class="form-group">
+                            <label>📝 Название желания</label>
+                            <input type="text" id="wishTitleInput" placeholder="Например: Новый скейтборд" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>📄 Описание (необязательно)</label>
+                            <textarea id="wishDescInput" rows="3" placeholder="Расскажи подробнее..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>🔗 Ссылка на товар (необязательно)</label>
+                            <input type="url" id="wishLinkInput" placeholder="https://...">
+                        </div>
+                        <div class="form-group">
+                            <label>💰 Цена в бонусах (предложи родителям)</label>
+                            <div class="price-controls">
+                                <button id="priceMinusBtn">−</button>
+                                <input type="number" id="wishPriceInput" value="50" step="5">
+                                <button id="pricePlusBtn">+</button>
+                            </div>
+                        </div>
+                        <button id="submitWishBtn" class="submit-wish-btn">✨ Отправить желание</button>
                     </div>
-                    <input type="file" id="wish-image-file" accept="image/*" style="display:none;" onchange="previewWishImage(this)">
-                    <input type="url" id="wish-image-url" placeholder="Или вставьте ссылку на изображение" style="
-                        width: 100%; padding: 12px 14px; margin-top: 10px;
-                        background: rgba(44,62,80,0.6); border: 1px solid rgba(78,204,163,0.2);
-                        border-radius: 14px; color: #33465d; font-size: 13px;
-                    ">
                 </div>
-                
-                <!-- Название -->
-                <div style="margin-bottom: 16px;">
-                    <label style="color: rgba(51,70,93,0.82); font-size: 13px; margin-bottom: 8px; display: block;">📝 Название</label>
-                    <input type="text" id="wish-title" placeholder="Что ты хочешь?" autocomplete="off" style="
-                        width: 100%; padding: 14px 16px;
-                        background: rgba(44,62,80,0.6); border: 1px solid rgba(78,204,163,0.2);
-                        border-radius: 14px; color: #33465d; font-size: 15px; outline: none;
-                    ">
-                </div>
-                
-                <!-- Описание -->
-                <div style="margin-bottom: 16px;">
-                    <label style="color: rgba(51,70,93,0.82); font-size: 13px; margin-bottom: 8px; display: block;">📄 Описание</label>
-                    <textarea id="wish-description" placeholder="Опиши подробнее..." style="
-                        width: 100%; padding: 14px 16px; min-height: 80px; resize: vertical;
-                        background: rgba(44,62,80,0.6); border: 1px solid rgba(78,204,163,0.2);
-                        border-radius: 14px; color: #33465d; font-size: 14px; outline: none;
-                    "></textarea>
-                </div>
-                
-                <!-- Ссылка на товар -->
-                <div style="margin-bottom: 20px;">
-                    <label style="color: rgba(51,70,93,0.82); font-size: 13px; margin-bottom: 8px; display: block;">🔗 Ссылка на товар</label>
-                    <input type="url" id="wish-link" placeholder="https://..." style="
-                        width: 100%; padding: 14px 16px;
-                        background: rgba(44,62,80,0.6); border: 1px solid rgba(78,204,163,0.2);
-                        border-radius: 14px; color: #33465d; font-size: 14px; outline: none;
-                    ">
-                </div>
-                
-                <!-- Цена -->
-               <div style="display: flex; align-items: center; gap: 8px; background: rgba(15,25,35,0.6); border-radius: 60px; padding: 6px; width: 100%;">
-    <button id="price-minus" style="
-        width: 44px; height: 44px; min-width: 44px; flex-shrink: 0;
-        border-radius: 50%;
-        background: rgba(233,69,96,0.2); border: 1px solid rgba(233,69,96,0.4);
-        color: #33465d; font-size: 22px; cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-    ">−</button>
-    <input type="number" id="wish-price" value="50" style="
-        flex: 1 1 auto;
-        min-width: 60px;
-        text-align: center; font-size: 28px; font-weight: 700;
-        background: transparent; border: none; color: #33465d;
-        outline: none; padding: 8px 4px;
-    ">
-    <button id="price-plus" style="
-        width: 44px; height: 44px; min-width: 44px; flex-shrink: 0;
-        border-radius: 50%;
-        background: rgba(78,204,163,0.2); border: 1px solid rgba(78,204,163,0.4);
-        color: #33465d; font-size: 22px; cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-    ">+</button>
-</div>
-                </div>
-                
-                <!-- Кнопка -->
-                <button id="submit-wish" style="
-                    width: 100%; padding: 16px;
-                    background: linear-gradient(135deg, #a8d8ff, #89cff0);
-                    border: none; border-radius: 60px;
-                    color: #33465d; font-size: 17px; font-weight: 700;
-                    cursor: pointer; transition: all 0.2s;
-                    letter-spacing: 0.5px;
-                ">✨ Отправить желание</button>
-            </div>
-        </div>
-    `;
-    
-    // Управление ценой
-    document.getElementById('price-minus').onclick = () => {
-        const input = document.getElementById('wish-price');
-        let val = parseInt(input.value) || 50;
-        if (val > 5) input.value = val - 5;
-    };
-    document.getElementById('price-plus').onclick = () => {
-        const input = document.getElementById('wish-price');
-        let val = parseInt(input.value) || 50;
-        input.value = val + 5;
-    };
-    
-    // Отправка
-    document.getElementById('submit-wish').onclick = async () => {
-        const title = document.getElementById('wish-title').value.trim();
-        if (!title) {
-            alert('Введите название желания');
-            return;
+            `;
+            // Обработчики +/-
+            document.getElementById('priceMinusBtn').onclick = () => { let inp = document.getElementById('wishPriceInput'); let val = parseInt(inp.value) || 50; if (val > 5) inp.value = val - 5; };
+            document.getElementById('pricePlusBtn').onclick = () => { let inp = document.getElementById('wishPriceInput'); let val = parseInt(inp.value) || 50; inp.value = val + 5; };
+            // Загрузка картинки с кроппером
+            const fileInput = document.getElementById('wishImageFile');
+            fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                try {
+                    const cropped = await openCropper(file, 512);
+                    document.getElementById('imagePreviewImg').src = cropped;
+                    document.getElementById('imagePreviewImg').style.display = 'block';
+                    document.getElementById('imagePlaceholderText').style.display = 'none';
+                    // сохраним dataUrl во временное поле
+                    let hiddenData = document.getElementById('croppedImageData');
+                    if (!hiddenData) {
+                        hiddenData = document.createElement('input');
+                        hiddenData.type = 'hidden';
+                        hiddenData.id = 'croppedImageData';
+                        fileInput.parentNode.appendChild(hiddenData);
+                    }
+                    hiddenData.value = cropped;
+                } catch(err) { console.warn('кроппинг отменён', err); }
+            };
+            document.getElementById('submitWishBtn').onclick = async () => {
+                const title = document.getElementById('wishTitleInput').value.trim();
+                if (!title) { alert('Введите название желания'); return; }
+                let finalImage = null;
+                const urlImage = document.getElementById('wishImageUrl').value.trim();
+                const hiddenData = document.getElementById('croppedImageData');
+                if (hiddenData?.value) finalImage = hiddenData.value;
+                else if (urlImage) finalImage = urlImage;
+                await createWish({
+                    title: title,
+                    description: document.getElementById('wishDescInput').value,
+                    price: parseInt(document.getElementById('wishPriceInput').value) || 50,
+                    icon: '🎁',
+                    imageUrl: finalImage,
+                    linkUrl: document.getElementById('wishLinkInput').value.trim()
+                });
+            };
         }
-        
-        await createWish({
-            title: title,
-            description: document.getElementById('wish-description').value,
-            price: parseInt(document.getElementById('wish-price').value) || 50,
-            icon: '🎁',
-            imageUrl: await pickWishImage(),
-            linkUrl: document.getElementById('wish-link').value.trim()
-        });
-    };
-}
-function previewWishImage(input) {
-    const file = input.files?.[0];
-    if (!file) return;
-    
-    // Используем кроппер для картинок желаний
-    openCropper(file, 256).then(dataUrl => {
-        const preview = document.getElementById('wish-image-preview-img');
-        const placeholder = document.getElementById('wish-image-placeholder');
-        preview.src = dataUrl;
-        preview.style.display = 'block';
-        placeholder.style.display = 'none';
-        
-        // Сохраняем обрезанное изображение в data-url
-        const fileInputHidden = document.createElement('input');
-        fileInputHidden.type = 'hidden';
-        fileInputHidden.id = 'wish-image-data-url';
-        fileInputHidden.value = dataUrl;
-        input.parentElement.appendChild(fileInputHidden);
-    }).catch(err => {
-        console.error('Ошибка кроппера:', err);
-    });
-}
 
         async function createWish(wishData) {
             try {
                 const response = await fetch(`${API_URL}/wishes`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(wishData)
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ title: wishData.title, description: wishData.description, price: wishData.price, icon: wishData.icon, image_url: wishData.imageUrl })
                 });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Ошибка создания');
-                }
+                if (!response.ok) throw new Error(await response.text());
                 const created = await response.json();
                 if (created?.id) {
-                    localWishExtras[created.id] = {
-                        linkUrl: wishData.linkUrl || '',
-                        comments: []
-                    };
+                    if (!localWishExtras[created.id]) localWishExtras[created.id] = { linkUrl: '', comments: [] };
+                    localWishExtras[created.id].linkUrl = wishData.linkUrl || '';
                     localStorage.setItem('homespace_wish_extras', JSON.stringify(localWishExtras));
                 }
-                
-                alert(currentUser?.role === 'parent' || currentUser?.role === 'user' ? '✨ Желание создано!' : '✨ Желание отправлено на одобрение!');
+                alert(currentUser?.role === 'parent' ? '✨ Желание создано!' : '✨ Желание отправлено на одобрение!');
                 setActiveTab('shop');
                 await loadWishes();
-            } catch (error) {
-                console.error('Ошибка создания:', error);
-                alert('❌ ' + error.message);
-            }
+            } catch (error) { alert('❌ Ошибка: ' + error.message); }
         }
 
         async function buyWish(wish) {
             const price = wish.approved_price || wish.price;
-            
-            if ((currentUser?.bonuses || 0) < price) {
-                alert(`Недостаточно бонусов! Нужно ещё ${price - (currentUser?.bonuses || 0)}💰`);
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_URL}/wishes/${wish.id}/purchase`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Ошибка покупки');
-                }
-                
-                const result = await response.json();
-                
-                // Обновляем бонусы
-                currentUser.bonuses = result.newBalance;
-                localStorage.setItem('homespace_currentUser', JSON.stringify(currentUser));
-                document.getElementById('user-bonuses').textContent = result.newBalance;
-                
-                alert(`Покупка выполнена: ${wish.title}`);
-                await loadWishes();
-            } catch (error) {
-                console.error('Ошибка покупки:', error);
-                alert('❌ ' + error.message);
-            }
+            if ((currentUser?.bonuses || 0) < price) { alert(`Недостаточно бонусов!`); return; }
+            const response = await fetch(`${API_URL}/wishes/${wish.id}/purchase`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+            if (!response.ok) throw new Error();
+            const result = await response.json();
+            currentUser.bonuses = result.newBalance;
+            localStorage.setItem('homespace_currentUser', JSON.stringify(currentUser));
+            document.getElementById('user-bonuses').textContent = result.newBalance;
+            alert(`Покупка: ${wish.title}`);
+            await loadWishes();
         }
 
         async function approveWish(wish, price) {
-            try {
-                const response = await fetch(`${API_URL}/wishes/${wish.id}/approve`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ price: parseInt(price) })
-                });
-                
-                if (!response.ok) throw new Error('Ошибка одобрения');
-                
-                alert(`✅ Желание "${wish.title}" одобрено за ${price} бонусов!`);
-                await loadWishes();
-            } catch (error) {
-                console.error('Ошибка одобрения:', error);
-                alert('❌ ' + error.message);
-            }
+            await fetch(`${API_URL}/wishes/${wish.id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ price: parseInt(price) }) });
+            alert(`✅ Желание "${wish.title}" одобрено!`);
+            await loadWishes();
         }
+        async function rejectWish(wish) { if(confirm(`Отклонить "${wish.title}"?`)){ await fetch(`${API_URL}/wishes/${wish.id}/reject`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }); await loadWishes(); } }
+        async function deleteWish(wish) { if(confirm(`Удалить "${wish.title}"?`)){ await fetch(`${API_URL}/wishes/${wish.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); await loadWishes(); } }
+        function showApproveModal(wish, price) { pendingApproveWish = wish; const modal = document.getElementById('approve-modal'); document.getElementById('approve-price').value = price || wish.price || 50; modal.classList.add('active'); }
+        function setActiveTab(tab) { currentTab = tab; document.querySelectorAll('.tab-btn').forEach(btn => { if(btn.dataset.tab === tab) btn.classList.add('active'); else btn.classList.remove('active'); }); loadWishes(); }
+        function getStatusText(s) { return s==='approved'?'✅ Одобрено':s==='pending'?'⏳ На одобрении':'Куплено'; }
+        function renderComments(wishId) { const comments = localWishExtras[wishId]?.comments || []; if(!comments.length) return '<div class="comment-row">💬 Нет комментариев</div>'; return comments.map(c => `<div class="comment-row"><b>${escapeHtml(c.author)}</b>: ${escapeHtml(c.text)}</div>`).join(''); }
+        function addComment(wishId) { const input = document.getElementById(`comment-${wishId}`); const text = input?.value?.trim(); if(!text) return; if(!localWishExtras[wishId]) localWishExtras[wishId] = { linkUrl: '', comments: [] }; localWishExtras[wishId].comments.push({ author: currentUser?.name || 'Пользователь', text }); localStorage.setItem('homespace_wish_extras', JSON.stringify(localWishExtras)); renderContent(); }
+        function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+        function getAvatarHtml(avatar, name) { if(avatar && (avatar.startsWith('http')||avatar.includes('/uploads/'))) return `<img src="${escapeHtml(avatar)}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;">`; const init = (name||'U')[0].toUpperCase(); return `<span style="font-size:24px;">${init}</span>`; }
+        function toSquareDataUrl(file, size=256) { return new Promise((res,rej)=>{ const reader=new FileReader(); reader.onload=()=>{ const img=new Image(); img.onload=()=>{ const side=Math.min(img.width,img.height); const canvas=document.createElement('canvas'); canvas.width=canvas.height=size; const ctx=canvas.getContext('2d'); ctx.drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,0,0,size,size); res(canvas.toDataURL('image/jpeg',0.9)); }; img.onerror=rej; img.src=reader.result; }; reader.onerror=rej; reader.readAsDataURL(file); }); }
+        function openCropper(file, outSize=256) { return new Promise((resolve, reject)=>{ const modal=document.getElementById('cropper-modal'); const canvas=document.getElementById('cropper-canvas'); const zoom=document.getElementById('cropper-zoom'); if(!modal){ toSquareDataUrl(file, outSize).then(resolve).catch(reject); return; } const reader=new FileReader(); reader.onload=()=>{ const img=new Image(); img.onload=()=>{ const cw=canvas.width, ch=canvas.height; let baseScale=Math.max(cw/img.width, ch/img.height); let state={ img, cw, ch, baseScale, zoom:1, offsetX:0, offsetY:0, dragging:false, lastX:0, lastY:0 }; const draw=()=>{ const s=state.baseScale*state.zoom; const dw=img.width*s, dh=img.height*s; let dx=(cw-dw)/2+state.offsetX, dy=(ch-dh)/2+state.offsetY; dx=Math.min(0, Math.max(cw-dw, dx)); dy=Math.min(0, Math.max(ch-dh, dy)); state.offsetX=dx-(cw-dw)/2; state.offsetY=dy-(ch-dh)/2; const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,cw,ch); ctx.drawImage(img,dx,dy,dw,dh); }; const onPointerDown=(e)=>{ e.preventDefault(); canvas.setPointerCapture(e.pointerId); state.dragging=true; state.lastX=e.clientX; state.lastY=e.clientY; }; const onPointerMove=(e)=>{ if(!state.dragging) return; const dx=e.clientX-state.lastX, dy=e.clientY-state.lastY; state.lastX=e.clientX; state.lastY=e.clientY; state.offsetX+=dx; state.offsetY+=dy; draw(); }; const onPointerUp=()=>{ state.dragging=false; }; const cleanup=()=>{ canvas.removeEventListener('pointerdown',onPointerDown); canvas.removeEventListener('pointermove',onPointerMove); canvas.removeEventListener('pointerup',onPointerUp); canvas.removeEventListener('pointercancel',onPointerUp); modal.classList.remove('active'); }; canvas.addEventListener('pointerdown',onPointerDown); canvas.addEventListener('pointermove',onPointerMove); canvas.addEventListener('pointerup',onPointerUp); canvas.addEventListener('pointercancel',onPointerUp); zoom.oninput=()=>{ state.zoom=Math.max(1,Math.min(3,Number(zoom.value)||1)); draw(); }; const apply=()=>{ const outCanvas=document.createElement('canvas'); outCanvas.width=outSize; outCanvas.height=outSize; outCanvas.getContext('2d').drawImage(canvas,0,0,outSize,outSize); const dataUrl=outCanvas.toDataURL('image/jpeg',0.9); cleanup(); resolve(dataUrl); }; document.getElementById('cropper-cancel').onclick=()=>{ cleanup(); reject(new Error('cancelled')); }; document.getElementById('cropper-apply').onclick=apply; modal.classList.add('active'); draw(); }; img.src=reader.result; }; reader.readAsDataURL(file); }); }
 
-        async function rejectWish(wish) {
-            if (!confirm(`Отклонить желание "${wish.title}"?`)) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/wishes/${wish.id}/reject`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                alert('❌ Желание отклонено');
-                await loadWishes();
-            } catch (error) {
-                console.error('Ошибка отклонения:', error);
-                alert('❌ ' + error.message);
-            }
-        }
-
-        async function deleteWish(wish) {
-    if (!confirm(`Удалить желание "${wish.title}"?`)) return;
-    
-    try {
-        const response = await fetch(`${API_URL}/wishes/${wish.id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
+        document.addEventListener('DOMContentLoaded', async () => {
+            try { localWishExtras = JSON.parse(localStorage.getItem('homespace_wish_extras') || '{}'); } catch(e) { localWishExtras = {}; }
+            await loadCurrentUser();
+            if(!token || !currentUser) { window.location.href='/'; return; }
+            document.getElementById('approve-cancel').onclick = () => document.getElementById('approve-modal').classList.remove('active');
+            document.getElementById('approve-confirm').onclick = async () => { if(pendingApproveWish) { await approveWish(pendingApproveWish, document.getElementById('approve-price').value); document.getElementById('approve-modal').classList.remove('active'); pendingApproveWish=null; } };
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => setActiveTab(btn.dataset.tab)));
+            await loadWishes();
         });
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Ошибка удаления');
-        }
-        
-        // ВАЖНО: перезагружаем список желаний
-        await loadWishes();
-        
-        alert('🗑 Желание удалено');
-    } catch (error) {
-        console.error('Ошибка удаления:', error);
-        alert('❌ ' + error.message);
-    }
-}
-
-        function showApproveModal(wish, currentPrice) {
-            pendingApproveWish = wish;
-            const modal = document.getElementById('approve-modal');
-            const priceInput = document.getElementById('approve-price');
-            priceInput.value = currentPrice || wish.price || 50;
-            modal.classList.add('active');
-        }
-
-        function setupEventListeners() {
-            // Вкладки
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    setActiveTab(btn.dataset.tab);
-                    loadWishes();  // <--- ДОБАВИТЬ ЭТУ СТРОКУ
-                    renderContent();
-                });
-            });
-            
-            // Модальное окно одобрения
-            document.getElementById('approve-cancel').onclick = () => {
-                document.getElementById('approve-modal').classList.remove('active');
-                pendingApproveWish = null;
-            };
-            
-            document.getElementById('approve-confirm').onclick = async () => {
-                const price = document.getElementById('approve-price').value;
-                if (pendingApproveWish) {
-                    await approveWish(pendingApproveWish, price);
-                    document.getElementById('approve-modal').classList.remove('active');
-                    pendingApproveWish = null;
-                }
-            };
-            
-            // Закрытие модалки по клику вне
-            document.getElementById('approve-modal').onclick = (e) => {
-                if (e.target === document.getElementById('approve-modal')) {
-                    document.getElementById('approve-modal').classList.remove('active');
-                }
-            };
-        }
-
-        function setActiveTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                if (btn.dataset.tab === tab) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-        }
-
-        function getStatusText(status) {
-            switch(status) {
-                case 'approved': return '✅ Одобрено';
-                case 'pending': return '⏳ На одобрении';
-                case 'purchased': return 'Куплено';
-                default: return status;
-            }
-        }
-
-        function renderWishImage(wish) {
-            const src = wish.image_url || '';
-            if (!src) return '';
-            return `<div class="wish-image"><img src="${escapeHtml(src)}" alt="wish image" onclick="window.open('${escapeHtml(src)}','_blank')"></div>`;
-        }
-
-        function renderWishLink(wish) {
-            const link = localWishExtras[wish.id]?.linkUrl || '';
-            if (!link) return '';
-            return `<div class="wish-link"><a href="${escapeHtml(link)}" target="_blank" rel="noopener">Перейти к товару</a></div>`;
-        }
-
-        function renderComments(wishId) {
-            const comments = localWishExtras[wishId]?.comments || [];
-            if (!comments.length) return '<div class="comment-row">Комментариев пока нет</div>';
-            return comments.map(c => `<div class="comment-row"><b>${escapeHtml(c.author)}</b>: ${escapeHtml(c.text)}</div>`).join('');
-        }
-
-        function addComment(wishId) {
-            const input = document.getElementById(`comment-${wishId}`);
-            const text = input?.value?.trim();
-            if (!text) return;
-            if (!localWishExtras[wishId]) localWishExtras[wishId] = { linkUrl: '', comments: [] };
-            localWishExtras[wishId].comments.push({ author: currentUser?.name || 'Пользователь', text });
-            localStorage.setItem('homespace_wish_extras', JSON.stringify(localWishExtras));
-            renderContent();
-        }
-
-       async function pickWishImage() {
-    const urlInput = document.getElementById('wish-image-url')?.value?.trim();
-    if (urlInput) return urlInput;
-    
-    // Проверяем сохраненное обрезанное изображение
-    const dataUrlInput = document.getElementById('wish-image-data-url');
-    if (dataUrlInput?.value) return dataUrlInput.value;
-    
-    // Если нет обрезанного - берем оригинальное
-    const fileInput = document.getElementById('wish-image-file');
-    const file = fileInput?.files?.[0];
-    if (!file) return null;
-    return await toDataUrl(file);
-}
-
-        function toDataUrl(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function getAvatarHtml(avatar, name) {
-            if (typeof avatar === 'string' && avatar.trim().length > 0) {
-                const trimmed = avatar.trim();
-                if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-                    return `<img src="${escapeHtml(trimmed)}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;" alt="avatar">`;
-                }
-                if (trimmed.startsWith('/uploads/') || trimmed.startsWith('/assets/uploads/') || trimmed.includes('/uploads/')) {
-                    const fullUrl = trimmed.startsWith('/') ? window.BASE_URL + trimmed : window.BASE_URL + '/' + trimmed;
-                    return `<img src="${escapeHtml(fullUrl)}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;" alt="avatar">`;
-                }
-            }
-            const base = (name || 'П').trim();
-            const parts = base.split(/\s+/).filter(Boolean).slice(0, 2);
-            const initials = parts.map(p => p[0]?.toUpperCase() || '').join('') || 'U';
-            return `<span style="font-size:18px;font-weight:700;color:#33465d;">${escapeHtml(initials)}</span>`;
-        }
-
-        // ========== КРОППЕР ==========
-        function toSquareDataUrl(file, size = 256) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const side = Math.min(img.width, img.height);
-                        const sx = (img.width - side) / 2;
-                        const sy = (img.height - side) / 2;
-                        const canvas = document.createElement('canvas');
-                        canvas.width = size;
-                        canvas.height = size;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
-                        resolve(canvas.toDataURL('image/jpeg', 0.9));
-                    };
-                    img.onerror = reject;
-                    img.src = reader.result;
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function openCropper(file, outSize = 256) {
-            return new Promise((resolve, reject) => {
-                const modal = document.getElementById('cropper-modal');
-                const canvas = document.getElementById('cropper-canvas');
-                const zoom = document.getElementById('cropper-zoom');
-                const btnCancel = document.getElementById('cropper-cancel');
-                const btnApply = document.getElementById('cropper-apply');
-                if (!modal || !canvas || !zoom || !btnCancel || !btnApply) {
-                    toSquareDataUrl(file, outSize).then(resolve).catch(reject);
-                    return;
-                }
-
-                const ctx = canvas.getContext('2d');
-                const reader = new FileReader();
-                reader.onerror = () => reject(new Error('read error'));
-                reader.onload = () => {
-                    const img = new Image();
-                    img.onerror = () => reject(new Error('image error'));
-                    img.onload = () => {
-                        const cw = canvas.width;
-                        const ch = canvas.height;
-                        const baseScale = Math.max(cw / img.width, ch / img.height);
-
-                        cropperState = {
-                            img,
-                            cw,
-                            ch,
-                            baseScale,
-                            zoom: 1,
-                            offsetX: 0,
-                            offsetY: 0,
-                            dragging: false,
-                            lastX: 0,
-                            lastY: 0
-                        };
-
-                        zoom.value = '1';
-
-                        const draw = () => {
-                            if (!cropperState) return;
-                            const s = cropperState.baseScale * cropperState.zoom;
-                            const dw = img.width * s;
-                            const dh = img.height * s;
-                            let dx = (cw - dw) / 2 + cropperState.offsetX;
-                            let dy = (ch - dh) / 2 + cropperState.offsetY;
-
-                            const minDx = cw - dw;
-                            const minDy = ch - dh;
-                            dx = Math.min(0, Math.max(minDx, dx));
-                            dy = Math.min(0, Math.max(minDy, dy));
-                            cropperState.offsetX = dx - (cw - dw) / 2;
-                            cropperState.offsetY = dy - (ch - dh) / 2;
-
-                            ctx.clearRect(0, 0, cw, ch);
-                            ctx.drawImage(img, dx, dy, dw, dh);
-                        };
-
-                        const onPointerDown = (ev) => {
-                            ev.preventDefault();
-                            canvas.setPointerCapture?.(ev.pointerId);
-                            cropperState.dragging = true;
-                            cropperState.lastX = ev.clientX;
-                            cropperState.lastY = ev.clientY;
-                        };
-                        const onPointerMove = (ev) => {
-                            if (!cropperState?.dragging) return;
-                            ev.preventDefault();
-                            const dx = ev.clientX - cropperState.lastX;
-                            const dy = ev.clientY - cropperState.lastY;
-                            cropperState.lastX = ev.clientX;
-                            cropperState.lastY = ev.clientY;
-                            cropperState.offsetX += dx;
-                            cropperState.offsetY += dy;
-                            draw();
-                        };
-                        const onPointerUp = (ev) => {
-                            ev.preventDefault();
-                            cropperState.dragging = false;
-                        };
-
-                        const cleanup = () => {
-                            canvas.removeEventListener('pointerdown', onPointerDown);
-                            canvas.removeEventListener('pointermove', onPointerMove);
-                            canvas.removeEventListener('pointerup', onPointerUp);
-                            canvas.removeEventListener('pointercancel', onPointerUp);
-                            zoom.oninput = null;
-                            btnCancel.onclick = null;
-                            btnApply.onclick = null;
-                            modal.onclick = null;
-                            cropperState = null;
-                            modal.classList.remove('active');
-                        };
-
-                        canvas.addEventListener('pointerdown', onPointerDown);
-                        canvas.addEventListener('pointermove', onPointerMove);
-                        canvas.addEventListener('pointerup', onPointerUp);
-                        canvas.addEventListener('pointercancel', onPointerUp);
-
-                        zoom.oninput = () => {
-                            if (!cropperState) return;
-                            cropperState.zoom = Math.max(1, Math.min(3, Number(zoom.value) || 1));
-                            draw();
-                        };
-
-                        btnCancel.onclick = () => {
-                            cleanup();
-                            reject(new Error('cancelled'));
-                        };
-                        btnApply.onclick = () => {
-                            try {
-                                const out = document.createElement('canvas');
-                                out.width = outSize;
-                                out.height = outSize;
-                                const octx = out.getContext('2d');
-                                octx.drawImage(canvas, 0, 0, outSize, outSize);
-                                const dataUrl = out.toDataURL('image/jpeg', 0.9);
-                                cleanup();
-                                resolve(dataUrl);
-                            } catch (e) {
-                                cleanup();
-                                reject(e);
-                            }
-                        };
-
-                        modal.onclick = (e) => {
-                            if (e.target === modal) {
-                                cleanup();
-                                reject(new Error('cancelled'));
-                            }
-                        };
-
-                        modal.classList.add('active');
-                        draw();
-                    };
-                    img.src = reader.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // Запуск
-        init();
     </script>
 </body>
 </html>

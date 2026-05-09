@@ -1124,23 +1124,8 @@ app.delete('/api/wishes/:id', authenticate, async (req, res) => {
 // ЧАТ (CHAT) - сокращено для краткости
 // =====================================================
 
-// Временно закомментируйте authenticate для отладки
-app.get('/api/chat', async (req, res) => {  // ← убрали authenticate
-    console.log('📨 CHAT REQUEST params:', req.query);
-    console.log('📨 HEADERS:', req.headers.authorization);
-    
+app.get('/api/chat', authenticate, async (req, res) => {
     try {
-        // Временно создайте тестового пользователя для отладки
-        const testUser = {
-            id: 'test-user-id',
-            familyId: 'test-family-id',
-            role: 'parent'
-        };
-        
-        // Временно замените req.user на testUser
-        req.user = testUser;
-        
-        // --- ДАЛЬШЕ ВЕСЬ ВАШ СУЩЕСТВУЮЩИЙ КОД ---
         const { type, withUserId, limit = 100 } = req.query;
         
         if (!req.user.familyId) return res.json([]);
@@ -1162,7 +1147,8 @@ app.get('/api/chat', async (req, res) => {  // ← убрали authenticate
         }
         
         sql += ` ORDER BY created_at ASC LIMIT ?`;
-        params.push(parseInt(limit));
+        const limitNum = parseInt(limit) || 100;  // ← ИСПРАВЛЕНИЕ
+        params.push(limitNum);
         
         const messages = await query(sql, params);
         
@@ -1176,12 +1162,10 @@ app.get('/api/chat', async (req, res) => {  // ← убрали authenticate
         res.json(filteredMessages);
         
     } catch (error) {
-        console.error('❌ CHAT ERROR:', error);
-        console.error('❌ STACK:', error.stack);
-        res.status(500).json({ error: error.message, stack: error.stack });
+        console.error('❌ Ошибка получения сообщений:', error);
+        res.status(500).json({ error: error.message });
     }
 });
-
 app.post('/api/chat', authenticate, async (req, res) => {
     try {
         const { message, type, recipientId } = req.body;

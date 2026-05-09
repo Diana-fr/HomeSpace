@@ -1,5 +1,4 @@
 // src/scenes/EditorScene.js
-import Phaser from 'phaser';
 import { furnitureData } from '../config/furniture.js';
 import { api } from '../services/api.js';
 
