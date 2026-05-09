@@ -1146,12 +1146,11 @@ app.get('/api/chat', authenticate, async (req, res) => {
             sql += ` AND (type = 'family' OR type = 'system' OR type = 'bot') AND (recipient_id IS NULL OR recipient_id = '')`;
         }
         
-        sql += ` ORDER BY created_at ASC LIMIT ?`;
-        const limitNum = parseInt(limit) || 100;  // ← ИСПРАВЛЕНИЕ
-        params.push(limitNum);
-        
+        sql += ` ORDER BY created_at ASC LIMIT ${parseInt(limit) || 100}`;
+
         const messages = await query(sql, params);
-        
+        // limit НЕ добавляется в params!
+                
         const filteredMessages = messages.filter(msg => {
             if (msg.deleted_by_user && msg.user_id === req.user.id) {
                 return false;
