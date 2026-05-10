@@ -113,29 +113,12 @@
             color: #33465d;
         }
 
-        /* Кнопка сворачивания сайдбара на десктопе */
-        .sidebar-collapse-btn {
-            position: absolute;
-            right: -12px;
-            top: 80px;
-            width: 24px;
-            height: 24px;
-            background: white;
-            border: 1px solid #6fbaff;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            z-index: 210;
-        }
-
-        /* Десктоп: сайдбар всегда виден */
+        /* Десктоп: сайдбар ВСЕГДА ВИДЕН, кнопка бургера скрыта */
         @media (min-width: 769px) {
             .chat-sidebar {
                 transform: translateX(0) !important;
                 position: relative;
+                width: 300px;
             }
             .sidebar-overlay {
                 display: none !important;
@@ -146,15 +129,9 @@
             .burger-menu {
                 display: none !important;
             }
-            .chat-sidebar.collapsed {
-                width: 0;
-                overflow: hidden;
-                padding: 0;
-                margin: 0;
-            }
         }
 
-        /* Мобильные устройства */
+        /* Мобильные устройства - сайдбар скрыт по умолчанию */
         @media (max-width: 768px) {
             .chat-sidebar { 
                 position: fixed; 
@@ -165,6 +142,7 @@
                 z-index: 200;
                 width: 280px;
                 box-shadow: 4px 0 25px rgba(0,0,0,0.2);
+                transition: transform 0.3s ease;
             }
             .chat-sidebar.open { 
                 transform: translateX(0); 
@@ -189,9 +167,6 @@
                 width: 42px; 
                 height: 42px; 
                 font-size: 18px; 
-            }
-            .sidebar-collapse-btn {
-                display: none !important;
             }
         }
 
@@ -481,7 +456,6 @@
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <div class="chat-sidebar" id="chat-sidebar">
-            <button class="sidebar-collapse-btn" id="collapse-sidebar-btn" title="Свернуть">◀</button>
             <div class="sidebar-header">
                 <div>
                     <h2>Семейный чат</h2>
@@ -587,7 +561,7 @@
             }); 
         }
         
-        // ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ==========
+        // ========== ФУНКЦИЯ ДЛЯ ВОСПРОИЗВЕДЕНИЯ ГОЛОСОВЫХ (РАБОТАЕТ НА iOS И ANDROID) ==========
         function playVoiceMessage(url, btnElement) {
             stopAllAudio();
             
@@ -607,39 +581,68 @@
                 btnElement.textContent = '⏳';
             }
             
-            // Убираем сложности - простой Audio для телефона
-            currentAudio = new Audio(audioUrl);
-            currentAudio.playbackRate = currentSpeed;
-            
-            const playPromise = currentAudio.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    console.log('✅ Аудио воспроизводится');
+            // Используем скрытый аудио элемент для лучшей совместимости с мобильными
+            const audioEl = document.getElementById('hidden-audio');
+            if (audioEl) {
+                audioEl.src = audioUrl;
+                audioEl.playbackRate = currentSpeed;
+                currentAudio = audioEl;
+                
+                const playPromise = audioEl.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('✅ Аудио воспроизводится');
+                        if (btnElement) btnElement.textContent = '⏸️';
+                        document.getElementById('stop-audio-btn').style.display = 'flex';
+                    }).catch(error => {
+                        console.error('❌ Ошибка воспроизведения:', error);
+                        if (btnElement) btnElement.textContent = '▶️';
+                        
+                        // Показываем кнопку для ручного запуска на iOS
+                        if (error.name === 'NotAllowedError') {
+                            const resumeBtn = document.createElement('button');
+                            resumeBtn.textContent = '🔊 Нажмите для прослушивания';
+                            resumeBtn.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:10001;padding:12px 24px;background:#6fbaff;border:none;border-radius:30px;color:white;font-size:16px;cursor:pointer;';
+                            resumeBtn.onclick = () => {
+                                audioEl.play();
+                                resumeBtn.remove();
+                            };
+                            document.body.appendChild(resumeBtn);
+                            setTimeout(() => resumeBtn.remove(), 10000);
+                        }
+                    });
+                }
+                
+                audioEl.onended = () => {
+                    if (btnElement) btnElement.textContent = '▶️';
+                    document.getElementById('stop-audio-btn').style.display = 'none';
+                    currentAudio = null;
+                };
+                
+                audioEl.onerror = (e) => {
+                    console.error('❌ Ошибка аудио:', e);
+                    if (btnElement) btnElement.textContent = '▶️';
+                    alert('Не удалось воспроизвести голосовое сообщение');
+                    document.getElementById('stop-audio-btn').style.display = 'none';
+                    currentAudio = null;
+                };
+            } else {
+                // Fallback на обычный Audio
+                currentAudio = new Audio(audioUrl);
+                currentAudio.playbackRate = currentSpeed;
+                currentAudio.play().then(() => {
                     if (btnElement) btnElement.textContent = '⏸️';
                     document.getElementById('stop-audio-btn').style.display = 'flex';
-                }).catch(error => {
-                    console.error('❌ Ошибка воспроизведения:', error);
+                }).catch(err => {
+                    console.error(err);
                     if (btnElement) btnElement.textContent = '▶️';
-                    
-                    // Показываем подсказку для iOS
-                    if (error.name === 'NotAllowedError') {
-                        alert('Нажмите на сообщение ещё раз для прослушивания');
-                    }
                 });
+                currentAudio.onended = () => {
+                    if (btnElement) btnElement.textContent = '▶️';
+                    document.getElementById('stop-audio-btn').style.display = 'none';
+                    currentAudio = null;
+                };
             }
-            
-            currentAudio.onended = () => {
-                if (btnElement) btnElement.textContent = '▶️';
-                document.getElementById('stop-audio-btn').style.display = 'none';
-                currentAudio = null;
-            };
-            
-            currentAudio.onerror = (e) => {
-                console.error('❌ Ошибка аудио:', e);
-                if (btnElement) btnElement.textContent = '▶️';
-                document.getElementById('stop-audio-btn').style.display = 'none';
-                currentAudio = null;
-            };
         }
         
         // Обёртка для вызова из onclick (без передачи кнопки)
@@ -647,17 +650,39 @@
             playVoiceMessage(url, null);
         }
 
-        // ========== ИНИЦИАЛИЗАЦИЯ АУДИО ДЛЯ МОБИЛЬНЫХ ==========
-        function initAudioForMobile() {
+        // ========== ИНИЦИАЛИЗАЦИЯ АУДИО КОНТЕКСТА ДЛЯ МОБИЛЬНЫХ ==========
+        function initAudioContext() {
             if (audioContextInitialized) return;
             
-            // Просто создаём тихий звук для активации аудио на iOS
+            // Создаём пустой AudioContext для активации аудио на iOS
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+                const audioCtx = new AudioContextClass();
+                // Создаём тихий звук для активации
+                const buffer = audioCtx.createBuffer(1, 1, 22050);
+                const source = audioCtx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioCtx.destination);
+                source.start();
+                audioCtx.suspend();
+                
+                // Активируем при первом касании
+                const activateAudio = () => {
+                    audioCtx.resume();
+                    document.removeEventListener('touchstart', activateAudio);
+                    document.removeEventListener('click', activateAudio);
+                    console.log('🎵 Аудио контекст активирован');
+                };
+                document.addEventListener('touchstart', activateAudio);
+                document.addEventListener('click', activateAudio);
+                
+                audioContextInitialized = true;
+            }
+            
+            // Также пробуем воспроизвести тишину через обычный Audio
             const silentAudio = new Audio();
             silentAudio.volume = 0;
             silentAudio.play().catch(() => {});
-            
-            audioContextInitialized = true;
-            console.log('Аудио инициализировано для мобильного');
         }
 
         // ========== ФУНКЦИЯ АВАТАРА С КЭШ-БАСТЕРОМ ==========
@@ -888,53 +913,31 @@
             } catch(e){} 
         }
         
-        // ========== ФУНКЦИИ САЙДБАРА ==========
+        // ========== ИСПРАВЛЕННЫЕ ФУНКЦИИ САЙДБАРА ==========
         function openSidebar() {
-            if (window.innerWidth > 768) return;
             const sidebar = document.getElementById('chat-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             sidebar.classList.add('open');
-            overlay.classList.add('active');
+            if (overlay) overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
+            console.log('📱 Сайдбар открыт');
         }
 
         function closeSidebar() {
             const sidebar = document.getElementById('chat-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             sidebar.classList.remove('open');
-            overlay.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
             document.body.style.overflow = '';
-        }
-
-        function closeSidebarOnMobile() {
-            if (window.innerWidth <= 768) {
-                closeSidebar();
-            }
+            console.log('📱 Сайдбар закрыт');
         }
 
         function toggleSidebar() {
-            if (window.innerWidth <= 768) {
-                const sidebar = document.getElementById('chat-sidebar');
-                if (sidebar.classList.contains('open')) {
-                    closeSidebar();
-                } else {
-                    openSidebar();
-                }
-            }
-        }
-        
-        // Сворачивание на десктопе
-        function collapseSidebarDesktop() {
-            if (window.innerWidth > 768) {
-                const sidebar = document.getElementById('chat-sidebar');
-                sidebar.classList.add('collapsed');
-            }
-        }
-        
-        function expandSidebarDesktop() {
-            if (window.innerWidth > 768) {
-                const sidebar = document.getElementById('chat-sidebar');
-                sidebar.classList.remove('collapsed');
+            const sidebar = document.getElementById('chat-sidebar');
+            if (sidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
             }
         }
         
@@ -944,7 +947,7 @@
             messages=[]; 
             loadMessages(); 
             markAsRead('family'); 
-            closeSidebarOnMobile(); 
+            if (window.innerWidth <= 768) closeSidebar();
         };
         
         window.switchToPrivateChat = function(user) { 
@@ -956,15 +959,38 @@
             if(user.id === BOT_ID && !welcomeShown) {
                 setTimeout(() => window.botAction('help'), 300);
             }
-            closeSidebarOnMobile(); 
+            if (window.innerWidth <= 768) closeSidebar();
         };
+        
+        // ========== АКТИВАЦИЯ АУДИО ДЛЯ МОБИЛЬНЫХ ==========
+        function enableAudioOnTouch() {
+            const hiddenAudio = document.getElementById('hidden-audio');
+            if (hiddenAudio) {
+                hiddenAudio.volume = 0;
+                hiddenAudio.play().then(() => {
+                    hiddenAudio.pause();
+                    hiddenAudio.currentTime = 0;
+                    console.log('🎵 Аудио активировано');
+                }).catch(e => console.log('Активация аудио:', e));
+            }
+            
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+                const ctx = new AudioContextClass();
+                ctx.resume().then(() => console.log('🎵 AudioContext активирован'));
+            }
+        }
         
         async function init() {
             await loadCurrentUser(); 
             if(!token||!currentUser){ window.location.href='/'; return; }
             
             // Инициализация аудио для мобильных
-            initAudioForMobile();
+            initAudioContext();
+            
+            // Добавляем обработчик первого касания для активации аудио на iOS
+            document.addEventListener('touchstart', enableAudioOnTouch, { once: true });
+            document.addEventListener('click', enableAudioOnTouch, { once: true });
             
             // Синхронизация данных с сервером
             await syncUserData();
@@ -1001,38 +1027,26 @@
             const burgerBtn = document.getElementById('burger-menu-btn');
             const closeBtnMobile = document.getElementById('mobile-close-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            const collapseBtn = document.getElementById('collapse-sidebar-btn');
             
             if(burgerBtn) {
                 burgerBtn.onclick = (e) => {
                     e.stopPropagation();
                     toggleSidebar();
+                    console.log('🍔 Бургер нажат');
                 };
             }
             if(closeBtnMobile) {
                 closeBtnMobile.onclick = (e) => {
                     e.stopPropagation();
                     closeSidebar();
+                    console.log('❌ Крестик нажат');
                 };
             }
             if(overlay) {
                 overlay.onclick = (e) => {
                     e.stopPropagation();
                     closeSidebar();
-                };
-            }
-            if(collapseBtn) {
-                collapseBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    collapseSidebarDesktop();
-                };
-            }
-            
-            // Двойной клик по заголовку чата для разворачивания на десктопе
-            const chatTitle = document.getElementById('chat-title-text');
-            if(chatTitle) {
-                chatTitle.ondblclick = () => {
-                    if(window.innerWidth > 768) expandSidebarDesktop();
+                    console.log('🌑 Оверлей нажат');
                 };
             }
             
@@ -1047,19 +1061,23 @@
             window.addEventListener('resize', () => {
                 if (window.innerWidth > 768) {
                     closeSidebar();
-                    // На десктопе убираем класс collapsed если ширина стала большой
-                    const sidebar = document.getElementById('chat-sidebar');
-                    if(sidebar.classList.contains('collapsed')) {
-                        // оставляем как есть
-                    }
                 }
             });
             
             // Периодическая синхронизация (каждые 30 секунд)
             setInterval(syncUserData, 30000);
             
-            if(window.innerWidth<=768) closeSidebar();
-            else window.switchToFamilyChat();
+            // На десктопе сайдбар всегда открыт, на мобиле закрыт
+            if (window.innerWidth > 768) {
+                // Десктоп: сайдбар виден всегда, явно открываем
+                openSidebar();
+            } else {
+                // Мобила: начинаем с закрытым сайдбаром
+                closeSidebar();
+            }
+            
+            // Загружаем семейный чат по умолчанию
+            window.switchToFamilyChat();
             
             if(isSoloMode && users.length > 0 && !welcomeShown) {
                 setTimeout(() => {
