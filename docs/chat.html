@@ -559,7 +559,7 @@
             }); 
         }
         
-        // ========== ФУНКЦИЯ ДЛЯ ВОСПРОИЗВЕДЕНИЯ ГОЛОСОВЫХ (РАБОТАЕТ НА iOS И ANDROID) ==========
+        // ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ==========
         function playVoiceMessage(url, btnElement) {
             stopAllAudio();
             
@@ -785,7 +785,7 @@
                     buttonsHtml = `<div class="bot-buttons">${msg.buttons.map(btn => `<button class="bot-btn" onclick="window.botAction('${btn.action}')">${btn.text}</button>`).join('')}</div>`;
                 }
                 
-                // Для голосовых сообщений используем функцию с передачей кнопки
+                // Для голосовых сообщений используем новую функцию с передачей кнопки
                 const voiceBtnCallback = msg.message_type === 'voice' && msg.voice_url 
                     ? `onclick="playVoiceMessageWithButton('${msg.voice_url}', this)"`
                     : '';
@@ -913,6 +913,7 @@
         
         // ========== ФУНКЦИИ САЙДБАРА ==========
         function openSidebar() {
+            if (window.innerWidth > 768) return;
             const sidebar = document.getElementById('chat-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             sidebar.classList.add('open');
@@ -966,35 +967,12 @@
             closeSidebarOnMobile(); 
         };
         
-        // ========== АКТИВАЦИЯ АУДИО ДЛЯ МОБИЛЬНЫХ ПРИ ПЕРВОМ КАСАНИИ ==========
-        function enableAudioOnTouch() {
-            const hiddenAudio = document.getElementById('hidden-audio');
-            if (hiddenAudio) {
-                hiddenAudio.volume = 0;
-                hiddenAudio.play().then(() => {
-                    hiddenAudio.pause();
-                    hiddenAudio.currentTime = 0;
-                    console.log('🎵 Аудио активировано для iOS');
-                }).catch(e => console.log('Активация аудио:', e));
-            }
-            
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioContextClass) {
-                const ctx = new AudioContextClass();
-                ctx.resume().then(() => console.log('🎵 AudioContext активирован'));
-            }
-        }
-        
         async function init() {
             await loadCurrentUser(); 
             if(!token||!currentUser){ window.location.href='/'; return; }
             
             // Инициализация аудио для мобильных
             initAudioContext();
-            
-            // ВАЖНО: активируем аудио при первом касании (для iOS)
-            document.addEventListener('touchstart', enableAudioOnTouch, { once: true });
-            document.addEventListener('click', enableAudioOnTouch, { once: true });
             
             // Синхронизация данных с сервером
             await syncUserData();
