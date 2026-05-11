@@ -795,7 +795,6 @@
                 <h2>Семейный чат</h2>
                 <p>Общайтесь всей семьёй</p>
             </div>
-            <button class="mobile-close-sidebar" id="mobile-close-sidebar">✕</button>
         </div>
         <div class="user-info" id="user-info">
             <div class="user-avatar" id="user-avatar"></div>
@@ -810,7 +809,7 @@
     <div class="chat-main">
         <div class="chat-header">
             <div class="chat-title">
-    <a href="#" id="simple-open-btn" style="background:#6fbaff;color:white;border-radius:30px;padding:8px 16px;text-decoration:none;display:inline-block;">📱 ОТКРЫТЬ</a>
+    <a href="#" id="simple-open-btn" style="background:#b0d8fd;color:white;border-radius:30px;padding:8px 16px;text-decoration:none;display:inline-block;">☰ чаты</a>
     <span id="chat-title-text">Семейный чат</span>
 </div>
             <div class="header-actions">
@@ -1561,7 +1560,23 @@
                 };
                 overlay.ontouchend = overlay.onclick;
             }
+                        // ЗАКРЫТИЕ ПАНЕЛИ ПО СВАЙПУ (БЕЗ ПОВТОРНОГО ОБЪЯВЛЕНИЯ overlay)
+            const swipeSidebar = document.getElementById('chat-sidebar');
+            let touchStartX = 0;
             
+            swipeSidebar.addEventListener('touchstart', function(e) {
+                touchStartX = e.touches[0].clientX;
+            });
+            
+            swipeSidebar.addEventListener('touchmove', function(e) {
+                const touchEndX = e.touches[0].clientX;
+                const deltaX = touchEndX - touchStartX;
+                if (deltaX < -50 && swipeSidebar.style.left === '0px') {
+                    swipeSidebar.style.left = '-280px';
+                    if (overlay) overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
         }
         init();
         
