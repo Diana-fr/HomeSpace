@@ -83,7 +83,7 @@
         }
 
         .sidebar-header {
-            padding: 60px 20px 24px 20px;
+            padding: 70px 20px 24px 20px;
             border-bottom: 1px solid rgba(140,190,255,0.2);
             display: flex;
             justify-content: space-between;
@@ -132,6 +132,7 @@
             color: #33465d;
             transition: all 0.2s ease;
             flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
         }
         .sidebar-collapse-btn:hover { background: rgba(235,245,255,0.95); transform: scale(1.05); }
 
@@ -151,6 +152,7 @@
             gap: 8px;
             color: #33465d;
             white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
         }
         .burger-menu:hover { background: rgba(235,245,255,0.95); }
 
@@ -510,6 +512,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
         }
         .send-btn { background: linear-gradient(135deg, #6fbaff, #a8d8ff); color: #fff; box-shadow: 0 6px 16px rgba(120,180,255,0.5); }
         .send-btn:hover { transform: scale(1.05); }
@@ -562,10 +565,6 @@
     <div class="chat-sidebar" id="chat-sidebar">   <!-- 👈 ЭТОЙ СТРОКИ НЕ ХВАТАЕТ -->
         <div class="sidebar-header">
             <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" title="Свернуть панель">☰</button>
-            <div class="sidebar-header-content">
-                <h2>Семейный чат</h2>
-                <p>Общайтесь всей семьёй</p>
-            </div>
             <button class="mobile-close-sidebar" id="mobile-close-sidebar">✕</button>
         </div>
         <div class="user-info" id="user-info">
@@ -993,7 +992,7 @@
         
         function connectSocket() { if(!currentUser?.familyId) return; socket=io(window.WS_URL,{ withCredentials:true }); socket.on('connect',()=>socket.emit('join-family',{ familyId:currentUser.familyId, userId:currentUser.id, userName:currentUser.name, userAvatar:currentUser.avatar, token })); socket.on('new-message',msg=>{ const chatId=msg.type==='family'?'family':(msg.user_id===currentUser.id?msg.recipient_id:msg.user_id); const isRelevant=(currentChat.type==='family'&&(msg.type==='family'||msg.type==='bot'))||(currentChat.type==='private'&&((msg.user_id===currentUser.id&&msg.recipient_id===currentChat.userId)||(msg.user_id===currentChat.userId&&msg.recipient_id===currentUser.id))); if(isRelevant){ messages.push(msg); renderMessages(); } else if(msg.user_id!==currentUser.id){ unreadCounts[chatId]=(unreadCounts[chatId]||0)+1; updateUnreadIndicators(); if(document.hidden) new Notification('💬 Новое сообщение',{ body:msg.message }); } if(msg.user_id!==currentUser?.id&&userInteracted) speakText(msg.message,null); }); }
         
-        async function startVoiceRecording() { try { const stream=await navigator.mediaDevices.getUserMedia({ audio:true }); mediaRecorder=new MediaRecorder(stream); audioChunks=[]; mediaRecorder.ondataavailable=e=>audioChunks.push(e.data); mediaRecorder.onstop=async()=>{ const blob=new Blob(audioChunks,{type:'audio/webm'}); const fd=new FormData(); fd.append('audio',blob,'voice.webm'); fd.append('type',currentChat.type); if(currentChat.type==='private') fd.append('recipientId',currentChat.userId); try{ await fetch(`${API_URL}/chat/voice`,{ method:'POST', headers:{'Authorization':`Bearer ${token}`}, body:fd }); loadMessages(); }catch(e){} stream.getTracks().forEach(t=>t.stop()); }; mediaRecorder.start(); isRecording=true; recordStartTime=Date.now(); document.getElementById('voice-record-btn').classList.add('recording'); } catch(e){ alert('Нет доступа к микрофону'); } }
+        async function startVoiceRecording() { try { const stream=await navigator.mediaDevices.getUserMedia({ audio:true }); const options = {}; if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) { options.mimeType = 'audio/webm;codecs=opus'; } else if (MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2')) { options.mimeType = 'audio/mp4;codecs=mp4a.40.2'; } else if (MediaRecorder.isTypeSupported('audio/mp4')) { options.mimeType = 'audio/mp4'; } mediaRecorder=new MediaRecorder(stream, options); audioChunks=[]; mediaRecorder.ondataavailable=e=>audioChunks.push(e.data); mediaRecorder.onstop=async()=>{ const blob=new Blob(audioChunks,{type:options.mimeType||'audio/webm'}); const fd=new FormData(); fd.append('audio',blob,'voice.'+(options.mimeType?.includes('mp4')?'m4a':'webm')); fd.append('type',currentChat.type); if(currentChat.type==='private') fd.append('recipientId',currentChat.userId); try{ await fetch(`${API_URL}/chat/voice`,{ method:'POST', headers:{'Authorization':`Bearer ${token}`}, body:fd }); loadMessages(); }catch(e){} stream.getTracks().forEach(t=>t.stop()); }; mediaRecorder.start(); isRecording=true; recordStartTime=Date.now(); document.getElementById('voice-record-btn').classList.add('recording'); } catch(e){ alert('Нет доступа к микрофону'); } }
         function stopVoiceRecording() { if(mediaRecorder&&isRecording){ mediaRecorder.stop(); isRecording=false; document.getElementById('voice-record-btn').classList.remove('recording'); } }
         
         async function loadMessages() { if(!currentUser?.familyId) return; try { let url=`${API_URL}/chat?`; if(currentChat.type==='private') url+=`type=private&withUserId=${currentChat.userId}`; else url+='type=family'; const r=await fetch(url,{ headers:{'Authorization':`Bearer ${token}`} }); if(r.ok){ messages=await r.json(); renderMessages(); } } catch(e){} }
@@ -1144,6 +1143,11 @@
                     e.stopPropagation();
                     toggleSidebar();
                 };
+                burgerBtn.ontouchstart = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleSidebar();
+                };
             }
             if(collapseBtn) {
                 collapseBtn.onclick = (e) => {
@@ -1201,21 +1205,7 @@
                     }
                 }, 1000);
             }
-                        // Принудительно показываем бургер на мобилках (дубль-проверка)
-            if (window.innerWidth <= 768) {
-                const burger = document.getElementById('burger-menu-btn');
-                if (burger) burger.style.display = 'flex';
-            }
-
-            // Проверяем, что сайдбар открывается по бургеру
-            const burgerCheck = document.getElementById('burger-menu-btn');
-            if (burgerCheck) {
-                burgerCheck.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    openSidebar();
-                };
-            }
+        
         }
         init();
         
