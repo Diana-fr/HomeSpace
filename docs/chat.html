@@ -1332,37 +1332,30 @@
             await loadCurrentUser(); 
             if(!token||!currentUser){ window.location.href='/'; return; }
             
-            // Инициализация аудио для мобильных
             initAudioContext();
-            
-            // Синхронизация данных с сервером
             await syncUserData();
-                        // ПРОСТЕЙШИЙ ОБРАБОТЧИК ДЛЯ IPHONE
+            
+            // Простая кнопка для открытия
             const simpleBtn = document.getElementById('simple-open-btn');
             if (simpleBtn) {
                 simpleBtn.onclick = function(e) {
                     e.preventDefault();
-                    const sidebar = document.getElementById('chat-sidebar');
-                    const overlay = document.getElementById('sidebar-overlay');
-                    var currentLeft = sidebar.style.left;
-                    if (currentLeft === '0px') {
-                        sidebar.style.left = '-280px';
-                        if (overlay) overlay.style.display = 'none';
-                        document.body.style.overflow = '';
+                    if (document.getElementById('chat-sidebar').classList.contains('open')) {
+                        closeSidebar();
                     } else {
-                        sidebar.style.left = '0px';
-                        if (overlay) overlay.style.display = 'block';
-                        document.body.style.overflow = 'hidden';
+                        openSidebar();
                     }
                     return false;
                 };
             }
+            
             isSoloMode=!currentUser.familyId;
             if(isSoloMode){ 
                 document.querySelector('.sidebar-header-content h2').textContent='Чат с ботом'; 
                 document.querySelector('.sidebar-header-content p').textContent='Вы без семьи — доступен только бот'; 
                 document.getElementById('voice-record-btn').style.display='none'; 
             }
+            
             try{ const saved=localStorage.getItem(`homespace_unread_${currentUser.id}`); if(saved) unreadCounts=JSON.parse(saved); }catch(e){ unreadCounts={}; }
             if(!isSoloMode) connectSocket(); 
             await loadUsers(); 
@@ -1389,43 +1382,29 @@
             notifBtn.onclick=notifHandler;
             notifBtn.ontouchend=(e)=>{ e.preventDefault(); notifHandler(); };
             
-            // Настройка сайдбара
-            const burgerBtn = document.getElementById('burger-menu-btn');
+            // ========== САЙДБАР: ОТКРЫТИЕ/ЗАКРЫТИЕ ==========
             const collapseBtn = document.getElementById('sidebar-collapse-btn');
             const closeBtnMobile = document.getElementById('mobile-close-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             
-
             if(collapseBtn) {
                 collapseBtn.onclick = (e) => {
                     e.stopPropagation();
                     if (window.innerWidth <= 768) return;
                     setSidebarCollapsed(!sidebarCollapsed);
                 };
-                collapseBtn.ontouchend = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (window.innerWidth <= 768) return;
-                    setSidebarCollapsed(!sidebarCollapsed);
-                };
             }
+            
             if(closeBtnMobile) {
                 closeBtnMobile.onclick = (e) => {
-                    e.stopPropagation();
-                    closeSidebar();
-                };
-                closeBtnMobile.ontouchend = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     closeSidebar();
                 };
             }
+            
             if(overlay) {
                 overlay.onclick = (e) => {
-                    e.stopPropagation();
-                    closeSidebar();
-                };
-                overlay.ontouchend = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     closeSidebar();
@@ -1449,7 +1428,7 @@
                 }
             });
             
-            // Периодическая синхронизация (каждые 30 секунд)
+            // Периодическая синхронизация
             setInterval(syncUserData, 30000);
             
             if(window.innerWidth <= 768) {
@@ -1468,118 +1447,25 @@
                     }
                 }, 1000);
             }
-             // ========== НОВОЕ РЕШЕНИЕ ДЛЯ IPHONE - ЗАМЕНА БУРГЕРА ==========
-            setTimeout(() => {
-                const oldBurger = document.getElementById('burger-menu-btn');
-                if (!oldBurger) return;
-                
-                // Создаём новую кнопку
-                const newBurger = document.createElement('button');
-                newBurger.id = 'new-burger-btn';
-                newBurger.innerHTML = '☰ Чаты';
-                newBurger.style.cssText = `
-                    background: rgba(255,255,255,0.85);
-                    border: 1px solid rgba(140,190,255,0.5);
-                    border-radius: 30px;
-                    padding: 8px 16px;
-                    height: 40px;
-                    font-size: 15px;
-                    font-weight: 500;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 8px;
-                    color: #33465d;
-                    white-space: nowrap;
-                `;
-                
-                // Заменяем старую кнопку
-                oldBurger.parentNode.replaceChild(newBurger, oldBurger);
-                
-                // Добавляем обработчик
-                newBurger.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const sidebar = document.getElementById('chat-sidebar');
-                    const overlay = document.getElementById('sidebar-overlay');
-                    const currentLeft = sidebar.style.left;
-                    if (currentLeft === '0px') {
-                        sidebar.style.left = '-280px';
-                        if (overlay) overlay.style.display = 'none';
-                        document.body.style.overflow = '';
-                    } else {
-                        sidebar.style.left = '0px';
-                        if (overlay) overlay.style.display = 'block';
-                        document.body.style.overflow = 'hidden';
-                    }
-                };
-            }, 200);
-                        // ТЕСТОВАЯ КНОПКА
-            const testBtn = document.getElementById('test-open-btn');
-            if (testBtn) {
-                testBtn.onclick = function() {
-                    const sidebar = document.getElementById('chat-sidebar');
-                    const overlay = document.getElementById('sidebar-overlay');
-                    if (sidebar.style.left === '0px') {
-                        sidebar.style.left = '-280px';
-                        if (overlay) overlay.style.display = 'none';
-                        document.body.style.overflow = '';
-                    } else {
-                        sidebar.style.left = '0px';
-                        if (overlay) overlay.style.display = 'block';
-                        document.body.style.overflow = 'hidden';
-                    }
-                };
-            }
-                        // ПОЧИНИТЬ КРЕСТИК
-            const closeBtn = document.getElementById('mobile-close-sidebar');
-            if (closeBtn) {
-                closeBtn.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const sidebar = document.getElementById('chat-sidebar');
-                    const overlay = document.getElementById('sidebar-overlay');
-                    sidebar.style.left = '-280px';
-                    sidebar.classList.remove('open');
-                    if (overlay) overlay.classList.remove('active');
-                    document.body.style.overflow = '';
-                };
-                closeBtn.ontouchend = closeBtn.onclick;
-            }
-                        // ПОЧИНИТЬ ОВЕРЛЕЙ
-            if (overlay) {
-                overlay.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const sidebar = document.getElementById('chat-sidebar');
-                    sidebar.style.left = '-280px';
-                    sidebar.classList.remove('open');
-                    overlay.classList.remove('active');
-                    document.body.style.overflow = '';
-                };
-                overlay.ontouchend = overlay.onclick;
-            }
-                // ЗАКРЫТИЕ ПАНЕЛИ ПО СВАЙПУ (ТОЛЬКО УБИРАЕТ ЗАТЕМНЕНИЕ)
-                const swipeSidebar = document.getElementById('chat-sidebar');
-                let touchStartX = 0;
-
+            
+            // ========== СВАЙП ДЛЯ ЗАКРЫТИЯ (ТОЛЬКО ЭТОТ БЛОК) ==========
+            const swipeSidebar = document.getElementById('chat-sidebar');
+            let touchStartX = 0;
+            
+            if (swipeSidebar) {
                 swipeSidebar.addEventListener('touchstart', function(e) {
                     touchStartX = e.touches[0].clientX;
                 });
-
+                
                 swipeSidebar.addEventListener('touchmove', function(e) {
                     const touchEndX = e.touches[0].clientX;
                     const deltaX = touchEndX - touchStartX;
-                    if (deltaX < -50 && swipeSidebar.style.left === '0px') {
-                        swipeSidebar.style.left = '-280px';
-                        swipeSidebar.classList.remove('open');
-                        // Убираем затемнение
-                        const overlay = document.getElementById('sidebar-overlay');
-                        if (overlay) overlay.classList.remove('active');
-                        document.body.style.overflow = '';
+                    if (deltaX < -30 && swipeSidebar.classList.contains('open')) {
+                        e.preventDefault();
+                        closeSidebar(); // Эта функция убирает и оверлей, и открывает чат
                     }
                 });
+            }
         }
         init();
         
