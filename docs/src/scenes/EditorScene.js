@@ -1774,60 +1774,57 @@ createInstruction() {
         if (lockBtn) lockBtn.addEventListener('click', () => this.lockSelected());
         if (unlockBtn) unlockBtn.addEventListener('click', () => this.unlockSelected());
     }
-    setupMobileGestures() {
-    if (!this.isMobile) return;
-    
-    let initialDistance = 0;
-    let initialScale = 1;
-    let selectedItemForZoom = null;
-    
-    this.input.on('pointerdown', (pointer) => {
-        // Запоминаем выбранный предмет
-        const hits = this.input.hitTestPointer(pointer);
-        const hitSprite = hits.find(h => h instanceof Phaser.GameObjects.Sprite);
-        if (hitSprite && hitSprite === this.selectedItem && !this.isLocked(this.selectedItem)) {
-            selectedItemForZoom = this.selectedItem;
-        }
-    });
-    
-    this.input.on('pointermove', (pointer) => {
-        if (!selectedItemForZoom) return;
+     setupMobileGestures() {
+        if (!this.isMobile) return;
         
-        // Проверяем два пальца
-        const pointers = this.input.pointers;
-        if (pointers.length >= 2) {
-            const p1 = pointers[0];
-            const p2 = pointers[1];
-            if (p1 && p2) {
-                const dx = p1.x - p2.x;
-                const dy = p1.y - p2.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (initialDistance === 0) {
-                    initialDistance = distance;
-                    initialScale = selectedItemForZoom.scale;
-                } else {
-                    const delta = distance / initialDistance;
-                    let newScale = initialScale * delta;
-                    newScale = Math.max(0.5, Math.min(2, newScale));
-                    selectedItemForZoom.setScale(newScale);
-                    this.saveCurrentRoomToDB();
-                }
+        let initialDistance = 0;
+        let initialScale = 1;
+        let selectedItemForZoom = null;
+        
+        this.input.on('pointerdown', (pointer) => {
+            const hits = this.input.hitTestPointer(pointer);
+            const hitSprite = hits.find(h => h instanceof Phaser.GameObjects.Sprite);
+            if (hitSprite && hitSprite === this.selectedItem && !this.isLocked(this.selectedItem)) {
+                selectedItemForZoom = this.selectedItem;
             }
-        } else {
-            // Сброс при поднятии пальцев
+        });
+        
+        this.input.on('pointermove', (pointer) => {
+            if (!selectedItemForZoom) return;
+            
+            const pointers = this.input.pointers;
+            if (pointers.length >= 2) {
+                const p1 = pointers[0];
+                const p2 = pointers[1];
+                if (p1 && p2) {
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (initialDistance === 0) {
+                        initialDistance = distance;
+                        initialScale = selectedItemForZoom.scale;
+                    } else {
+                        const delta = distance / initialDistance;
+                        let newScale = initialScale * delta;
+                        newScale = Math.max(0.5, Math.min(2, newScale));
+                        selectedItemForZoom.setScale(newScale);
+                        this.saveCurrentRoomToDB();
+                    }
+                }
+            } else {
+                initialDistance = 0;
+            }
+        });
+        
+        this.input.on('pointerup', () => {
             initialDistance = 0;
-        }
-    });
-    
-    this.input.on('pointerup', () => {
-        initialDistance = 0;
-        selectedItemForZoom = null;
-    });
-    
-    console.log('📱 Мобильные жесты для масштабирования настроены');
-}
-}
+            selectedItemForZoom = null;
+        });
+        
+        console.log('📱 Мобильные жесты для масштабирования настроены');
+    }
+}  // ← ЭТА СКОБКА ЗАКРЫВАЕТ КЛАСС
 
 // Делаем класс доступным глобально
 window.EditorScene = EditorScene;
