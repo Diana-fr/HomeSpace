@@ -711,77 +711,24 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(140,190,255,0.15); }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #6fbaff, #a8d8ff); border-radius: 3px; }
-        /* ========== ФИКС ДЛЯ iOS И ВСЕХ МОБИЛЬНЫХ ========== */
-
-/* Убираем стандартные отступы у body */
-body {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-/* Контейнер чата занимает всю доступную высоту */
-.chat-app {
-    height: 100%;
-    overflow: hidden;
-}
-
-/* Основная область чата flex — растягивается правильно */
-.chat-main {
-    flex: 1;
-    min-height: 0; /* Важно для iOS */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-/* Область сообщений скроллится */
-.messages-area {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
-}
-
-/* Поле ввода всегда внизу и доступно */
-.chat-input-area {
-    flex-shrink: 0;
-    background: rgba(255,255,255,0.6);
-    backdrop-filter: blur(10px);
-    padding: 12px 16px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
-}
-
-/* Для очень маленьких экранов — уменьшаем отступы */
-@media (max-width: 480px) {
-    .chat-header {
-        padding-top: calc(12px + env(safe-area-inset-top));
-    }
-    
+        /* ========== ФИКС ТОЛЬКО ДЛЯ МОБИЛЬНЫХ (НЕ ТРОГАЕТ ДЕСКТОП) ========== */
+@media (max-width: 768px) {
+    /* Фикс для поля ввода на iPhone — чтобы не перекрывалось */
     .chat-input-area {
-        padding-bottom: max(10px, env(safe-area-inset-bottom));
-    }
-    
-    .send-btn, .voice-btn {
-        width: 44px;
-        height: 44px;
-    }
-}
-
-/* iOS Safari — фикс для safe-area */
-@supports (padding: max(0px)) {
-    .chat-header {
-        padding-left: max(16px, env(safe-area-inset-left));
-        padding-right: max(16px, env(safe-area-inset-right));
-        padding-top: max(12px, env(safe-area-inset-top));
-    }
-    
-    .chat-input-area {
-        padding-left: max(16px, env(safe-area-inset-left));
-        padding-right: max(16px, env(safe-area-inset-right));
         padding-bottom: max(12px, env(safe-area-inset-bottom));
+        background: rgba(255,255,255,0.6);
+    }
+    
+    /* Область сообщений — нормальный скролл */
+    .messages-area {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Safe-area для iPhone */
+    .chat-header {
+        padding-top: max(12px, env(safe-area-inset-top));
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
     }
     
     .sidebar-header {
@@ -1264,14 +1211,13 @@ body {
         
         // ========== ФУНКЦИИ САЙДБАРА ==========
         function openSidebar() {
-            // Убираем условие для width — теперь работает на всех мобилках
+            // Убираем проверку на ширину — теперь работает на всех мобилках
             const sidebar = document.getElementById('chat-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             if (!sidebar) return;
             sidebar.classList.add('open');
             if (overlay) overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
-            sidebar.style.transform = 'translateX(0)';
         }
 
         function closeSidebar() {
@@ -1388,12 +1334,15 @@ body {
             const closeBtnMobile = document.getElementById('mobile-close-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             
-                        if(burgerBtn) {
-                // Убираем старые, добавляем новые
-                const newHandler = (e) => {
+            if(burgerBtn) {
+                // Удаляем старые обработчики
+                burgerBtn.onclick = null;
+                burgerBtn.ontouchend = null;
+                // Добавляем новые — сработает на iPhone
+                const handleOpen = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Бургер нажат');
+                    console.log('Бургер нажат, открываем сайдбар');
                     const sidebar = document.getElementById('chat-sidebar');
                     if (sidebar.classList.contains('open')) {
                         closeSidebar();
@@ -1401,12 +1350,8 @@ body {
                         openSidebar();
                     }
                 };
-                burgerBtn.removeEventListener('click', burgerBtn._listener);
-                burgerBtn.removeEventListener('touchstart', burgerBtn._touchListener);
-                burgerBtn.addEventListener('click', newHandler);
-                burgerBtn.addEventListener('touchstart', newHandler, { passive: false });
-                burgerBtn._listener = newHandler;
-                burgerBtn._touchListener = newHandler;
+                burgerBtn.addEventListener('click', handleOpen);
+                burgerBtn.addEventListener('touchstart', handleOpen, { passive: false });
             }
             if(collapseBtn) {
                 collapseBtn.onclick = (e) => {
