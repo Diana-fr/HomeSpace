@@ -1376,17 +1376,7 @@
             const closeBtnMobile = document.getElementById('mobile-close-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             
-            if(burgerBtn) {
-                burgerBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    toggleSidebar();
-                };
-                burgerBtn.ontouchend = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleSidebar();
-                };
-            }
+
             if(collapseBtn) {
                 collapseBtn.onclick = (e) => {
                     e.stopPropagation();
