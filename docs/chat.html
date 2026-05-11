@@ -227,17 +227,16 @@
         @media (max-width: 768px) {
             .chat-sidebar { 
                 position: fixed; 
-                left: 0; 
+                left: -280px;
                 top: 0; 
                 bottom: 0; 
-                transform: translateX(-100%);
                 z-index: 200;
                 width: 280px;
                 box-shadow: 4px 0 25px rgba(0,0,0,0.25);
-                transition: transform 0.25s ease;
+                transition: left 0.25s ease;
             }
             .chat-sidebar.open { 
-                transform: translateX(0); 
+                left: 0 !important;
             }
             .chat-main { 
                 width: 100%; 
@@ -1247,6 +1246,17 @@
             const sidebar = document.getElementById('chat-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             if (!sidebar) return;
+            sidebar.style.left = '0px';
+            sidebar.classList.add('open');
+            if (overlay) overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function openSidebar() {
+            const sidebar = document.getElementById('chat-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (!sidebar) return;
+            sidebar.style.left = '0px';
             sidebar.classList.add('open');
             if (overlay) overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -1255,8 +1265,10 @@
         function closeSidebar() {
             const sidebar = document.getElementById('chat-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
+            if (!sidebar) return;
+            sidebar.style.left = '-280px';
             sidebar.classList.remove('open');
-            overlay.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
             document.body.style.overflow = '';
         }
 
@@ -1449,40 +1461,6 @@
                     }
                 }, 1000);
             }
-                    // ========== ПРИНУДИТЕЛЬНОЕ РЕШЕНИЕ ДЛЯ IPHONE ==========
-            const forceFixForIPhone = () => {
-                if (window.innerWidth <= 768) {
-                    console.log('iPhone режим активирован');
-                    const burger = document.getElementById('burger-menu-btn');
-                    const sidebar = document.getElementById('chat-sidebar');
-                    const overlay = document.getElementById('sidebar-overlay');
-                    
-                    if (burger) {
-                        // Удаляем все старые обработчики
-                        const newBurgerHandler = () => {
-                            console.log('Бургер нажат на iPhone');
-                            if (sidebar.classList.contains('open')) {
-                                sidebar.classList.remove('open');
-                                if (overlay) overlay.classList.remove('active');
-                                document.body.style.overflow = '';
-                                sidebar.style.transform = '';
-                                sidebar.style.display = '';
-                            } else {
-                                sidebar.classList.add('open');
-                                if (overlay) overlay.classList.add('active');
-                                document.body.style.overflow = 'hidden';
-                                sidebar.style.transform = 'translateX(0)';
-                                sidebar.style.display = 'flex';
-                            }
-                        };
-                        burger.onclick = null;
-                        burger.ontouchend = null;
-                        burger.addEventListener('click', newBurgerHandler);
-                        burger.addEventListener('touchstart', newBurgerHandler);
-                    }
-                }
-            };
-            forceFixForIPhone();
         }
         init();
         
@@ -1494,4 +1472,4 @@
         };
     </script>
 </body>
-</html> 
+</html>  
