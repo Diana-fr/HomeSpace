@@ -1449,62 +1449,53 @@
                     }
                 }, 1000);
             }
-                        // ========== ПРЯМОЕ РЕШЕНИЕ ДЛЯ IPHONE ==========
+             // ========== НОВОЕ РЕШЕНИЕ ДЛЯ IPHONE - ЗАМЕНА БУРГЕРА ==========
             setTimeout(() => {
-                const sidebar = document.getElementById('chat-sidebar');
-                const overlay = document.getElementById('sidebar-overlay');
-                const burger = document.getElementById('burger-menu-btn');
+                const oldBurger = document.getElementById('burger-menu-btn');
+                if (!oldBurger) return;
                 
-                if (!sidebar) return;
+                // Создаём новую кнопку
+                const newBurger = document.createElement('button');
+                newBurger.id = 'new-burger-btn';
+                newBurger.innerHTML = '☰ Чаты';
+                newBurger.style.cssText = `
+                    background: rgba(255,255,255,0.85);
+                    border: 1px solid rgba(140,190,255,0.5);
+                    border-radius: 30px;
+                    padding: 8px 16px;
+                    height: 40px;
+                    font-size: 15px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    color: #33465d;
+                    white-space: nowrap;
+                `;
                 
-                // Принудительно применяем стили прямо через JS
-                if (window.innerWidth <= 768) {
-                    sidebar.style.position = 'fixed';
-                    sidebar.style.left = '-280px';
-                    sidebar.style.top = '0';
-                    sidebar.style.bottom = '0';
-                    sidebar.style.width = '280px';
-                    sidebar.style.zIndex = '200';
-                    sidebar.style.transition = 'left 0.25s ease';
-                    
-                    if (overlay) {
-                        overlay.style.position = 'fixed';
-                        overlay.style.inset = '0';
-                        overlay.style.background = 'rgba(0,0,0,0.2)';
-                        overlay.style.zIndex = '150';
-                        overlay.style.display = 'none';
+                // Заменяем старую кнопку
+                oldBurger.parentNode.replaceChild(newBurger, oldBurger);
+                
+                // Добавляем обработчик
+                newBurger.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const sidebar = document.getElementById('chat-sidebar');
+                    const overlay = document.getElementById('sidebar-overlay');
+                    const currentLeft = sidebar.style.left;
+                    if (currentLeft === '0px') {
+                        sidebar.style.left = '-280px';
+                        if (overlay) overlay.style.display = 'none';
+                        document.body.style.overflow = '';
+                    } else {
+                        sidebar.style.left = '0px';
+                        if (overlay) overlay.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
                     }
-                    
-                    if (burger) {
-                        const newHandler = function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const currentLeft = sidebar.style.left;
-                            if (currentLeft === '0px') {
-                                sidebar.style.left = '-280px';
-                                if (overlay) overlay.style.display = 'none';
-                                document.body.style.overflow = '';
-                            } else {
-                                sidebar.style.left = '0px';
-                                if (overlay) overlay.style.display = 'block';
-                                document.body.style.overflow = 'hidden';
-                            }
-                        };
-                        burger.removeEventListener('click', newHandler);
-                        burger.removeEventListener('touchstart', newHandler);
-                        burger.addEventListener('click', newHandler);
-                        burger.addEventListener('touchstart', newHandler);
-                    }
-                    
-                    if (overlay) {
-                        overlay.onclick = function() {
-                            sidebar.style.left = '-280px';
-                            overlay.style.display = 'none';
-                            document.body.style.overflow = '';
-                        };
-                    }
-                }
-            }, 100);
+                };
+            }, 200);
         }
         init();
         
