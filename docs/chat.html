@@ -203,6 +203,7 @@
             padding: 12px 15px;
         }
 
+
         /* ========== ДЕСКТОП (шире 768) ========== */
         @media (min-width: 769px) {
             .chat-sidebar {
@@ -1144,16 +1145,16 @@
             const closeBtnMobile = document.getElementById('mobile-close-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             
-            if(burgerBtn) {
-                burgerBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    toggleSidebar();
-                };
-                burgerBtn.ontouchend = (e) => {
+                       if(burgerBtn) {
+                // Для iPhone используем touchstart, а не click
+                const openSidebarHandler = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    toggleSidebar();
+                    console.log('Бургер нажат, открываем панель');
+                    openSidebar();
                 };
+                burgerBtn.addEventListener('touchstart', openSidebarHandler, { passive: false });
+                burgerBtn.addEventListener('click', openSidebarHandler);
             }
             if(collapseBtn) {
                 collapseBtn.onclick = (e) => {
