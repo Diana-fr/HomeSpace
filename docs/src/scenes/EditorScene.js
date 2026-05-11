@@ -1289,6 +1289,7 @@ showTaskModalForItem(sprite, tasks) {
     if (this.isLocked(this.selectedItem)) { this.showMessage('🔒 Предмет закреплён'); return; }
     
     this.selectedItem.depth += 1;
+    this.forceSave();
     this.showMessage(`⬆️ Слой ${this.selectedItem.depth}`);
     this.saveCurrentRoomToDB();
 }
@@ -1299,6 +1300,7 @@ sendToBack() {
     if (this.isLocked(this.selectedItem)) { this.showMessage('🔒 Предмет закреплён'); return; }
     
     this.selectedItem.depth = Math.max(1, this.selectedItem.depth - 1);
+    this.forceSave();
     this.showMessage(`⬇️ Слой ${this.selectedItem.depth}`);
     this.saveCurrentRoomToDB();
 }
@@ -1332,6 +1334,7 @@ sendToBack() {
             if (text) text.destroy();
             this.furnitureGroup.remove(this.selectedItem, true, true);
             this.selectedItem = null;
+            this.forceSave();
             this.saveCurrentRoomToDB();
             this.showMessage('🗑 Предмет удален');
         } else if (this.selectedItem && this.isLocked(this.selectedItem)) {
@@ -1413,7 +1416,8 @@ sendToBack() {
     
     this.furnitureGroup.add(sprite);
     this.saveCurrentRoomToDB();
-    
+    this.forceSave(); 
+
     return sprite;
 }
     
@@ -1498,6 +1502,7 @@ createInstruction() {
                 if (this.textures.exists(textureKey)) {
                     this.selectedItem.setTexture(textureKey);
                     this.selectedItem.setData('direction', newDirection);
+                    this.forceSave();
                     this.saveCurrentRoomToDB();
                 }
             }
@@ -1570,6 +1575,8 @@ createInstruction() {
         const buttons = [
             { icon: '⬆️', title: 'Вперёд', action: () => this.bringToFront() },
             { icon: '⬇️', title: 'Назад', action: () => this.sendToBack() },
+            { icon: '🔍+', title: 'Увеличить', action: () => this.zoomItem(0.1) },
+            { icon: '🔍-', title: 'Уменьшить', action: () => this.zoomItem(-0.1) },
             { icon: '🗑️', title: 'Удалить', action: () => { if (!this.readOnlyMode) this.deleteSelected(); } },
             { icon: '🔄', title: 'Поворот', action: () => { if (!this.readOnlyMode) this.rotateDirection(1); } },
             { icon: '📐', title: 'Сетка', action: () => this.toggleSnap() },
@@ -1772,6 +1779,65 @@ createInstruction() {
         if (lockBtn) lockBtn.addEventListener('click', () => this.lockSelected());
         if (unlockBtn) unlockBtn.addEventListener('click', () => this.unlockSelected());
     }
+    async forceSave() {
+    if (this.readOnlyMode) return;
+    if (!this.currentRoomId || this.currentRoomId === 'default') {
+        console.warn('❌ Не сохраняем default комнату');
+        return;
+    }
+    
+    const room = this.rooms[this.currentRoomId];
+    if (!room) return;
+    
+    const items = [];
+    this.furnitureGroup.getChildren().forEach(sprite => {
+        items.push({
+            type: sprite.getData('type'),
+            itemInstanceId: sprite.getData('itemInstanceId'),
+            x: sprite.x,
+            y: sprite.y,
+            direction: sprite.getData('direction') || 'NE',
+            scale: sprite.scale,
+            depth: sprite.depth,
+            locked: sprite.getData('locked') || false
+        });
+    });
+    
+    console.log(`💾 Принудительное сохранение ${items.length} предметов в комнату ${room.name}`);
+    
+    try {
+        await api.updateRoom(this.currentRoomId, {
+            name: room.name,
+            background: room.background || 'bg_default',
+            items: items
+        });
+        room.items = items;
+        this.saveRoomsToLocalStorage();
+        console.log('✅ Успешно сохранено!');
+    } catch (error) {
+        console.error('❌ Ошибка сохранения:', error);
+    }
+}
+zoomItem(delta) {
+    if (this.readOnlyMode) {
+        this.showMessage('❌ Только просмотр');
+        return;
+    }
+    if (!this.selectedItem) {
+        this.showMessage('🔍 Сначала выберите предмет');
+        return;
+    }
+    if (this.isLocked(this.selectedItem)) {
+        this.showMessage('🔒 Предмет закреплён, разблокируйте (U)');
+        return;
+    }
+    
+    let newScale = this.selectedItem.scale + delta;
+    newScale = Math.max(0.3, Math.min(2, newScale));
+    this.selectedItem.setScale(newScale);
+    this.forceSave();
+    this.showMessage(`📏 Масштаб: ${Math.round(newScale * 100)}%`);
+}
 }
 
 // Делаем класс доступным глобально
