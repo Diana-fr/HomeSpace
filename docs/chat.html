@@ -1006,12 +1006,14 @@
                 const c=document.getElementById('users-list'); 
                 if(!c) return; 
                 c.innerHTML=`<div class="user-item" data-chat-id="family" onclick="window.switchToFamilyChat()"><div class="user-item-avatar">👨‍👩‍👧</div><div class="user-item-info"><div class="user-item-name">Семейный чат</div></div></div>`; 
+                c.querySelector('.user-item').ontouchend=(e)=>{ e.preventDefault(); window.switchToFamilyChat(); };
                 users.filter(u=>u.id!==currentUser?.id).forEach(u=>{ 
                     const d=document.createElement('div'); 
                     d.className='user-item'; 
                     d.dataset.chatId=u.id; 
                     d.innerHTML=`<div class="user-item-avatar">${u.id===BOT_ID?'🤖':getAvatarHtml(u.avatar,u.name)}</div><div class="user-item-info"><div class="user-item-name">${escapeHtml(u.name)}</div></div>`; 
                     d.onclick=()=>window.switchToPrivateChat(u); 
+                    d.ontouchend=(e)=>{ e.preventDefault(); window.switchToPrivateChat(u); };
                     c.appendChild(d); 
                 }); 
                 updateUnreadIndicators(); 
@@ -1116,7 +1118,9 @@
             await loadMessages();
             
             document.getElementById('send-btn').onclick=sendMessage;
+            document.getElementById('send-btn').ontouchend=(e)=>{ e.preventDefault(); sendMessage(); };
             document.getElementById('refresh-btn').onclick=()=>loadMessages();
+            document.getElementById('refresh-btn').ontouchend=(e)=>{ e.preventDefault(); loadMessages(); };
             document.getElementById('stop-audio-btn').onclick=stopAllAudio;
             
             const voiceBtn=document.getElementById('voice-record-btn');
@@ -1130,7 +1134,9 @@
             
             const notifBtn=document.getElementById('enable-notifications-btn');
             if(Notification.permission==='granted'){ notificationPermission=true; notifBtn.classList.add('active'); }
-            notifBtn.onclick=async()=>{ if(Notification.permission==='granted'){ notificationPermission=true; notifBtn.classList.add('active'); } else if(Notification.permission!=='denied'){ const p=await Notification.requestPermission(); notificationPermission=p==='granted'; if(notificationPermission) notifBtn.classList.add('active'); } };
+            const notifHandler = async()=>{ if(Notification.permission==='granted'){ notificationPermission=true; notifBtn.classList.add('active'); } else if(Notification.permission!=='denied'){ const p=await Notification.requestPermission(); notificationPermission=p==='granted'; if(notificationPermission) notifBtn.classList.add('active'); } };
+            notifBtn.onclick=notifHandler;
+            notifBtn.ontouchend=(e)=>{ e.preventDefault(); notifHandler(); };
             
             // Настройка сайдбара
             const burgerBtn = document.getElementById('burger-menu-btn');
@@ -1143,7 +1149,7 @@
                     e.stopPropagation();
                     toggleSidebar();
                 };
-                burgerBtn.ontouchstart = (e) => {
+                burgerBtn.ontouchend = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     toggleSidebar();
@@ -1155,15 +1161,31 @@
                     if (window.innerWidth <= 768) return;
                     setSidebarCollapsed(!sidebarCollapsed);
                 };
+                collapseBtn.ontouchend = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (window.innerWidth <= 768) return;
+                    setSidebarCollapsed(!sidebarCollapsed);
+                };
             }
             if(closeBtnMobile) {
                 closeBtnMobile.onclick = (e) => {
                     e.stopPropagation();
                     closeSidebar();
                 };
+                closeBtnMobile.ontouchend = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeSidebar();
+                };
             }
             if(overlay) {
                 overlay.onclick = (e) => {
+                    e.stopPropagation();
+                    closeSidebar();
+                };
+                overlay.ontouchend = (e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     closeSidebar();
                 };
