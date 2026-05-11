@@ -1097,6 +1097,16 @@ showTaskModal(itemKey, itemInstanceId, itemName, presetAssignedTo, presetAssigne
         }
     };
 }
+async refreshTaskMarkers() {
+    this.clearAllMarkers();
+    
+    const sprites = this.furnitureGroup.getChildren();
+    console.log(`🔄 Обновление маркеров для ${sprites.length} предметов`);
+    
+    for (const sprite of sprites) {
+        await this.updateTaskMarkerForItem(sprite);
+    }
+}
     
    async updateTaskMarkerForItem(sprite) {
     const itemType = sprite.getData('type');
