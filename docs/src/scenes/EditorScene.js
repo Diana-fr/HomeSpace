@@ -154,7 +154,6 @@ loadRemainingFurniture() {
         
         if (this.isMobile) {
         this.addMobileControls();
-        this.setupMobileGestures();  // ← ДОБАВЬТЕ ЭТУ СТРОКУ
         }
         
         console.log('✅ EditorScene ready');
@@ -913,22 +912,25 @@ showTaskModal(itemKey, itemInstanceId, itemName, presetAssignedTo, presetAssigne
         display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 10000;
         justify-content: center; align-items: center;
+        padding: 10px;
+        box-sizing: border-box;
     `;
     
     const isMobile = this.isMobile;
-    // ТОЛЬКО ЭТИ СТРОКИ МЕНЯЮТ РАЗМЕР - остальное ваше оригинальное
-    const modalWidth = isMobile ? '95%' : '540px';
-   const modalPadding = isMobile ? '16px' : '28px';
+    const modalWidth = isMobile ? '92%' : '540px';
+    const modalPadding = isMobile ? '16px' : '28px';
+    const fontSize = isMobile ? '14px' : '16px';
+    const btnPadding = isMobile ? '10px 20px' : '14px 32px';
     
     let selectHtml = '';
     if (presetAssignedTo) {
         selectHtml = `<input type="hidden" id="task-assigned-editor" value="${presetAssignedTo}">
-                      <div style="background: rgba(111,186,255,0.15); padding: 12px; border-radius: 16px; margin-bottom: 16px; text-align: center; font-size: 14px; border: 1px solid rgba(111,186,255,0.3);">
+                      <div style="background: rgba(111,186,255,0.15); padding: 10px; border-radius: 16px; margin-bottom: 16px; text-align: center; font-size: ${fontSize}; border: 1px solid rgba(111,186,255,0.3);">
                           👤 <strong>Назначено: ${presetAssignedToName}</strong>
                       </div>`;
     } else {
-        selectHtml = '<label style="color:#33465d; display:block; margin-bottom:8px; font-size:15px; font-weight:500;">👤 Назначить:</label>';
-        selectHtml += '<select id="task-assigned-editor" style="width:100%; padding:14px; background:rgba(255,255,255,0.9); border:1px solid rgba(111,186,255,0.5); border-radius:16px; color:#33465d; font-size:16px; outline:none;">';
+        selectHtml = '<label style="color:#33465d; display:block; margin-bottom:8px; font-size:' + fontSize + '; font-weight:500;">👤 Назначить:</label>';
+        selectHtml += '<select id="task-assigned-editor" style="width:100%; padding:10px; background:rgba(255,255,255,0.9); border:1px solid rgba(111,186,255,0.5); border-radius:16px; color:#33465d; font-size:' + fontSize + '; outline:none;">';
         selectHtml += `<option value="">— Не назначено —</option>`;
         if (this.currentUser?.role === 'parent') {
             selectHtml += `<option value="${this.currentUser.id}">👑 Себе (${this.currentUser.name})</option>`;
@@ -942,68 +944,66 @@ showTaskModal(itemKey, itemInstanceId, itemName, presetAssignedTo, presetAssigne
     }
     
     modal.innerHTML = `
-        <div style="background:linear-gradient(135deg, rgba(255,255,255,0.98), rgba(240,248,255,0.98)); border-radius:32px; padding:${modalPadding}; max-width:${modalWidth}; width:100%; border:1px solid rgba(111,186,255,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
-            <h3 style="color:#33465d; margin-bottom:20px; font-size:26px; text-align:center; font-weight:700;">✨ Создать задание</h3>
+        <div style="background:linear-gradient(135deg, rgba(255,255,255,0.98), rgba(240,248,255,0.98)); border-radius:32px; padding:${modalPadding}; max-width:${modalWidth}; width:100%; max-height:85vh; overflow-y:auto; border:1px solid rgba(111,186,255,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <h3 style="color:#33465d; margin-bottom:16px; font-size:${isMobile ? '20px' : '26px'}; text-align:center; font-weight:700;">✨ Создать задание</h3>
             
-            <input type="text" id="task-title-editor" placeholder="Название задания" autocomplete="off" value="Задание для ${itemName}" style="width:100%; padding:14px; margin-bottom:16px; background:rgba(255,255,255,0.95); border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:16px; outline:none; transition:0.2s;">
+            <input type="text" id="task-title-editor" placeholder="Название задания" autocomplete="off" value="Задание для ${itemName}" style="width:100%; padding:10px; margin-bottom:12px; background:rgba(255,255,255,0.95); border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:${fontSize}; outline:none; box-sizing:border-box;">
             
-            <textarea id="task-desc-editor" placeholder="Описание (необязательно)" style="width:100%; padding:14px; margin-bottom:16px; background:rgba(255,255,255,0.95); border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; resize:vertical; min-height:80px; font-size:16px; outline:none; font-family:inherit;"></textarea>
+            <textarea id="task-desc-editor" placeholder="Описание (необязательно)" style="width:100%; padding:10px; margin-bottom:12px; background:rgba(255,255,255,0.95); border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; resize:vertical; min-height:60px; font-size:${fontSize}; outline:none; font-family:inherit; box-sizing:border-box;"></textarea>
             
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; background:rgba(111,186,255,0.08); padding:12px 16px; border-radius:60px;">
-                <span style="color:#33465d; font-weight:600; font-size:16px; white-space:nowrap;">💰 Бонус:</span>
-                <button id="bonus-minus-editor" style="width:40px; height:40px; border-radius:50%; background:white; border:1px solid rgba(111,186,255,0.5); color:#6fbaff; font-size:22px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;">−</button>
-                <input type="number" id="task-bonus-editor" value="10" min="1" max="100" style="flex:1; text-align:center; font-weight:700; font-size:20px; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; padding:10px;">
-                <button id="bonus-plus-editor" style="width:40px; height:40px; border-radius:50%; background:white; border:1px solid rgba(111,186,255,0.5); color:#6fbaff; font-size:22px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; background:rgba(111,186,255,0.08); padding:8px 12px; border-radius:60px; flex-wrap:wrap;">
+                <span style="color:#33465d; font-weight:600; font-size:${fontSize};">💰 Бонус:</span>
+                <button type="button" id="bonus-minus-editor" style="width:36px; height:36px; border-radius:50%; background:white; border:1px solid rgba(111,186,255,0.5); color:#6fbaff; font-size:20px; font-weight:bold; cursor:pointer;">−</button>
+                <input type="number" id="task-bonus-editor" value="10" min="1" max="100" style="flex:1; text-align:center; font-weight:700; font-size:18px; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; padding:6px;">
+                <button type="button" id="bonus-plus-editor" style="width:36px; height:36px; border-radius:50%; background:white; border:1px solid rgba(111,186,255,0.5); color:#6fbaff; font-size:20px; font-weight:bold; cursor:pointer;">+</button>
             </div>
             
-            <div id="task-assigned-container" style="margin-bottom:20px;">${selectHtml}</div>
+            <div id="task-assigned-container" style="margin-bottom:16px;">${selectHtml}</div>
 
-            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(111,186,255,0.3);">
-                <div style="color: #33465d; font-weight: 600; margin-bottom: 12px; font-size:15px;">
-                    ⏰ Автоматически повторять
-                </div>
-                <div style="display:flex; gap:12px; flex-wrap: wrap; margin-bottom:12px;">
-                    <select id="task-recurrence-editor" style="flex:1; min-width: 160px; padding:14px; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:15px; outline:none;">
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(111,186,255,0.3);">
+                <div style="color: #33465d; font-weight: 600; margin-bottom: 10px; font-size:${fontSize};">⏰ Автоматически повторять</div>
+                <div style="display:flex; gap:10px; flex-wrap: wrap; margin-bottom:10px;">
+                    <select id="task-recurrence-editor" style="flex:1; min-width: 140px; padding:10px; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:${fontSize}; outline:none;">
                         <option value="none">Не повторять</option>
                         <option value="daily">Каждый день</option>
                         <option value="weekly">По дням недели</option>
                         <option value="once">Один раз (дата)</option>
                     </select>
-                    <input id="task-time-editor" type="time" value="09:00" style="flex:1; min-width: 140px; padding:14px; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:15px; outline:none;">
+                    <input id="task-time-editor" type="time" value="09:00" style="flex:1; min-width: 120px; padding:10px; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:${fontSize}; outline:none;">
                 </div>
-                <div id="task-recur-extra-editor" style="margin-top: 12px; display:none;">
-                    <div id="task-dows-editor" style="display:none; flex-wrap:wrap; gap:8px;">
+                <div id="task-recur-extra-editor" style="margin-top: 10px; display:none;">
+                    <div id="task-dows-editor" style="display:none; flex-wrap:wrap; gap:6px;">
                         ${[
                             { v: 1, t: 'Пн' }, { v: 2, t: 'Вт' }, { v: 3, t: 'Ср' },
                             { v: 4, t: 'Чт' }, { v: 5, t: 'Пт' }, { v: 6, t: 'Сб' }, { v: 0, t: 'Вс' }
                         ].map(d => `
-                            <label style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:40px; border:1px solid rgba(111,186,255,0.5); background: white; cursor:pointer; font-size:14px; color:#33465d;">
-                                <input type="checkbox" data-dow="${d.v}" style="width:16px; height:16px; accent-color:#6fbaff;">
+                            <label style="display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:40px; border:1px solid rgba(111,186,255,0.5); background: white; cursor:pointer; font-size:12px; color:#33465d;">
+                                <input type="checkbox" data-dow="${d.v}" style="width:14px; height:14px; accent-color:#6fbaff;">
                                 <span>${d.t}</span>
                             </label>
                         `).join('')}
                     </div>
-                    <input id="task-runat-editor" type="datetime-local" style="width:100%; padding:14px; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:15px; outline:none; display:none;" />
+                    <input id="task-runat-editor" type="datetime-local" style="width:100%; padding:10px; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:${fontSize}; outline:none; display:none; margin-top:6px;" />
                 </div>
-                <div style="margin-top: 10px; color: rgba(51,70,93,0.65); font-size:12px; line-height: 1.4;">
+                <div style="margin-top: 8px; color: rgba(51,70,93,0.65); font-size:10px; line-height: 1.3;">
                     💡 Если выбрать повтор — задание будет автоматически создаваться по расписанию
                 </div>
             </div>
 
-            <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:28px;">
-                <button id="task-cancel-editor" style="padding:14px 32px; border-radius:40px; background:rgba(111,186,255,0.15); border:1px solid rgba(111,186,255,0.4); color:#33465d; cursor:pointer; font-size:15px; font-weight:500; transition:0.2s;">Отмена</button>
-                <button id="task-save-editor" style="padding:14px 36px; border-radius:40px; background:linear-gradient(135deg, #6fbaff, #a8d8ff); border:none; color:#fff; cursor:pointer; font-size:15px; font-weight:600; transition:0.2s; box-shadow: 0 4px 12px rgba(111,186,255,0.4);">Создать</button>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+                <button id="task-cancel-editor" style="padding:${btnPadding}; border-radius:40px; background:rgba(111,186,255,0.15); border:1px solid rgba(111,186,255,0.4); color:#33465d; cursor:pointer; font-size:${fontSize}; font-weight:500;">Отмена</button>
+                <button id="task-save-editor" style="padding:${btnPadding}; border-radius:40px; background:linear-gradient(135deg, #6fbaff, #a8d8ff); border:none; color:#fff; cursor:pointer; font-size:${fontSize}; font-weight:600; box-shadow: 0 4px 12px rgba(111,186,255,0.4);">Создать</button>
             </div>
         </div>
     `;
     
     document.body.appendChild(modal);
     
-    // Закрытие по клику на фон
     modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.remove();
     });
     
+    // ... остальные обработчики (оставьте как были)
     const titleInput = modal.querySelector('#task-title-editor');
     const descInput = modal.querySelector('#task-desc-editor');
     const bonusInput = modal.querySelector('#task-bonus-editor');
@@ -1030,9 +1030,6 @@ showTaskModal(itemKey, itemInstanceId, itemName, presetAssignedTo, presetAssigne
             timeInput.style.display = 'none';
         } else {
             extraWrap.style.display = 'none';
-            dowsWrap.style.display = 'none';
-            runAtInput.style.display = 'none';
-            timeInput.style.display = 'block';
         }
     }
     if (recurrenceSelect) recurrenceSelect.onchange = updateRecurrenceUI;
@@ -1101,18 +1098,6 @@ showTaskModal(itemKey, itemInstanceId, itemName, presetAssignedTo, presetAssigne
     };
 }
     
-    async refreshTaskMarkers() {
-    this.clearAllMarkers();
-    
-    const sprites = this.furnitureGroup.getChildren();
-    console.log(`🔄 Обновление маркеров для ${sprites.length} предметов`);
-    
-    // Показываем маркер на КАЖДОМ предмете, у которого есть задания
-    for (const sprite of sprites) {
-        await this.updateTaskMarkerForItem(sprite);
-    }
-}
-    
    async updateTaskMarkerForItem(sprite) {
     const itemType = sprite.getData('type');
     const itemInstanceId = sprite.getData('itemInstanceId');
@@ -1171,39 +1156,42 @@ showTaskModalForItem(sprite, tasks) {
     
     const itemName = sprite.getData('name') || 'предмета';
     const isMobile = this.isMobile;
-    const modalWidth = isMobile ? '95%' : '520px';
-   const modalPadding = isMobile ? '16px' : '28px';
-    const titleSize = isMobile ? '22px' : '26px';
+    const modalWidth = isMobile ? '92%' : '520px';
+    const modalPadding = isMobile ? '16px' : '28px';
+    const titleSize = isMobile ? '18px' : '26px';
+    const fontSize = isMobile ? '13px' : '14px';
     
     const modal = document.createElement('div');
     modal.style.cssText = `
         display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 10000;
         justify-content: center; align-items: center;
+        padding: 10px;
+        box-sizing: border-box;
     `;
     
-    let tasksHtml = '<div style="max-height: 50vh; overflow-y: auto; margin: 15px 0;">';
+    let tasksHtml = '<div style="max-height: 50vh; overflow-y: auto; margin: 10px 0;">';
     tasks.forEach(task => {
         const statusIcon = task.status === 'completed' ? '✅' : '⏳';
         tasksHtml += `
-            <div style="background: rgba(111,186,255,0.08); border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 1px solid rgba(111,186,255,0.3);">
-                <div style="font-weight: 700; color: #33465d; display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <div style="background: rgba(111,186,255,0.08); border-radius: 16px; padding: ${isMobile ? '10px' : '14px'}; margin-bottom: 10px; border: 1px solid rgba(111,186,255,0.3);">
+                <div style="font-weight: 700; color: #33465d; display: flex; justify-content: space-between; margin-bottom: 6px; font-size: ${fontSize};">
                     <span>${statusIcon} ${this.escapeHtml(task.title)}</span>
-                    <span style="color: #ffd700; background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 20px;">💰 ${task.bonus}</span>
+                    <span style="color: #ffd700; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 20px; font-size: ${fontSize};">💰 ${task.bonus}</span>
                 </div>
-                ${task.description ? `<div style="font-size: 12px; color: rgba(51,70,93,0.7); margin-top: 6px;">📝 ${this.escapeHtml(task.description)}</div>` : ''}
-                <div style="font-size: 11px; color: rgba(51,70,93,0.5); margin-top: 8px;">
+                ${task.description ? `<div style="font-size: 11px; color: rgba(51,70,93,0.7); margin-top: 4px;">📝 ${this.escapeHtml(task.description)}</div>` : ''}
+                <div style="font-size: 10px; color: rgba(51,70,93,0.5); margin-top: 6px;">
                     👤 ${task.assigned_to_name || 'Не назначено'} | ✏️ от ${task.created_by_name}
                 </div>
                 ${task.status !== 'completed' && (this.currentUser?.id === task.assigned_to || this.currentUser?.role === 'parent') ? `
                 <button data-task-id="${task.id}" class="complete-task-btn" style="
-                    margin-top: 12px;
-                    padding: 6px 16px;
+                    margin-top: 10px;
+                    padding: ${isMobile ? '5px 12px' : '6px 16px'};
                     background: linear-gradient(135deg, #6fbaff, #a8d8ff);
                     color: white;
                     border: none;
                     border-radius: 30px;
-                    font-size: 12px;
+                    font-size: ${isMobile ? '11px' : '12px'};
                     cursor: pointer;
                     font-weight: 500;
                 ">✅ Выполнить</button>
@@ -1214,11 +1202,11 @@ showTaskModalForItem(sprite, tasks) {
     tasksHtml += '</div>';
     
     modal.innerHTML = `
-        <div style="background:linear-gradient(135deg, rgba(255,255,255,0.98), rgba(240,248,255,0.98)); border-radius:32px; padding:${modalPadding}; max-width:${modalWidth}; width:100%; border:1px solid rgba(111,186,255,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
-            <h3 style="color:#33465d; margin-bottom:20px; font-size:${titleSize}; text-align:center; font-weight:700;">📋 Задания для "${this.escapeHtml(itemName)}"</h3>
+        <div style="background:linear-gradient(135deg, rgba(255,255,255,0.98), rgba(240,248,255,0.98)); border-radius:32px; padding:${modalPadding}; max-width:${modalWidth}; width:100%; max-height:85vh; overflow-y:auto; border:1px solid rgba(111,186,255,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <h3 style="color:#33465d; margin-bottom:16px; font-size:${titleSize}; text-align:center; font-weight:700;">📋 Задания для "${this.escapeHtml(itemName)}"</h3>
             ${tasksHtml}
-            <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:20px;">
-                <button id="task-modal-close" style="padding:14px 32px; border-radius:40px; background:rgba(111,186,255,0.15); border:1px solid rgba(111,186,255,0.4); color:#33465d; cursor:pointer; font-size:15px; font-weight:500;">Закрыть</button>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+                <button id="task-modal-close" style="padding:${isMobile ? '8px 20px' : '14px 32px'}; border-radius:40px; background:rgba(111,186,255,0.15); border:1px solid rgba(111,186,255,0.4); color:#33465d; cursor:pointer; font-size:${fontSize}; font-weight:500;">Закрыть</button>
             </div>
         </div>
     `;
@@ -1773,66 +1761,6 @@ createInstruction() {
         const unlockBtn = document.getElementById('unlock-selected');
         if (lockBtn) lockBtn.addEventListener('click', () => this.lockSelected());
         if (unlockBtn) unlockBtn.addEventListener('click', () => this.unlockSelected());
-    }
-setupMobileGestures() {
-    if (!this.isMobile) return;
-    
-    let initialDistance = 0;
-    let initialScale = 1;
-    let activePinchItem = null;
-    
-    // Следим за касаниями
-    this.input.on('pointerdown', (pointer) => {
-        // Запоминаем выбранный предмет
-        const hits = this.input.hitTestPointer(pointer);
-        const hitSprite = hits.find(h => h instanceof Phaser.GameObjects.Sprite);
-        if (hitSprite && hitSprite === this.selectedItem && !this.isLocked(this.selectedItem)) {
-            activePinchItem = this.selectedItem;
-        }
-    });
-    
-    // Обработка движения пальцев
-    this.input.on('pointermove', () => {
-        if (!activePinchItem) return;
-        
-        const pointers = this.input.pointers;
-        const activePointers = pointers.filter(p => p.active);
-        
-        // Если два пальца на экране
-        if (activePointers.length === 2) {
-            const p1 = activePointers[0];
-            const p2 = activePointers[1];
-            
-            // Вычисляем расстояние между пальцами
-            const dx = p1.x - p2.x;
-            const dy = p1.y - p2.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (initialDistance === 0) {
-                // Первое касание - запоминаем начальное расстояние и масштаб
-                initialDistance = distance;
-                initialScale = activePinchItem.scale;
-            } else {
-                // Вычисляем изменение масштаба
-                const delta = distance / initialDistance;
-                let newScale = initialScale * delta;
-                newScale = Math.max(0.5, Math.min(2, newScale));
-                activePinchItem.setScale(newScale);
-                this.saveCurrentRoomToDB();
-            }
-        } else {
-            // Сброс при поднятии одного из пальцев
-            initialDistance = 0;
-        }
-    });
-    
-    // Сброс при отпускании пальцев
-    this.input.on('pointerup', () => {
-        initialDistance = 0;
-        activePinchItem = null;
-    });
-    
-    console.log('📱 Pinch-to-zoom на телефоне настроен');
     }
 }
 
