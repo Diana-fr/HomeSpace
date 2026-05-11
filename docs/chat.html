@@ -99,6 +99,22 @@
         }
         .sidebar-overlay.active { display: block; }
 
+        .sidebar-collapse-btn {
+            background: rgba(255,255,255,0.8);
+            border: 1px solid rgba(140,190,255,0.5);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            color: #33465d;
+            display: flex;
+            transition: all 0.2s ease;
+        }
+        .sidebar-collapse-btn:hover { background: rgba(235,245,255,0.95); }
+
         .burger-menu {
             display: none;
             background: rgba(255,255,255,0.7);
@@ -111,6 +127,52 @@
             align-items: center;
             justify-content: center;
             color: #33465d;
+        }
+
+        .chat-sidebar.collapsed {
+            width: 56px;
+            min-width: 56px;
+            overflow: hidden;
+        }
+        .chat-sidebar.collapsed .sidebar-header {
+            padding: 16px 8px;
+            justify-content: center;
+        }
+        .chat-sidebar.collapsed .sidebar-header > div,
+        .chat-sidebar.collapsed .user-info,
+        .chat-sidebar.collapsed .user-item-info,
+        .chat-sidebar.collapsed .unread-badge {
+            display: none;
+        }
+        .chat-sidebar.collapsed .user-item {
+            justify-content: center;
+            padding: 14px 0;
+        }
+        .chat-sidebar.collapsed .user-item-avatar {
+            margin: 0;
+        }
+        .chat-sidebar.collapsed .user-item.active {
+            border-left: 0;
+            border-radius: 50%;
+        }
+        .chat-sidebar.collapsed:hover {
+            width: 300px;
+        }
+        .chat-sidebar.collapsed:hover .sidebar-header > div {
+            display: block;
+        }
+        .chat-sidebar.collapsed:hover .user-info {
+            display: flex;
+        }
+        .chat-sidebar.collapsed:hover .user-item-info {
+            display: flex;
+        }
+        .chat-sidebar.collapsed:hover .unread-badge {
+            display: flex;
+        }
+        .chat-sidebar.collapsed:hover .user-item {
+            justify-content: flex-start;
+            padding: 12px 15px;
         }
 
         /* Десктоп: сайдбар всегда виден */
@@ -150,13 +212,25 @@
             }
             .burger-menu { 
                 display: flex; 
+                min-width: 120px;
+                padding: 0 14px;
+                height: 40px;
+                border-radius: 24px;
+                font-size: 16px;
+                gap: 8px;
+                justify-content: center;
+                white-space: nowrap;
             }
+            .sidebar-collapse-btn { display: none !important; }
             .message { 
                 max-width: 85%; 
             }
             .chat-header { 
                 padding: 12px 16px; 
                 padding-top: 56px; 
+                padding-left: 90px;
+                position: relative;
+                z-index: 20;
             }
             .chat-input-area { 
                 padding: 12px 14px; 
@@ -455,6 +529,7 @@
 
         <div class="chat-sidebar" id="chat-sidebar">
             <div class="sidebar-header">
+                <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" title="Свернуть панель">☰</button>
                 <div>
                     <h2>Семейный чат</h2>
                     <p>Общайтесь всей семьёй</p>
@@ -474,7 +549,7 @@
         <div class="chat-main">
             <div class="chat-header">
                 <div class="chat-title">
-                    <button class="burger-menu" id="burger-menu-btn">☰</button>
+                    <button class="burger-menu" id="burger-menu-btn">☰ Чаты</button>
                     <span id="chat-title-text">Семейный чат</span>
                 </div>
                 <div class="header-actions">
@@ -497,6 +572,7 @@
         let token = localStorage.getItem('homespace_token');
         let currentUser = null;
         let currentChat = { type: 'family', userId: null, userName: null };
+        let sidebarCollapsed = false;
         let messages = [], users = [], socket = null;
         let unreadCounts = {};
         let notificationPermission = false, audioNotification = null;
@@ -929,6 +1005,26 @@
             document.body.style.overflow = '';
         }
 
+        function setSidebarCollapsed(collapsed) {
+            const sidebar = document.getElementById('chat-sidebar');
+            const collapseBtn = document.getElementById('sidebar-collapse-btn');
+            if (!sidebar || !collapseBtn) return;
+            sidebarCollapsed = collapsed;
+            if (collapsed) {
+                sidebar.classList.add('collapsed');
+                collapseBtn.textContent = '▶';
+                collapseBtn.title = 'Развернуть панель';
+            } else {
+                sidebar.classList.remove('collapsed');
+                collapseBtn.textContent = '☰';
+                collapseBtn.title = 'Свернуть панель';
+            }
+            if (window.innerWidth > 768) {
+                localStorage.setItem('homespace_sidebar_collapsed', collapsed ? 'true' : 'false');
+            }
+        }
+
+
         function closeSidebarOnMobile() {
             if (window.innerWidth <= 768) {
                 closeSidebar();
@@ -1007,6 +1103,7 @@
             
             // Настройка сайдбара
             const burgerBtn = document.getElementById('burger-menu-btn');
+            const collapseBtn = document.getElementById('sidebar-collapse-btn');
             const closeBtnMobile = document.getElementById('mobile-close-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             
@@ -1014,6 +1111,13 @@
                 burgerBtn.onclick = (e) => {
                     e.stopPropagation();
                     toggleSidebar();
+                };
+            }
+            if(collapseBtn) {
+                collapseBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (window.innerWidth <= 768) return;
+                    setSidebarCollapsed(!sidebarCollapsed);
                 };
             }
             if(closeBtnMobile) {
@@ -1041,13 +1145,21 @@
                 if (window.innerWidth > 768) {
                     closeSidebar();
                 }
+                if (window.innerWidth <= 768) {
+                    document.getElementById('chat-sidebar')?.classList.remove('collapsed');
+                }
             });
             
             // Периодическая синхронизация (каждые 30 секунд)
             setInterval(syncUserData, 30000);
             
-            if(window.innerWidth<=768) closeSidebar();
-            else window.switchToFamilyChat();
+            if(window.innerWidth <= 768) {
+                closeSidebar();
+            } else {
+                const savedSidebarCollapsed = localStorage.getItem('homespace_sidebar_collapsed') === 'true';
+                setSidebarCollapsed(savedSidebarCollapsed);
+                window.switchToFamilyChat();
+            }
             
             if(isSoloMode && users.length > 0 && !welcomeShown) {
                 setTimeout(() => {
