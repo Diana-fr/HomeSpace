@@ -1779,19 +1779,22 @@ createInstruction() {
         if (lockBtn) lockBtn.addEventListener('click', () => this.lockSelected());
         if (unlockBtn) unlockBtn.addEventListener('click', () => this.unlockSelected());
     }
-    async forceSave() {
+async forceSave() {
     if (this.readOnlyMode) return;
     if (!this.currentRoomId || this.currentRoomId === 'default') {
-        console.warn('❌ Не сохраняем default комнату');
+        console.warn('❌ Не сохраняем default комнату, ID:', this.currentRoomId);
         return;
     }
     
     const room = this.rooms[this.currentRoomId];
-    if (!room) return;
+    if (!room) {
+        console.error('❌ Комната не найдена:', this.currentRoomId);
+        return;
+    }
     
     const items = [];
     this.furnitureGroup.getChildren().forEach(sprite => {
-        items.push({
+        const itemData = {
             type: sprite.getData('type'),
             itemInstanceId: sprite.getData('itemInstanceId'),
             x: sprite.x,
@@ -1800,20 +1803,23 @@ createInstruction() {
             scale: sprite.scale,
             depth: sprite.depth,
             locked: sprite.getData('locked') || false
-        });
+        };
+        console.log(`📦 Предмет: ${itemData.type}, scale: ${itemData.scale}, pos: (${itemData.x}, ${itemData.y})`);
+        items.push(itemData);
     });
     
-    console.log(`💾 Принудительное сохранение ${items.length} предметов в комнату ${room.name}`);
+    console.log(`💾 Сохранение ${items.length} предметов в комнату "${room.name}" (${this.currentRoomId})`);
     
     try {
-        await api.updateRoom(this.currentRoomId, {
+        const result = await api.updateRoom(this.currentRoomId, {
             name: room.name,
             background: room.background || 'bg_default',
             items: items
         });
+        console.log('✅ Ответ сервера:', result);
         room.items = items;
         this.saveRoomsToLocalStorage();
-        console.log('✅ Успешно сохранено!');
+        console.log('✅ Успешно сохранено в БД и localStorage!');
     } catch (error) {
         console.error('❌ Ошибка сохранения:', error);
     }
