@@ -775,13 +775,7 @@
         background: rgba(255,255,255,0.95);
     }
 }
-/* Принудительные стили для теста */
-.chat-sidebar {
-    left: -280px !important;
-}
-.chat-sidebar.open {
-    left: 0 !important;
-}
+
     </style>
 </head>
 <body>
@@ -816,8 +810,7 @@
     <div class="chat-main">
         <div class="chat-header">
             <div class="chat-title">
-    <button class="burger-menu" id="burger-menu-btn">☰ Чаты</button>
-    <button id="test-open-btn" style="background:red;color:white;border-radius:30px;padding:8px 16px;">📱 ОТКРЫТЬ</button>
+    <a href="#" id="simple-open-btn" style="background:#6fbaff;color:white;border-radius:30px;padding:8px 16px;text-decoration:none;display:inline-block;">📱 ОТКРЫТЬ</a>
     <span id="chat-title-text">Семейный чат</span>
 </div>
             <div class="header-actions">
@@ -1345,7 +1338,26 @@
             
             // Синхронизация данных с сервером
             await syncUserData();
-            
+                        // ПРОСТЕЙШИЙ ОБРАБОТЧИК ДЛЯ IPHONE
+            const simpleBtn = document.getElementById('simple-open-btn');
+            if (simpleBtn) {
+                simpleBtn.onclick = function(e) {
+                    e.preventDefault();
+                    const sidebar = document.getElementById('chat-sidebar');
+                    const overlay = document.getElementById('sidebar-overlay');
+                    var currentLeft = sidebar.style.left;
+                    if (currentLeft === '0px') {
+                        sidebar.style.left = '-280px';
+                        if (overlay) overlay.style.display = 'none';
+                        document.body.style.overflow = '';
+                    } else {
+                        sidebar.style.left = '0px';
+                        if (overlay) overlay.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                    }
+                    return false;
+                };
+            }
             isSoloMode=!currentUser.familyId;
             if(isSoloMode){ 
                 document.querySelector('.sidebar-header-content h2').textContent='Чат с ботом'; 
@@ -1521,34 +1533,7 @@
                     }
                 };
             }
-                        // ПЛАВАЮЩАЯ ТЕСТОВАЯ КНОПКА
-            const floatBtn = document.createElement('div');
-            floatBtn.innerHTML = '🔓';
-            floatBtn.style.cssText = `
-                position: fixed;
-                bottom: 100px;
-                right: 20px;
-                width: 50px;
-                height: 50px;
-                background: #6fbaff;
-                color: white;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 24px;
-                z-index: 99999;
-                cursor: pointer;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            `;
-            floatBtn.onclick = () => {
-                const sidebar = document.getElementById('chat-sidebar');
-                sidebar.style.left = '0px';
-                alert('Панель открыта!');
-            };
-            document.body.appendChild(floatBtn);
         }
-
         init();
         
         window.debugSidebar = {
