@@ -711,30 +711,7 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(140,190,255,0.15); }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #6fbaff, #a8d8ff); border-radius: 3px; }
-        /* ========== ФИКС ТОЛЬКО ДЛЯ МОБИЛЬНЫХ (НЕ ТРОГАЕТ ДЕСКТОП) ========== */
-@media (max-width: 768px) {
-    /* Фикс для поля ввода на iPhone — чтобы не перекрывалось */
-    .chat-input-area {
-        padding-bottom: max(12px, env(safe-area-inset-bottom));
-        background: rgba(255,255,255,0.6);
-    }
-    
-    /* Область сообщений — нормальный скролл */
-    .messages-area {
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    /* Safe-area для iPhone */
-    .chat-header {
-        padding-top: max(12px, env(safe-area-inset-top));
-        padding-left: max(16px, env(safe-area-inset-left));
-        padding-right: max(16px, env(safe-area-inset-right));
-    }
-    
-    .sidebar-header {
-        padding-top: max(60px, env(safe-area-inset-top));
-    }
-}
+        
     </style>
 </head>
 <body>
@@ -1211,12 +1188,11 @@
         
         // ========== ФУНКЦИИ САЙДБАРА ==========
         function openSidebar() {
-            // Убираем проверку на ширину — теперь работает на всех мобилках
+            if (window.innerWidth > 768) return;
             const sidebar = document.getElementById('chat-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            if (!sidebar) return;
             sidebar.classList.add('open');
-            if (overlay) overlay.classList.add('active');
+            overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
 
@@ -1335,23 +1311,15 @@
             const overlay = document.getElementById('sidebar-overlay');
             
             if(burgerBtn) {
-                // Удаляем старые обработчики
-                burgerBtn.onclick = null;
-                burgerBtn.ontouchend = null;
-                // Добавляем новые — сработает на iPhone
-                const handleOpen = (e) => {
+                burgerBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleSidebar();
+                };
+                burgerBtn.ontouchend = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Бургер нажат, открываем сайдбар');
-                    const sidebar = document.getElementById('chat-sidebar');
-                    if (sidebar.classList.contains('open')) {
-                        closeSidebar();
-                    } else {
-                        openSidebar();
-                    }
+                    toggleSidebar();
                 };
-                burgerBtn.addEventListener('click', handleOpen);
-                burgerBtn.addEventListener('touchstart', handleOpen, { passive: false });
             }
             if(collapseBtn) {
                 collapseBtn.onclick = (e) => {
