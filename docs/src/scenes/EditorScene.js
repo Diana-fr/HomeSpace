@@ -50,27 +50,63 @@ class EditorScene extends Phaser.Scene {
         this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-    preload() {
-        console.log('📦 Загрузка моделей...');
-        const basePath = 'assets/furniture/';
-        
-        this.furnitureCatalog.forEach(item => {
+preload() {
+    console.log('📦 Быстрая загрузка только необходимого...');
+    
+    // НЕ загружаем всю мебель сразу!
+    // Загружаем только базовые вещи для старта
+    
+    // 1. Загружаем простой фон цветом (не картинкой)
+    // 2. Загружаем только 5-10 самых популярных предметов для начала
+    
+    const basePath = 'assets/furniture/';
+    
+    // Загружаем только базовые предметы для старта
+    const essentialItems = [
+        'table', 'chair', 'bedDouble', 'kitchenCabinet', 'toilet',
+        'loungeSofa', 'wall', 'window', 'doorway'
+    ];
+    
+    essentialItems.forEach(itemId => {
+        const item = this.furnitureCatalog.find(f => f.id === itemId);
+        if (item) {
             item.rotations.forEach(dir => {
                 const textureKey = `${item.id}_${dir}`;
                 const filePath = `${basePath}${item.path}/${item.id}_${dir}.png`;
                 this.load.image(textureKey, filePath);
             });
+        }
+    });
+    
+    this.load.on('loaderror', (file) => console.warn(`⚠️ Не загружено: ${file.src}`));
+    this.load.on('complete', () => {
+        console.log('✅ Базовая загрузка завершена');
+        // После старта - догружаем остальное в фоне
+        this.loadRemainingFurniture();
+    });
+}
+loadRemainingFurniture() {
+    // На iPhone загружаем фоном с задержкой, чтоб не тормозить интерфейс
+    const isiPhone = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const delay = isiPhone ? 3000 : 500;
+    
+    setTimeout(() => {
+        console.log('📦 Фоновая загрузка остальной мебели...');
+        const basePath = 'assets/furniture/';
+        
+        this.furnitureCatalog.forEach(item => {
+            item.rotations.forEach(dir => {
+                const textureKey = `${item.id}_${dir}`;
+                if (!this.textures.exists(textureKey)) {
+                    const filePath = `${basePath}${item.path}/${item.id}_${dir}.png`;
+                    this.load.image(textureKey, filePath);
+                }
+            });
         });
         
-        ['default', 'bedroom', 'kitchen', 'bathroom', 'livingroom'].forEach(bg => {
-            this.load.image(`bg_${bg}`, `${basePath}backgrounds/${bg}.png`);
-        });
-        
-        this.load.on('loaderror', (file) => console.warn(`⚠️ Не загружено: ${file.src}`));
-        this.load.on('complete', () => {
-            console.log('✅ Модели загружены');
-        });
-    }
+        this.load.start();
+    }, delay);
+}
 
     async create() {
         const userStr = localStorage.getItem('homespace_currentUser');

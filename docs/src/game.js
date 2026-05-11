@@ -2,12 +2,18 @@
 
 console.log('Starting HomeSpace editor bootstrap');
 
+// ОПРЕДЕЛЯЕМ iPhone - для них WebGL глючит, используем Canvas
+const isiPhone = /iPhone|iPad|iPod/.test(navigator.userAgent);
+if (isiPhone) {
+    console.log('📱 iPhone detected - using Canvas renderer');
+}
+
 const config = {
-    type: Phaser.AUTO,
+    type: isiPhone ? Phaser.CANVAS : Phaser.AUTO,  // iPhone использует Canvas
     width: 1280,
     height: 800,
     parent: 'game',
-    scene: [window.EditorScene], // ← используем window.EditorScene
+    scene: [window.EditorScene],
     backgroundColor: '#cfe3fb',
     scale: {
         mode: Phaser.Scale.FIT,
@@ -20,7 +26,7 @@ const config = {
 
 try {
     const game = new Phaser.Game(config);
-    console.log('Phaser editor instance created');
+    console.log('Phaser editor instance created', isiPhone ? '(Canvas mode)' : '(WebGL mode)');
 
     window.homespaceGame = game;
     window.getEditorScene = () => game?.scene?.getScene('EditorScene');

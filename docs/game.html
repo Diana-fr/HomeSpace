@@ -392,6 +392,123 @@
                 font-size: 13px;
             }
         }
+        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ (ДОПОЛНИТЕЛЬНАЯ) ===== */
+@media (max-width: 768px) {
+    /* Панель мебели - более компактная */
+    .panel {
+        top: 45px;
+        left: 5px;
+        right: 5px;
+        width: auto;
+        max-width: none;
+        max-height: 45vh;
+        border-radius: 16px;
+    }
+    
+    .panel__body {
+        padding: 8px;
+        gap: 6px;
+    }
+    
+    /* Кнопки крупнее для пальцев */
+    .chip {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-height: 36px;
+    }
+    
+    /* Список мебели */
+    .furniture-list {
+        max-height: 120px;
+    }
+    
+    .furniture-item {
+        padding: 8px 6px;
+    }
+    
+    .furniture-name {
+        font-size: 11px;
+    }
+    
+    /* Список комнат */
+    .rooms-list {
+        max-height: 80px;
+    }
+    
+    .room-item {
+        padding: 5px 8px;
+        font-size: 12px;
+    }
+    
+    /* Кнопки действий */
+    .row {
+        gap: 6px;
+    }
+    
+    .select, .input {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    /* Мобильная панель инструментов */
+    #mobile-toolbar {
+        bottom: 5px;
+        left: 5px;
+        right: 5px;
+        padding: 6px;
+        gap: 5px;
+        background: rgba(15, 15, 26, 0.98);
+    }
+    
+    #mobile-toolbar button {
+        width: 48px;
+        height: 48px;
+        font-size: 22px;
+        border-radius: 30px;
+    }
+    
+    /* Кнопка назад */
+    .back-to-menu {
+        top: 5px;
+        left: 5px;
+        padding: 5px 10px;
+        font-size: 11px;
+        z-index: 1001;
+    }
+    
+    /* Заголовок панели */
+    .panel__title {
+        font-size: 13px;
+    }
+    
+    .icon-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+}
+
+/* Для очень маленьких экранов (до 400px) */
+@media (max-width: 480px) {
+    .panel {
+        max-height: 40vh;
+    }
+    
+    .furniture-list {
+        max-height: 100px;
+    }
+    
+    .chip {
+        padding: 6px 8px;
+        font-size: 10px;
+    }
+    
+    #mobile-toolbar button {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+}
     </style>
 </head>
 <body>
