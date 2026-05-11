@@ -470,10 +470,20 @@
     const API_URL = window.API_URL;
 </script>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
-<script src="/src/services/api.js"></script>
 <script src="/src/config/furniture.js"></script>
+<script src="/src/services/api.js"></script>
 <script src="/src/scenes/EditorScene.js"></script>
 <script src="/src/game.js"></script>
+<script>
+    // Проверка загрузки зависимостей
+    window.addEventListener('load', () => {
+        console.log('🔍 Проверка загрузки:');
+        console.log('  - Phaser:', typeof Phaser);
+        console.log('  - furnitureData:', typeof window.furnitureData);
+        console.log('  - api:', typeof window.api);
+        console.log('  - EditorScene:', typeof window.EditorScene);
+    });
+</script>
     
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -568,6 +578,7 @@
     window.getEditorScene = () => {
         return window.homespaceGame?.scene?.getScene('EditorScene');
     };
+    
 </script>
 </body>
 </html>

@@ -1,18 +1,19 @@
 class ApiService {
-constructor() {
-    // Берём URL из глобальной переменной (объявлена в HTML)
-    if (typeof window !== 'undefined' && window.API_URL) {
-        this.baseUrl = window.API_URL;
-    } else if (import.meta.env && import.meta.env.VITE_API_URL) {
-        this.baseUrl = import.meta.env.VITE_API_URL;
-    } else {
-        // ❌ Лучше убрать этот fallback, чтобы не было ошибок
-        // this.baseUrl = 'http://localhost:3001/api';
-        console.error('❌ API_URL не определён! Убедитесь, что config.js загружен.');
-        this.baseUrl = '/api'; // относительный путь как запасной вариант
+    constructor() {
+        // Берём URL из глобальной переменной (объявлена в config.js)
+        if (typeof window !== 'undefined' && window.API_URL) {
+            this.baseUrl = window.API_URL;
+        } else {
+            console.error('❌ API_URL не определён! Убедитесь, что config.js загружен.');
+            // Fallback для локальной разработки
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                this.baseUrl = 'http://localhost:3001/api';
+            } else {
+                this.baseUrl = '/api';
+            }
+        }
+        this.token = localStorage.getItem('homespace_token');
     }
-    this.token = localStorage.getItem('homespace_token');
-}
 
     // ========== БАЗОВЫЕ МЕТОДЫ ==========
     setToken(token) {
@@ -147,7 +148,7 @@ constructor() {
         return await this.handleResponse(response);
     }
 
-    // ========== НОВЫЙ МЕТОД: ПОЛУЧЕНИЕ АКТУАЛЬНОГО ПОЛЬЗОВАТЕЛЯ ==========
+    // ========== ПОЛУЧЕНИЕ АКТУАЛЬНОГО ПОЛЬЗОВАТЕЛЯ ==========
     async fetchCurrentUser() {
         try {
             const response = await fetch(`${this.baseUrl}/users/me`, {
@@ -175,14 +176,13 @@ constructor() {
         }
     }
 
-    // ========== НОВЫЙ МЕТОД: ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ АВАТАРОВ СЕМЬИ ==========
+    // ========== ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ АВАТАРОВ СЕМЬИ ==========
     async refreshFamilyAvatars() {
         const user = this.getCurrentUser();
         if (!user?.familyId) return [];
         
         try {
             const members = await this.getFamilyMembers();
-            // Обновляем кэш членов семьи
             localStorage.setItem('homespace_family_members', JSON.stringify(members));
             return members;
         } catch (error) {
@@ -191,7 +191,7 @@ constructor() {
         }
     }
 
-    // ========== НОВЫЙ МЕТОД: ПОЛУЧЕНИЕ АВАТАРА ПОЛЬЗОВАТЕЛЯ ПО ID ==========
+    // ========== ПОЛУЧЕНИЕ АВАТАРА ПОЛЬЗОВАТЕЛЯ ПО ID ==========
     async getUserAvatar(userId) {
         try {
             const response = await fetch(`${this.baseUrl}/users/${userId}/avatar`, {
@@ -203,7 +203,6 @@ constructor() {
                 return null;
             }
             
-            // Возвращаем blob или URL
             const blob = await response.blob();
             return URL.createObjectURL(blob);
         } catch (error) {
@@ -256,27 +255,27 @@ constructor() {
         }
     }
 
-async createTask(taskData) {
-    console.log('📤 api.createTask получил:', JSON.stringify(taskData)); // ← ДОБАВЬ ЭТО
-    try {
-        const response = await fetch(`${this.baseUrl}/tasks`, {
-            method: 'POST',
-            headers: this.getHeaders(),
-            body: JSON.stringify({
-                title: taskData.title,
-                description: taskData.description,
-                bonus: taskData.bonus,
-                assignedTo: taskData.assignedTo,
-                itemKey: taskData.itemKey,
-                itemInstanceId: taskData.itemInstanceId
-            })
-        });
-        return await this.handleResponse(response);
-    } catch (error) {
-        console.error('Ошибка создания задания:', error);
-        throw error;
+    async createTask(taskData) {
+        console.log('📤 api.createTask получил:', JSON.stringify(taskData));
+        try {
+            const response = await fetch(`${this.baseUrl}/tasks`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    title: taskData.title,
+                    description: taskData.description,
+                    bonus: taskData.bonus,
+                    assignedTo: taskData.assignedTo,
+                    itemKey: taskData.itemKey,
+                    itemInstanceId: taskData.itemInstanceId
+                })
+            });
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('Ошибка создания задания:', error);
+            throw error;
+        }
     }
-}
 
     // ========== АВТОЗАДАНИЯ (TASK SCHEDULES) ==========
     async getTaskSchedules() {
@@ -679,4 +678,5 @@ async createTask(taskData) {
     }
 }
 
+// Создаём глобальный экземпляр
 window.api = new ApiService();
