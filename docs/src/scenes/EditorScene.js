@@ -900,7 +900,6 @@ setupInput() {
     
     this.showTaskModal(itemType, itemInstanceId, itemName, assignedTo, assignedToName);
 }
-    
 showTaskModal(itemKey, itemInstanceId, itemName, presetAssignedTo, presetAssignedToName) {
     const oldModal = document.getElementById('task-modal-editor');
     if (oldModal) oldModal.remove();
@@ -908,134 +907,129 @@ showTaskModal(itemKey, itemInstanceId, itemName, presetAssignedTo, presetAssigne
     const modal = document.createElement('div');
     modal.id = 'task-modal-editor';
     modal.style.cssText = `
-        display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 10000;
-        justify-content: center; align-items: center;
+        display: flex; 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%;
+        background: rgba(0,0,0,0.7); 
+        backdrop-filter: blur(5px); 
+        z-index: 10000;
+        justify-content: center; 
+        align-items: center;
+        padding: 10px;
+        box-sizing: border-box;
     `;
     
     const isMobile = this.isMobile;
-    const padding = isMobile ? '20px' : '28px';
-    const titleSize = isMobile ? '22px' : '26px';
-    const inputPadding = isMobile ? '12px' : '14px';
-    const btnSize = isMobile ? '44px' : '44px';
+    const modalWidth = isMobile ? '95%' : '540px';
+    const fontSize = isMobile ? '14px' : '16px';
+    const padding = isMobile ? '16px' : '24px';
     
     let selectHtml = '';
     if (presetAssignedTo) {
         selectHtml = `<input type="hidden" id="task-assigned-editor" value="${presetAssignedTo}">
-                      <div style="background: rgba(111,186,255,0.15); padding: 12px; border-radius: 16px; margin-bottom: 16px; text-align: center; font-size: ${isMobile ? '13px' : '14px'}; border: 1px solid rgba(111,186,255,0.3);">
+                      <div style="background:#e8f0fe; padding:10px; border-radius:12px; margin-bottom:12px; text-align:center; font-size:${fontSize};">
                           👤 <strong>Назначено: ${presetAssignedToName}</strong>
                       </div>`;
     } else {
-        selectHtml = '<label style="color:#33465d; display:block; margin-bottom:8px; font-size:' + (isMobile ? '14px' : '15px') + '; font-weight:500;">👤 Назначить:</label>';
-        selectHtml += '<select id="task-assigned-editor" style="width:100%; padding:' + (isMobile ? '12px' : '14px') + '; background:rgba(255,255,255,0.9); border:1px solid rgba(111,186,255,0.5); border-radius:16px; color:#33465d; font-size:' + (isMobile ? '15px' : '16px') + '; outline:none;">';
-        selectHtml += `<option value="">— Не назначено —</option>`;
-        if (this.currentUser?.role === 'parent') {
-            selectHtml += `<option value="${this.currentUser.id}">👑 Себе (${this.currentUser.name})</option>`;
-        }
-        if (this.children && this.children.length > 0) {
-            for (const child of this.children) {
-                selectHtml += `<option value="${child.id}">👶 ${child.name}</option>`;
-            }
-        }
-        selectHtml += '</select>';
+        selectHtml = `
+            <label style="display:block; margin-bottom:6px; font-weight:500; font-size:${fontSize};">👤 Назначить:</label>
+            <select id="task-assigned-editor" style="width:100%; padding:10px; border-radius:12px; border:1px solid #ccc; font-size:${fontSize}; margin-bottom:12px;">
+                <option value="">— Не назначено —</option>
+                ${this.currentUser?.role === 'parent' ? `<option value="${this.currentUser.id}">👑 Себе (${this.currentUser.name})</option>` : ''}
+                ${this.children ? this.children.map(c => `<option value="${c.id}">👶 ${c.name}</option>`).join('') : ''}
+            </select>
+        `;
     }
     
     modal.innerHTML = `
-        <div style="background:linear-gradient(135deg, rgba(255,255,255,0.98), rgba(240,248,255,0.98)); border-radius:32px; padding:${padding}; max-width:${isMobile ? '92%' : '540px'}; width:100%; border:1px solid rgba(111,186,255,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
-            <h3 style="color:#33465d; margin-bottom:20px; font-size:${titleSize}; text-align:center; font-weight:700;">✨ Создать задание</h3>
+        <div style="
+            background: white; 
+            border-radius: 20px; 
+            padding: ${padding}; 
+            width: ${modalWidth}; 
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        ">
+            <h3 style="color:#333; margin-bottom: 15px; font-size: ${isMobile ? '18px' : '22px'}; text-align:center;">✨ Создать задание</h3>
             
-            <input type="text" id="task-title-editor" placeholder="Название задания" autocomplete="off" value="Задание для ${itemName}" style="width:100%; padding:${inputPadding}; margin-bottom:16px; background:rgba(255,255,255,0.95); border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:${isMobile ? '15px' : '16px'}; outline:none; transition:0.2s;">
+            <input type="text" id="task-title-editor" placeholder="Название" value="Задание для ${itemName}" style="width:100%; padding:10px; margin-bottom:12px; border:1px solid #ccc; border-radius:12px; font-size:${fontSize}; box-sizing:border-box;">
             
-            <textarea id="task-desc-editor" placeholder="Описание (необязательно)" style="width:100%; padding:${inputPadding}; margin-bottom:16px; background:rgba(255,255,255,0.95); border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; resize:vertical; min-height:${isMobile ? '60px' : '80px'}; font-size:${isMobile ? '15px' : '16px'}; outline:none; font-family:inherit;"></textarea>
+            <textarea id="task-desc-editor" placeholder="Описание (необязательно)" style="width:100%; padding:10px; margin-bottom:12px; border:1px solid #ccc; border-radius:12px; font-size:${fontSize}; resize:vertical; min-height:60px; box-sizing:border-box; font-family:inherit;"></textarea>
             
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; background:rgba(111,186,255,0.08); padding:12px 16px; border-radius:60px;">
-                <span style="color:#33465d; font-weight:600; font-size:${isMobile ? '15px' : '16px'}; white-space:nowrap;">💰 Бонус:</span>
-                <button id="bonus-minus-editor" style="width:40px; height:40px; border-radius:50%; background:white; border:1px solid rgba(111,186,255,0.5); color:#6fbaff; font-size:22px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;">−</button>
-                <input type="number" id="task-bonus-editor" value="10" min="1" max="100" style="flex:1; text-align:center; font-weight:700; font-size:${isMobile ? '18px' : '20px'}; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; padding:10px;">
-                <button id="bonus-plus-editor" style="width:40px; height:40px; border-radius:50%; background:white; border:1px solid rgba(111,186,255,0.5); color:#6fbaff; font-size:22px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+                <span style="font-weight:600; font-size:${fontSize};">💰 Бонус:</span>
+                <button type="button" id="bonus-minus-editor" style="width:32px; height:32px; border-radius:50%; border:1px solid #ccc; background:#f0f0f0; font-size:18px;">−</button>
+                <input type="number" id="task-bonus-editor" value="10" min="1" max="100" style="width:60px; text-align:center; padding:6px; border-radius:10px; border:1px solid #ccc; font-size:${fontSize};">
+                <button type="button" id="bonus-plus-editor" style="width:32px; height:32px; border-radius:50%; border:1px solid #ccc; background:#f0f0f0; font-size:18px;">+</button>
             </div>
             
-            <div id="task-assigned-container" style="margin-bottom:20px;">${selectHtml}</div>
-
-            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(111,186,255,0.3);">
-                <div style="color: #33465d; font-weight: 600; margin-bottom: 12px; font-size:${isMobile ? '14px' : '15px'};">
-                    ⏰ Автоматически повторять
-                </div>
-                <div style="display:flex; gap:12px; flex-wrap: wrap; margin-bottom:12px;">
-                    <select id="task-recurrence-editor" style="flex:1; min-width: 160px; padding:${isMobile ? '12px' : '14px'}; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:${isMobile ? '14px' : '15px'}; outline:none;">
+            ${selectHtml}
+            
+            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee;">
+                <div style="font-weight: 600; margin-bottom: 8px; font-size:${fontSize};">⏰ Повторять</div>
+                <div style="display:flex; gap:8px; flex-wrap: wrap; margin-bottom:8px;">
+                    <select id="task-recurrence-editor" style="flex:1; padding:8px; border-radius:10px; border:1px solid #ccc; font-size:${fontSize};">
                         <option value="none">Не повторять</option>
                         <option value="daily">Каждый день</option>
                         <option value="weekly">По дням недели</option>
-                        <option value="once">Один раз (дата)</option>
+                        <option value="once">Один раз</option>
                     </select>
-                    <input id="task-time-editor" type="time" value="09:00" style="flex:1; min-width: 140px; padding:${isMobile ? '12px' : '14px'}; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:${isMobile ? '14px' : '15px'}; outline:none;">
+                    <input id="task-time-editor" type="time" value="09:00" style="padding:8px; border-radius:10px; border:1px solid #ccc; font-size:${fontSize};">
                 </div>
-                <div id="task-recur-extra-editor" style="margin-top: 12px; display:none;">
-                    <div id="task-dows-editor" style="display:none; flex-wrap:wrap; gap:8px;">
+                
+                <div id="task-recur-extra-editor" style="margin-top: 8px; display:none;">
+                    <div id="task-dows-editor" style="display:none; flex-wrap:wrap; gap:6px; margin-top:6px;">
                         ${[
-                            { v: 1, t: 'Пн' },
-                            { v: 2, t: 'Вт' },
-                            { v: 3, t: 'Ср' },
-                            { v: 4, t: 'Чт' },
-                            { v: 5, t: 'Пт' },
-                            { v: 6, t: 'Сб' },
-                            { v: 0, t: 'Вс' }
+                            { v: 1, t: 'Пн' }, { v: 2, t: 'Вт' }, { v: 3, t: 'Ср' },
+                            { v: 4, t: 'Чт' }, { v: 5, t: 'Пт' }, { v: 6, t: 'Сб' }, { v: 0, t: 'Вс' }
                         ].map(d => `
-                            <label style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:40px; border:1px solid rgba(111,186,255,0.5); background: white; cursor:pointer; font-size:${isMobile ? '13px' : '14px'}; color:#33465d;">
-                                <input type="checkbox" data-dow="${d.v}" style="width:16px; height:16px; accent-color:#6fbaff;">
+                            <label style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; border-radius:30px; border:1px solid #ccc; background:white; font-size:13px;">
+                                <input type="checkbox" data-dow="${d.v}" style="width:14px; height:14px;">
                                 <span>${d.t}</span>
                             </label>
                         `).join('')}
                     </div>
-                    <input id="task-runat-editor" type="datetime-local" style="width:100%; padding:${isMobile ? '12px' : '14px'}; background:white; border:1px solid rgba(111,186,255,0.5); border-radius:20px; color:#33465d; font-size:${isMobile ? '14px' : '15px'}; outline:none; display:none;" />
-                </div>
-                <div style="margin-top: 10px; color: rgba(51,70,93,0.65); font-size:${isMobile ? '11px' : '12px'}; line-height: 1.4;">
-                    💡 Если выбрать повтор — задание будет автоматически создаваться по расписанию
+                    <input id="task-runat-editor" type="datetime-local" style="width:100%; padding:8px; border-radius:10px; border:1px solid #ccc; display:none; margin-top:6px;">
                 </div>
             </div>
 
-            <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:28px;">
-                <button id="task-cancel-editor" style="padding:${isMobile ? '12px 24px' : '14px 32px'}; border-radius:40px; background:rgba(111,186,255,0.15); border:1px solid rgba(111,186,255,0.4); color:#33465d; cursor:pointer; font-size:${isMobile ? '14px' : '15px'}; font-weight:500; transition:0.2s;">Отмена</button>
-                <button id="task-save-editor" style="padding:${isMobile ? '12px 28px' : '14px 36px'}; border-radius:40px; background:linear-gradient(135deg, #6fbaff, #a8d8ff); border:none; color:#fff; cursor:pointer; font-size:${isMobile ? '14px' : '15px'}; font-weight:600; transition:0.2s; box-shadow: 0 4px 12px rgba(111,186,255,0.4);">Создать</button>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top: 20px;">
+                <button id="task-cancel-editor" style="padding:8px 16px; border-radius:30px; background:#f0f0f0; border:none; cursor:pointer; font-size:${fontSize};">Отмена</button>
+                <button id="task-save-editor" style="padding:8px 20px; border-radius:30px; background:#4ecca3; color:white; border:none; cursor:pointer; font-size:${fontSize}; font-weight:600;">Создать</button>
             </div>
         </div>
     `;
     
     document.body.appendChild(modal);
     
-    // Добавляем hover эффекты
-    const saveBtn = modal.querySelector('#task-save-editor');
-    const cancelBtn = modal.querySelector('#task-cancel-editor');
-    
-    if (saveBtn) {
-        saveBtn.onmouseover = () => saveBtn.style.transform = 'scale(1.02)';
-        saveBtn.onmouseout = () => saveBtn.style.transform = 'scale(1)';
-    }
-    if (cancelBtn) {
-        cancelBtn.onmouseover = () => cancelBtn.style.background = 'rgba(111,186,255,0.25)';
-        cancelBtn.onmouseout = () => cancelBtn.style.background = 'rgba(111,186,255,0.15)';
-    }
-    
     // Закрытие по клику на фон
     modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.remove();
     });
     
-    const titleInput = modal.querySelector('#task-title-editor');
-    const descInput = modal.querySelector('#task-desc-editor');
     const bonusInput = modal.querySelector('#task-bonus-editor');
+    modal.querySelector('#bonus-minus-editor').onclick = () => {
+        let val = parseInt(bonusInput.value) || 10;
+        if (val > 1) bonusInput.value = val - 1;
+    };
+    modal.querySelector('#bonus-plus-editor').onclick = () => {
+        let val = parseInt(bonusInput.value) || 10;
+        bonusInput.value = val + 1;
+    };
+    
     const recurrenceSelect = modal.querySelector('#task-recurrence-editor');
     const timeInput = modal.querySelector('#task-time-editor');
     const extraWrap = modal.querySelector('#task-recur-extra-editor');
     const dowsWrap = modal.querySelector('#task-dows-editor');
     const runAtInput = modal.querySelector('#task-runat-editor');
-
-    // Фокус на поле ввода
-    if (titleInput) setTimeout(() => titleInput.focus(), 100);
-
-    function updateRecurrenceUI() {
-        const v = recurrenceSelect?.value || 'none';
-        if (!extraWrap || !dowsWrap || !runAtInput || !timeInput) return;
+    
+    const updateRecurrenceUI = () => {
+        const v = recurrenceSelect.value;
         if (v === 'weekly') {
             extraWrap.style.display = 'block';
             dowsWrap.style.display = 'flex';
@@ -1048,32 +1042,16 @@ showTaskModal(itemKey, itemInstanceId, itemName, presetAssignedTo, presetAssigne
             timeInput.style.display = 'none';
         } else {
             extraWrap.style.display = 'none';
-            dowsWrap.style.display = 'none';
-            runAtInput.style.display = 'none';
-            timeInput.style.display = 'block';
         }
-    }
-    if (recurrenceSelect) recurrenceSelect.onchange = updateRecurrenceUI;
+    };
+    recurrenceSelect.onchange = updateRecurrenceUI;
     updateRecurrenceUI();
     
     modal.querySelector('#task-cancel-editor').onclick = () => modal.remove();
     
-    modal.querySelector('#bonus-plus-editor').onclick = () => {
-        let val = parseInt(bonusInput.value) || 10;
-        bonusInput.value = val + 1;
-    };
-    
-    modal.querySelector('#bonus-minus-editor').onclick = () => {
-        let val = parseInt(bonusInput.value) || 10;
-        if (val > 1) bonusInput.value = val - 1;
-    };
-    
     modal.querySelector('#task-save-editor').onclick = async () => {
-        const title = titleInput?.value.trim();
-        if (!title) { 
-            alert('Введите название задания'); 
-            return; 
-        }
+        const title = modal.querySelector('#task-title-editor')?.value.trim();
+        if (!title) { alert('Введите название задания'); return; }
         
         let assignedTo = presetAssignedTo;
         if (!assignedTo) {
@@ -1082,67 +1060,40 @@ showTaskModal(itemKey, itemInstanceId, itemName, presetAssignedTo, presetAssigne
         }
         
         const bonus = parseInt(bonusInput?.value) || 10;
-        const description = descInput?.value.trim();
-        
-        console.log('📤 ДАННЫЕ ДЛЯ ОТПРАВКИ:', {
-            itemKey: itemKey,
-            itemInstanceId: itemInstanceId,
-            title: title,
-            assignedTo: assignedTo
-        });
+        const description = modal.querySelector('#task-desc-editor')?.value.trim();
         
         try {
-            const recurrence = recurrenceSelect?.value || 'none';
+            const recurrence = recurrenceSelect.value;
             if (recurrence && recurrence !== 'none') {
                 const tzOffset = -new Date().getTimezoneOffset();
-                const scheduleType = recurrence;
                 let daysOfWeek = undefined;
                 let runAt = undefined;
-                if (scheduleType === 'weekly') {
-                    daysOfWeek = Array.from(modal.querySelectorAll('#task-dows-editor input[type="checkbox"][data-dow]'))
-                        .filter(i => i.checked)
-                        .map(i => Number(i.dataset.dow));
-                    if (!daysOfWeek.length) {
-                        alert('Выберите хотя бы один день недели');
-                        return;
-                    }
+                if (recurrence === 'weekly') {
+                    daysOfWeek = Array.from(modal.querySelectorAll('#task-dows-editor input[type="checkbox"]:checked'))
+                        .map(ch => Number(ch.dataset.dow));
+                    if (!daysOfWeek.length) { alert('Выберите дни недели'); return; }
                 }
-                if (scheduleType === 'once') {
+                if (recurrence === 'once') {
                     runAt = runAtInput?.value;
-                    if (!runAt) {
-                        alert('Выберите дату и время');
-                        return;
-                    }
+                    if (!runAt) { alert('Выберите дату'); return; }
                 }
-                const payload = {
-                    title,
-                    description,
-                    bonus,
-                    assignedTo,
-                    itemKey,
-                    itemInstanceId,
-                    scheduleType,
-                    timeOfDay: scheduleType === 'once' ? undefined : (timeInput?.value || '09:00'),
-                    daysOfWeek,
-                    runAt,
-                    timezoneOffsetMin: tzOffset
-                };
-                const result = await api.createTaskSchedule(payload);
-                console.log('✅ Автозадание создано:', result);
+                await api.createTaskSchedule({
+                    title, description, bonus, assignedTo,
+                    itemKey, itemInstanceId,
+                    scheduleType: recurrence,
+                    timeOfDay: recurrence === 'once' ? undefined : (timeInput?.value || '09:00'),
+                    daysOfWeek, runAt, timezoneOffsetMin: tzOffset
+                });
                 this.showMessage(`✅ Автозадание "${title}" создано!`);
             } else {
-                const result = await api.createTask({
-                    title, description, bonus, assignedTo,
-                    itemKey, itemInstanceId
-                });
-                console.log('✅ Задание создано:', result);
+                await api.createTask({ title, description, bonus, assignedTo, itemKey, itemInstanceId });
                 this.showMessage(`✅ Задание "${title}" создано!`);
             }
             modal.remove();
             setTimeout(() => this.refreshTaskMarkers(), 500);
         } catch (error) {
-            console.error('❌ Ошибка создания задания:', error);
-            alert('Не удалось создать задание: ' + (error.message || 'Ошибка сервера'));
+            console.error('Ошибка:', error);
+            alert('Не удалось создать задание');
         }
     };
 }
@@ -1216,48 +1167,119 @@ showTaskModalForItem(sprite, tasks) {
     if (!tasks || tasks.length === 0) return;
     
     const itemName = sprite.getData('name') || 'предмета';
+    const isMobile = this.isMobile;
+    const fontSize = isMobile ? '14px' : '16px';
+    const padding = isMobile ? '16px' : '24px';
     
-    // Создаём модалку для просмотра заданий
     const modal = document.createElement('div');
+    modal.id = 'task-modal-view';
     modal.style.cssText = `
-        display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 10000;
-        justify-content: center; align-items: center;
+        display: flex; 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%;
+        background: rgba(0,0,0,0.7); 
+        backdrop-filter: blur(5px); 
+        z-index: 10000;
+        justify-content: center; 
+        align-items: center;
+        padding: 10px;
+        box-sizing: border-box;
     `;
     
-    let tasksHtml = '<div style="max-height: 400px; overflow-y: auto; margin: 15px 0;">';
+    let tasksHtml = '';
     tasks.forEach(task => {
         const statusIcon = task.status === 'completed' ? '✅' : '⏳';
+        const statusColor = task.status === 'completed' ? '#4ecca3' : '#e94560';
         tasksHtml += `
-            <div style="background: rgba(15,25,35,0.6); border-radius: 14px; padding: 14px; margin-bottom: 10px; border-left: 3px solid ${task.status === 'completed' ? '#4ecca3' : '#e94560'};">
-                <div style="font-weight: 700; color: #33465d; display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <div style="
+                background: #f8f9fa; 
+                border-radius: 12px; 
+                padding: 12px; 
+                margin-bottom: 10px; 
+                border-left: 3px solid ${statusColor};
+            ">
+                <div style="font-weight: 700; color: #333; display: flex; justify-content: space-between; margin-bottom: 6px; font-size: ${fontSize};">
                     <span>${statusIcon} ${this.escapeHtml(task.title)}</span>
-                    <span style="color: #ffd700;">💰 ${task.bonus}</span>
+                    <span style="color: #ff9800;">💰 ${task.bonus}</span>
                 </div>
-                ${task.description ? `<div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 6px;">📝 ${this.escapeHtml(task.description)}</div>` : ''}
-                <div style="font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 8px;">
+                ${task.description ? `<div style="font-size: 12px; color: #666; margin-top: 5px;">📝 ${this.escapeHtml(task.description)}</div>` : ''}
+                <div style="font-size: 11px; color: #999; margin-top: 8px;">
                     👤 ${task.assigned_to_name || 'Не назначено'} | ✏️ от ${task.created_by_name}
                 </div>
+                ${task.status !== 'completed' && (this.currentUser?.id === task.assigned_to || this.currentUser?.role === 'parent') ? `
+                <button data-task-id="${task.id}" class="complete-task-btn" style="
+                    margin-top: 10px;
+                    padding: 6px 12px;
+                    background: #4ecca3;
+                    color: white;
+                    border: none;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    cursor: pointer;
+                ">✅ Выполнить</button>
+                ` : ''}
             </div>
         `;
     });
-    tasksHtml += '</div>';
     
     modal.innerHTML = `
-        <div style="background:linear-gradient(135deg, rgba(26,26,46,0.98), rgba(22,33,62,0.98)); border-radius:28px; padding:32px; max-width:520px; width:90%; border:1px solid rgba(78,204,163,0.4);">
-            <h3 style="color:#4ecca3; margin-bottom: 20px; font-size: 24px; text-align: center;">📋 Задания для "${this.escapeHtml(itemName)}"</h3>
-            ${tasksHtml}
+        <div style="
+            background: white; 
+            border-radius: 20px; 
+            padding: ${padding}; 
+            width: ${isMobile ? '95%' : '500px'}; 
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        ">
+            <h3 style="color: #e94560; margin-bottom: 15px; font-size: ${isMobile ? '18px' : '20px'}; text-align: center;">
+                📋 Задания для "${this.escapeHtml(itemName)}"
+            </h3>
+            <div style="max-height: 60vh; overflow-y: auto;">
+                ${tasksHtml || '<div style="text-align:center;padding:20px;">✨ Нет активных заданий</div>'}
+            </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button id="task-modal-close" style="padding: 10px 25px; border-radius: 30px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); cursor: pointer;">Закрыть</button>
+                <button id="task-modal-close" style="
+                    padding: 8px 20px; 
+                    border-radius: 30px; 
+                    background: #e0e0e0; 
+                    border: none; 
+                    cursor: pointer; 
+                    font-size: ${fontSize};
+                ">Закрыть</button>
             </div>
         </div>
     `;
     
     document.body.appendChild(modal);
     
-    modal.querySelector('#task-modal-close').onclick = () => modal.remove();
+    // Закрытие по клику на фон
     modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.remove();
+    });
+    
+    modal.querySelector('#task-modal-close').onclick = () => modal.remove();
+    
+    // Обработчики для кнопок "Выполнить"
+    modal.querySelectorAll('.complete-task-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const taskId = btn.dataset.taskId;
+            if (confirm('Отметить задание как выполненное?')) {
+                try {
+                    await api.completeTask(taskId);
+                    this.showMessage('✅ Задание выполнено!');
+                    modal.remove();
+                    setTimeout(() => this.refreshTaskMarkers(), 500);
+                } catch (error) {
+                    console.error('Ошибка выполнения задания:', error);
+                    alert('Не удалось выполнить задание');
+                }
+            }
+        });
     });
 }
     

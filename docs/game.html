@@ -392,123 +392,7 @@
                 font-size: 13px;
             }
         }
-        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ (ДОПОЛНИТЕЛЬНАЯ) ===== */
-@media (max-width: 768px) {
-    /* Панель мебели - более компактная */
-    .panel {
-        top: 45px;
-        left: 5px;
-        right: 5px;
-        width: auto;
-        max-width: none;
-        max-height: 45vh;
-        border-radius: 16px;
-    }
-    
-    .panel__body {
-        padding: 8px;
-        gap: 6px;
-    }
-    
-    /* Кнопки крупнее для пальцев */
-    .chip {
-        padding: 8px 12px;
-        font-size: 12px;
-        min-height: 36px;
-    }
-    
-    /* Список мебели */
-    .furniture-list {
-        max-height: 120px;
-    }
-    
-    .furniture-item {
-        padding: 8px 6px;
-    }
-    
-    .furniture-name {
-        font-size: 11px;
-    }
-    
-    /* Список комнат */
-    .rooms-list {
-        max-height: 80px;
-    }
-    
-    .room-item {
-        padding: 5px 8px;
-        font-size: 12px;
-    }
-    
-    /* Кнопки действий */
-    .row {
-        gap: 6px;
-    }
-    
-    .select, .input {
-        padding: 8px 10px;
-        font-size: 12px;
-    }
-    
-    /* Мобильная панель инструментов */
-    #mobile-toolbar {
-        bottom: 5px;
-        left: 5px;
-        right: 5px;
-        padding: 6px;
-        gap: 5px;
-        background: rgba(15, 15, 26, 0.98);
-    }
-    
-    #mobile-toolbar button {
-        width: 48px;
-        height: 48px;
-        font-size: 22px;
-        border-radius: 30px;
-    }
-    
-    /* Кнопка назад */
-    .back-to-menu {
-        top: 5px;
-        left: 5px;
-        padding: 5px 10px;
-        font-size: 11px;
-        z-index: 1001;
-    }
-    
-    /* Заголовок панели */
-    .panel__title {
-        font-size: 13px;
-    }
-    
-    .icon-btn {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
-    }
-}
-
-/* Для очень маленьких экранов (до 400px) */
-@media (max-width: 480px) {
-    .panel {
-        max-height: 40vh;
-    }
-    
-    .furniture-list {
-        max-height: 100px;
-    }
-    
-    .chip {
-        padding: 6px 8px;
-        font-size: 10px;
-    }
-    
-    #mobile-toolbar button {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-    }
-}
+        
     </style>
 </head>
 <body>
@@ -591,6 +475,20 @@
 <script src="/src/services/api.js"></script>
 <script src="/src/scenes/EditorScene.js"></script>
 <script src="/src/game.js"></script>
+<script>
+// Принудительный Canvas для iPhone
+if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+    // Переопределяем WebGL на Canvas
+    const originalGetContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function(type, attributes) {
+        if (type === 'webgl' || type === 'experimental-webgl') {
+            console.log('iPhone: блокируем WebGL, используем Canvas');
+            return originalGetContext.call(this, '2d', attributes);
+        }
+        return originalGetContext.call(this, type, attributes);
+    };
+}
+</script>
 <script>
     // Проверка загрузки зависимостей
     window.addEventListener('load', () => {
