@@ -810,7 +810,9 @@
     <div class="chat-main">
         <div class="chat-header">
             <div class="chat-title">
-    <a href="#" id="simple-open-btn" style="background:#6fbaff;color:white;border-radius:30px;padding:8px 16px;text-decoration:none;display:inline-block;">📱 ОТКРЫТЬ</a>
+    <button id="burger-fixed-btn" style="background:rgba(255,255,255,0.9);border:1px solid rgba(140,190,255,0.6);border-radius:30px;padding:8px 18px;height:40px;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;color:#33465d;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <span style="font-size:16px;">☰</span> Чаты
+    </button>
     <span id="chat-title-text">Семейный чат</span>
 </div>
             <div class="header-actions">
@@ -1529,6 +1531,53 @@
                     } else {
                         sidebar.style.left = '0px';
                         if (overlay) overlay.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                    }
+                };
+            }
+                        // ПОЧИНИТЬ КРЕСТИК
+            const closeBtn = document.getElementById('mobile-close-sidebar');
+            if (closeBtn) {
+                closeBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const sidebar = document.getElementById('chat-sidebar');
+                    const overlay = document.getElementById('sidebar-overlay');
+                    sidebar.style.left = '-280px';
+                    sidebar.classList.remove('open');
+                    if (overlay) overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                };
+                closeBtn.ontouchend = closeBtn.onclick;
+            }
+                        // ПОЧИНИТЬ ОВЕРЛЕЙ
+            if (overlay) {
+                overlay.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const sidebar = document.getElementById('chat-sidebar');
+                    sidebar.style.left = '-280px';
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                };
+                overlay.ontouchend = overlay.onclick;
+            }
+                        // КРАСИВАЯ КНОПКА-БУРГЕР
+            const niceBurger = document.getElementById('burger-fixed-btn');
+            if (niceBurger) {
+                niceBurger.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const sidebar = document.getElementById('chat-sidebar');
+                    const overlay = document.getElementById('sidebar-overlay');
+                    if (sidebar.style.left === '0px') {
+                        sidebar.style.left = '-280px';
+                        if (overlay) overlay.classList.remove('active');
+                        document.body.style.overflow = '';
+                    } else {
+                        sidebar.style.left = '0px';
+                        if (overlay) overlay.classList.add('active');
                         document.body.style.overflow = 'hidden';
                     }
                 };
