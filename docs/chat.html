@@ -809,9 +809,10 @@
     <div class="chat-main">
         <div class="chat-header">
             <div class="chat-title">
-                <button class="burger-menu" id="burger-menu-btn">☰ Чаты</button>
-                <span id="chat-title-text">Семейный чат</span>
-            </div>
+    <button class="burger-menu" id="burger-menu-btn">☰ Чаты</button>
+    <button id="test-open-btn" style="background:red;color:white;border-radius:30px;padding:8px 16px;">📱 ОТКРЫТЬ</button>
+    <span id="chat-title-text">Семейный чат</span>
+</div>
             <div class="header-actions">
                 <button class="notification-btn" id="enable-notifications-btn" title="Уведомления">🔔</button>
                 <button class="refresh-btn" id="refresh-btn" title="Обновить">⟳</button>
@@ -1496,6 +1497,23 @@
                     }
                 };
             }, 200);
+                        // ТЕСТОВАЯ КНОПКА
+            const testBtn = document.getElementById('test-open-btn');
+            if (testBtn) {
+                testBtn.onclick = function() {
+                    const sidebar = document.getElementById('chat-sidebar');
+                    const overlay = document.getElementById('sidebar-overlay');
+                    if (sidebar.style.left === '0px') {
+                        sidebar.style.left = '-280px';
+                        if (overlay) overlay.style.display = 'none';
+                        document.body.style.overflow = '';
+                    } else {
+                        sidebar.style.left = '0px';
+                        if (overlay) overlay.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                    }
+                };
+            }
         }
         init();
         
