@@ -580,5 +580,29 @@
     };
     
 </script>
+<script>
+// Простая диагностика для телефона
+(function() {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        // Показываем окошко с информацией
+        setTimeout(() => {
+            const token = localStorage.getItem('homespace_token');
+            const user = localStorage.getItem('homespace_currentUser');
+            const rooms = localStorage.getItem('homespace_rooms_user_' + (user ? JSON.parse(user).id : ''));
+            
+            let msg = '📱 МОБИЛЬНЫЙ РЕЖИМ\n\n';
+            msg += `Токен: ${token ? '✅ Есть' : '❌ Нет'}\n`;
+            msg += `Пользователь: ${user ? '✅' : '❌'}\n`;
+            msg += `Сохраненные комнаты: ${rooms ? '✅' : '❌'}\n`;
+            msg += `API URL: ${window.API_URL || '❌ не задан'}\n\n`;
+            msg += `Проверьте консоль (F12) для деталей`;
+            
+            alert(msg);
+        }, 1000);
+    }
+})();
+</script>
 </body>
 </html>
