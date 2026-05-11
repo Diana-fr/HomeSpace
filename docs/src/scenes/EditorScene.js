@@ -917,8 +917,8 @@ showTaskModal(itemKey, itemInstanceId, itemName, presetAssignedTo, presetAssigne
     
     const isMobile = this.isMobile;
     // ТОЛЬКО ЭТИ СТРОКИ МЕНЯЮТ РАЗМЕР - остальное ваше оригинальное
-    const modalWidth = isMobile ? '92%' : '540px';
-    const modalPadding = isMobile ? '20px' : '28px';
+    const modalWidth = isMobile ? '95%' : '540px';
+   const modalPadding = isMobile ? '16px' : '28px';
     
     let selectHtml = '';
     if (presetAssignedTo) {
@@ -1171,8 +1171,8 @@ showTaskModalForItem(sprite, tasks) {
     
     const itemName = sprite.getData('name') || 'предмета';
     const isMobile = this.isMobile;
-    const modalWidth = isMobile ? '92%' : '520px';
-    const modalPadding = isMobile ? '20px' : '28px';
+    const modalWidth = isMobile ? '95%' : '520px';
+   const modalPadding = isMobile ? '16px' : '28px';
     const titleSize = isMobile ? '22px' : '26px';
     
     const modal = document.createElement('div');
@@ -1774,57 +1774,67 @@ createInstruction() {
         if (lockBtn) lockBtn.addEventListener('click', () => this.lockSelected());
         if (unlockBtn) unlockBtn.addEventListener('click', () => this.unlockSelected());
     }
-     setupMobileGestures() {
-        if (!this.isMobile) return;
+setupMobileGestures() {
+    if (!this.isMobile) return;
+    
+    let initialDistance = 0;
+    let initialScale = 1;
+    let activePinchItem = null;
+    
+    // Следим за касаниями
+    this.input.on('pointerdown', (pointer) => {
+        // Запоминаем выбранный предмет
+        const hits = this.input.hitTestPointer(pointer);
+        const hitSprite = hits.find(h => h instanceof Phaser.GameObjects.Sprite);
+        if (hitSprite && hitSprite === this.selectedItem && !this.isLocked(this.selectedItem)) {
+            activePinchItem = this.selectedItem;
+        }
+    });
+    
+    // Обработка движения пальцев
+    this.input.on('pointermove', () => {
+        if (!activePinchItem) return;
         
-        let initialDistance = 0;
-        let initialScale = 1;
-        let selectedItemForZoom = null;
+        const pointers = this.input.pointers;
+        const activePointers = pointers.filter(p => p.active);
         
-        this.input.on('pointerdown', (pointer) => {
-            const hits = this.input.hitTestPointer(pointer);
-            const hitSprite = hits.find(h => h instanceof Phaser.GameObjects.Sprite);
-            if (hitSprite && hitSprite === this.selectedItem && !this.isLocked(this.selectedItem)) {
-                selectedItemForZoom = this.selectedItem;
-            }
-        });
-        
-        this.input.on('pointermove', (pointer) => {
-            if (!selectedItemForZoom) return;
+        // Если два пальца на экране
+        if (activePointers.length === 2) {
+            const p1 = activePointers[0];
+            const p2 = activePointers[1];
             
-            const pointers = this.input.pointers;
-            if (pointers.length >= 2) {
-                const p1 = pointers[0];
-                const p2 = pointers[1];
-                if (p1 && p2) {
-                    const dx = p1.x - p2.x;
-                    const dy = p1.y - p2.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (initialDistance === 0) {
-                        initialDistance = distance;
-                        initialScale = selectedItemForZoom.scale;
-                    } else {
-                        const delta = distance / initialDistance;
-                        let newScale = initialScale * delta;
-                        newScale = Math.max(0.5, Math.min(2, newScale));
-                        selectedItemForZoom.setScale(newScale);
-                        this.saveCurrentRoomToDB();
-                    }
-                }
+            // Вычисляем расстояние между пальцами
+            const dx = p1.x - p2.x;
+            const dy = p1.y - p2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (initialDistance === 0) {
+                // Первое касание - запоминаем начальное расстояние и масштаб
+                initialDistance = distance;
+                initialScale = activePinchItem.scale;
             } else {
-                initialDistance = 0;
+                // Вычисляем изменение масштаба
+                const delta = distance / initialDistance;
+                let newScale = initialScale * delta;
+                newScale = Math.max(0.5, Math.min(2, newScale));
+                activePinchItem.setScale(newScale);
+                this.saveCurrentRoomToDB();
             }
-        });
-        
-        this.input.on('pointerup', () => {
+        } else {
+            // Сброс при поднятии одного из пальцев
             initialDistance = 0;
-            selectedItemForZoom = null;
-        });
-        
-        console.log('📱 Мобильные жесты для масштабирования настроены');
+        }
+    });
+    
+    // Сброс при отпускании пальцев
+    this.input.on('pointerup', () => {
+        initialDistance = 0;
+        activePinchItem = null;
+    });
+    
+    console.log('📱 Pinch-to-zoom на телефоне настроен');
     }
-}  // ← ЭТА СКОБКА ЗАКРЫВАЕТ КЛАСС
+}
 
 // Делаем класс доступным глобально
 window.EditorScene = EditorScene;
