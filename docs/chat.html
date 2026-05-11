@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -133,8 +134,6 @@
             transition: all 0.2s ease;
             flex-shrink: 0;
             -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none;
-            user-select: none;
         }
         .sidebar-collapse-btn:hover { background: rgba(235,245,255,0.95); transform: scale(1.05); }
 
@@ -155,8 +154,6 @@
             color: #33465d;
             white-space: nowrap;
             -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none;
-            user-select: none;
         }
         .burger-menu:hover { background: rgba(235,245,255,0.95); }
 
@@ -206,7 +203,6 @@
             justify-content: flex-start;
             padding: 12px 15px;
         }
-
 
         /* ========== ДЕСКТОП (шире 768) ========== */
         @media (min-width: 769px) {
@@ -296,11 +292,171 @@
             }
         }
 
+        @media (max-width: 480px) {
+            .sidebar-header {
+                padding: 60px 16px 20px 16px;
+            }
+            .sidebar-header-content h2 {
+                font-size: 18px;
+            }
+            .sidebar-header-content p {
+                font-size: 11px;
+            }
+            .user-info {
+                padding: 16px;
+            }
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+            }
+            .user-name {
+                font-size: 14px;
+            }
+            .user-role {
+                font-size: 10px;
+            }
+            .user-item {
+                padding: 10px 12px;
+                gap: 10px;
+            }
+            .user-item-avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            .user-item-name {
+                font-size: 13px;
+            }
+            .chat-header {
+                padding: 10px 12px;
+                padding-top: 50px;
+            }
+            .chat-title {
+                font-size: 16px;
+                gap: 8px;
+            }
+            .burger-menu {
+                padding: 6px 12px;
+                height: 36px;
+                font-size: 13px;
+            }
+            .message {
+                max-width: 90%;
+                gap: 8px;
+            }
+            .message-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+            .message-content {
+                padding: 8px 12px;
+            }
+            .message-text {
+                font-size: 13px;
+            }
+            .message-sender {
+                font-size: 11px;
+            }
+            .message-time {
+                font-size: 9px;
+            }
+            .chat-input-area {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+            .chat-input {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+            .send-btn, .voice-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            .voice-message {
+                padding: 6px 10px;
+                gap: 8px;
+            }
+            .voice-play-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+            }
+            .voice-duration {
+                font-size: 11px;
+            }
+            .speed-btn {
+                padding: 2px 6px;
+                font-size: 9px;
+            }
+            .message-actions {
+                gap: 6px;
+            }
+            .edit-msg-btn, .delete-msg-btn, .speak-btn {
+                padding: 3px 8px;
+                font-size: 10px;
+            }
+            .bot-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .empty-messages {
+                padding: 40px 20px;
+            }
+            .empty-messages div:first-child {
+                font-size: 40px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .sidebar-header {
+                padding: 55px 12px 16px 12px;
+            }
+            .sidebar-header-content h2 {
+                font-size: 16px;
+            }
+            .sidebar-header-content p {
+                font-size: 10px;
+            }
+            .burger-menu {
+                padding: 4px 10px;
+                font-size: 12px;
+            }
+            .chat-title {
+                font-size: 14px;
+            }
+            .message {
+                max-width: 95%;
+            }
+            .chat-input {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+            .send-btn, .voice-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+        }
+
         @media (max-width: 360px) {
-            .chat-header { padding: 10px 12px; padding-top: 46px; }
-            .messages-area { padding: 14px; }
-            .chat-input-area { padding: 10px 12px; gap: 10px; }
-            .chat-input { padding: 10px 14px; font-size: 13px; }
+            .chat-header { 
+                padding: 8px 10px; 
+                padding-top: 46px; 
+            }
+            .messages-area { 
+                padding: 12px; 
+            }
+            .chat-input-area { 
+                padding: 8px 10px; 
+                gap: 8px; 
+            }
+            .chat-input { 
+                padding: 8px 12px; 
+                font-size: 12px; 
+            }
         }
 
         /* Остальные стили (user-info, users-list и т.д.) остаются как у тебя */
@@ -339,9 +495,6 @@
             margin-bottom: 5px;
             transition: all 0.2s ease;
             position: relative;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none;
-            user-select: none;
         }
         .user-item:hover {
             background: rgba(140,190,255,0.18);
@@ -521,8 +674,6 @@
             justify-content: center;
             transition: all 0.2s ease;
             -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none;
-            user-select: none;
         }
         .send-btn { background: linear-gradient(135deg, #6fbaff, #a8d8ff); color: #fff; box-shadow: 0 6px 16px rgba(120,180,255,0.5); }
         .send-btn:hover { transform: scale(1.05); }
@@ -572,9 +723,13 @@
 <div class="chat-app">
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-    <div class="chat-sidebar" id="chat-sidebar">   <!-- 👈 ЭТОЙ СТРОКИ НЕ ХВАТАЕТ -->
+    <div class="chat-sidebar" id="chat-sidebar">
         <div class="sidebar-header">
             <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" title="Свернуть панель">☰</button>
+            <div class="sidebar-header-content">
+                <h2>Семейный чат</h2>
+                <p>Общайтесь всей семьёй</p>
+            </div>
             <button class="mobile-close-sidebar" id="mobile-close-sidebar">✕</button>
         </div>
         <div class="user-info" id="user-info">
@@ -585,29 +740,29 @@
             </div>
         </div>
         <div class="users-list" id="users-list"><div style="text-align:center;padding:20px;">Загрузка...</div></div>
-    </div>  <!-- 👈 И ЭТОТ ЗАКРЫВАЮЩИЙ ТЕГ -->
+    </div>
         
-        <div class="chat-main">
-            <div class="chat-header">
-                <div class="chat-title">
-                    <button class="burger-menu" id="burger-menu-btn">☰ Чаты</button>
-                    <span id="chat-title-text">Семейный чат</span>
-                </div>
-                <div class="header-actions">
-                    <button class="notification-btn" id="enable-notifications-btn" title="Уведомления">🔔</button>
-                    <button class="refresh-btn" id="refresh-btn" title="Обновить">⟳</button>
-                </div>
+    <div class="chat-main">
+        <div class="chat-header">
+            <div class="chat-title">
+                <button class="burger-menu" id="burger-menu-btn">☰ Чаты</button>
+                <span id="chat-title-text">Семейный чат</span>
             </div>
-            <div class="messages-area" id="messages-area"><div class="empty-messages"><div style="font-size:48px">💬</div><div>Выберите чат</div></div></div>
-            <div class="chat-input-area">
-                <textarea class="chat-input" id="message-input" placeholder="Введите сообщение..." rows="1"></textarea>
-                <button class="voice-btn" id="voice-record-btn" title="Записать голосовое">🎤</button>
-                <button class="send-btn" id="send-btn">➤</button>
+            <div class="header-actions">
+                <button class="notification-btn" id="enable-notifications-btn" title="Уведомления">🔔</button>
+                <button class="refresh-btn" id="refresh-btn" title="Обновить">⟳</button>
             </div>
         </div>
+        <div class="messages-area" id="messages-area"><div class="empty-messages"><div style="font-size:48px">💬</div><div>Выберите чат</div></div></div>
+        <div class="chat-input-area">
+            <textarea class="chat-input" id="message-input" placeholder="Введите сообщение..." rows="1"></textarea>
+            <button class="voice-btn" id="voice-record-btn" title="Записать голосовое">🎤</button>
+            <button class="send-btn" id="send-btn">➤</button>
+        </div>
     </div>
+</div>
 
-    <script>
+<script>
         const API_URL = window.API_URL;
         const BOT_ID = '00000000-0000-0000-0000-000000000001';
         let token = localStorage.getItem('homespace_token');
@@ -1016,14 +1171,14 @@
                 const c=document.getElementById('users-list'); 
                 if(!c) return; 
                 c.innerHTML=`<div class="user-item" data-chat-id="family" onclick="window.switchToFamilyChat()"><div class="user-item-avatar">👨‍👩‍👧</div><div class="user-item-info"><div class="user-item-name">Семейный чат</div></div></div>`; 
-                c.querySelector('.user-item').ontouchstart=(e)=>{ e.preventDefault(); window.switchToFamilyChat(); };
+                c.querySelector('.user-item').ontouchend=(e)=>{ e.preventDefault(); window.switchToFamilyChat(); };
                 users.filter(u=>u.id!==currentUser?.id).forEach(u=>{ 
                     const d=document.createElement('div'); 
                     d.className='user-item'; 
                     d.dataset.chatId=u.id; 
                     d.innerHTML=`<div class="user-item-avatar">${u.id===BOT_ID?'🤖':getAvatarHtml(u.avatar,u.name)}</div><div class="user-item-info"><div class="user-item-name">${escapeHtml(u.name)}</div></div>`; 
                     d.onclick=()=>window.switchToPrivateChat(u); 
-                    d.ontouchstart=(e)=>{ e.preventDefault(); window.switchToPrivateChat(u); };
+                    d.ontouchend=(e)=>{ e.preventDefault(); window.switchToPrivateChat(u); };
                     c.appendChild(d); 
                 }); 
                 updateUnreadIndicators(); 
@@ -1118,8 +1273,8 @@
             
             isSoloMode=!currentUser.familyId;
             if(isSoloMode){ 
-                document.querySelector('.sidebar-header h2').textContent='Чат с ботом'; 
-                document.querySelector('.sidebar-header p').textContent='Вы без семьи — доступен только бот'; 
+                document.querySelector('.sidebar-header-content h2').textContent='Чат с ботом'; 
+                document.querySelector('.sidebar-header-content p').textContent='Вы без семьи — доступен только бот'; 
                 document.getElementById('voice-record-btn').style.display='none'; 
             }
             try{ const saved=localStorage.getItem(`homespace_unread_${currentUser.id}`); if(saved) unreadCounts=JSON.parse(saved); }catch(e){ unreadCounts={}; }
@@ -1128,9 +1283,9 @@
             await loadMessages();
             
             document.getElementById('send-btn').onclick=sendMessage;
-            document.getElementById('send-btn').ontouchstart=(e)=>{ e.preventDefault(); sendMessage(); };
+            document.getElementById('send-btn').ontouchend=(e)=>{ e.preventDefault(); sendMessage(); };
             document.getElementById('refresh-btn').onclick=()=>loadMessages();
-            document.getElementById('refresh-btn').ontouchstart=(e)=>{ e.preventDefault(); loadMessages(); };
+            document.getElementById('refresh-btn').ontouchend=(e)=>{ e.preventDefault(); loadMessages(); };
             document.getElementById('stop-audio-btn').onclick=stopAllAudio;
             
             const voiceBtn=document.getElementById('voice-record-btn');
@@ -1146,7 +1301,7 @@
             if(Notification.permission==='granted'){ notificationPermission=true; notifBtn.classList.add('active'); }
             const notifHandler = async()=>{ if(Notification.permission==='granted'){ notificationPermission=true; notifBtn.classList.add('active'); } else if(Notification.permission!=='denied'){ const p=await Notification.requestPermission(); notificationPermission=p==='granted'; if(notificationPermission) notifBtn.classList.add('active'); } };
             notifBtn.onclick=notifHandler;
-            notifBtn.ontouchstart=(e)=>{ e.preventDefault(); notifHandler(); };
+            notifBtn.ontouchend=(e)=>{ e.preventDefault(); notifHandler(); };
             
             // Настройка сайдбара
             const burgerBtn = document.getElementById('burger-menu-btn');
@@ -1154,16 +1309,16 @@
             const closeBtnMobile = document.getElementById('mobile-close-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             
-                       if(burgerBtn) {
-                // Для iPhone используем touchstart, а не click
-                const openSidebarHandler = (e) => {
+            if(burgerBtn) {
+                burgerBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleSidebar();
+                };
+                burgerBtn.ontouchend = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Бургер нажат, открываем панель');
-                    openSidebar();
+                    toggleSidebar();
                 };
-                burgerBtn.addEventListener('touchstart', openSidebarHandler, { passive: false });
-                burgerBtn.addEventListener('click', openSidebarHandler);
             }
             if(collapseBtn) {
                 collapseBtn.onclick = (e) => {
@@ -1171,7 +1326,7 @@
                     if (window.innerWidth <= 768) return;
                     setSidebarCollapsed(!sidebarCollapsed);
                 };
-                collapseBtn.ontouchstart = (e) => {
+                collapseBtn.ontouchend = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (window.innerWidth <= 768) return;
@@ -1183,7 +1338,7 @@
                     e.stopPropagation();
                     closeSidebar();
                 };
-                closeBtnMobile.ontouchstart = (e) => {
+                closeBtnMobile.ontouchend = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     closeSidebar();
@@ -1194,7 +1349,7 @@
                     e.stopPropagation();
                     closeSidebar();
                 };
-                overlay.ontouchstart = (e) => {
+                overlay.ontouchend = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     closeSidebar();
@@ -1250,3 +1405,4 @@
     </script>
 </body>
 </html>
+```
