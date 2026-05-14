@@ -57,24 +57,25 @@ async function getNewEvents() {
     console.log(`🔍 Проверка событий с: ${lastCheckTime.toISOString()}`);
     
     try {
-        // Новые задания
+// Новые задания
         const [newTasks] = await db.query(`
             SELECT t.id, t.title, t.bonus, t.family_id, t.assigned_to, 
-                   u.name as assigned_name, c.name as created_name
+                u.name as assigned_name, c.name as created_name
             FROM tasks t
             JOIN users u ON t.assigned_to = u.id
             JOIN users c ON t.created_by = c.id
             WHERE t.created_at > ? AND t.assigned_to IS NOT NULL 
-              AND t.created_by != t.assigned_to
+            AND t.created_by != t.assigned_to
         `, [lastCheckTime]);
-        
+
         console.log(`📋 Найдено новых заданий: ${newTasks.length}`);
-        
+
         for (const task of newTasks) {
             console.log(`  - Задание: "${task.title}" для ${task.assigned_name}`);
             events.push({
                 familyId: task.family_id,
                 userId: task.assigned_to,
+                taskId: task.id,  // ← ДОБАВЬ ЭТУ СТРОКУ
                 message: `${task.created_name} создал(а) задание "${task.title}" для ${task.assigned_name}\n💰 Награда: ${task.bonus} бонусов`
             });
         }
@@ -131,20 +132,21 @@ async function getNewEvents() {
 
 async function sendBotMessage(event) {
     try {
-        console.log(`📨 Попытка отправить сообщение пользователю ${event.userId}`);
-        console.log(`📨 Текст: ${event.message.substring(0, 50)}...`);
-        
         const messageId = uuidv4();
         
-        const [result] = await db.query(`
+        // Добавляем taskId в сообщение, чтобы потом можно было его найти
+        const messageText = event.taskId 
+            ? `[TASK:${event.taskId}]\n${event.message}`
+            : event.message;
+        
+        await db.query(`
             INSERT INTO chat_messages (id, family_id, user_id, user_name, user_avatar, message, type, recipient_id, is_read, message_type, created_at)
             VALUES (?, ?, ?, ?, ?, ?, 'private', ?, 0, 'text', NOW())
-`, [messageId, event.familyId, config.botUserId, config.botName, config.botAvatar, event.message, event.userId]);
+        `, [messageId, event.familyId, config.botUserId, config.botName, config.botAvatar, messageText, event.userId]);
         
-        console.log(`✅ [БОТ] Сообщение отправлено пользователю ${event.userId}, ID: ${messageId}`);
+        console.log(`📨 [БОТ] Сообщение отправлено пользователю ${event.userId}`);
     } catch (error) {
         console.error('❌ [БОТ] Ошибка отправки:', error.message);
-        console.error('❌ Детали ошибки:', error);
     }
 }
 

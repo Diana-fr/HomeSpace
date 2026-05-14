@@ -1224,8 +1224,45 @@
         
         async function startVoiceRecording() { try { const stream=await navigator.mediaDevices.getUserMedia({ audio:true }); const options = {}; if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) { options.mimeType = 'audio/webm;codecs=opus'; } else if (MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2')) { options.mimeType = 'audio/mp4;codecs=mp4a.40.2'; } else if (MediaRecorder.isTypeSupported('audio/mp4')) { options.mimeType = 'audio/mp4'; } mediaRecorder=new MediaRecorder(stream, options); audioChunks=[]; mediaRecorder.ondataavailable=e=>audioChunks.push(e.data); mediaRecorder.onstop=async()=>{ const blob=new Blob(audioChunks,{type:options.mimeType||'audio/webm'}); const fd=new FormData(); fd.append('audio',blob,'voice.'+(options.mimeType?.includes('mp4')?'m4a':'webm')); fd.append('type',currentChat.type); if(currentChat.type==='private') fd.append('recipientId',currentChat.userId); try{ await fetch(`${API_URL}/chat/voice`,{ method:'POST', headers:{'Authorization':`Bearer ${token}`}, body:fd }); loadMessages(); }catch(e){} stream.getTracks().forEach(t=>t.stop()); }; mediaRecorder.start(); isRecording=true; recordStartTime=Date.now(); document.getElementById('voice-record-btn').classList.add('recording'); } catch(e){ alert('Нет доступа к микрофону'); } }
         function stopVoiceRecording() { if(mediaRecorder&&isRecording){ mediaRecorder.stop(); isRecording=false; document.getElementById('voice-record-btn').classList.remove('recording'); } }
+        // Добавь ПЕРЕД функцией loadMessages()
+async function removeCompletedTaskMessages() {
+    if (!currentUser?.familyId) return;
+    
+    try {
+        // Получаем все выполненные задания
+        const response = await fetch(`${API_URL}/tasks?status=completed`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const completedTasks = await response.json();
         
-        async function loadMessages() { if(!currentUser?.familyId) return; try { let url=`${API_URL}/chat?`; if(currentChat.type==='private') url+=`type=private&withUserId=${currentChat.userId}`; else url+='type=family'; const r=await fetch(url,{ headers:{'Authorization':`Bearer ${token}`} }); if(r.ok){ messages=await r.json(); renderMessages(); } } catch(e){} }
+        // Получаем ID выполненных заданий
+        const completedTaskIds = completedTasks.map(t => t.id);
+        
+        // Флаг, были ли изменения
+        let changed = false;
+        
+        // Проходим по сообщениям и удаляем те, которые относятся к выполненным заданиям
+        for (let i = 0; i < messages.length; i++) {
+            const msg = messages[i];
+            if (msg.user_id === BOT_ID && msg.message && msg.message.includes('[TASK:')) {
+                // Извлекаем ID задания из сообщения
+                const match = msg.message.match(/\[TASK:([^\]]+)\]/);
+                if (match && completedTaskIds.includes(match[1])) {
+                    messages.splice(i, 1);
+                    changed = true;
+                    i--; // Корректируем индекс после удаления
+                }
+            }
+        }
+        
+        if (changed) {
+            renderMessages();
+        }
+    } catch (error) {
+        console.error('Ошибка при удалении сообщений о выполненных заданиях:', error);
+    }
+}
+        async function loadMessages() { if(!currentUser?.familyId) return; try { let url=`${API_URL}/chat?`; if(currentChat.type==='private') url+=`type=private&withUserId=${currentChat.userId}`; else url+='type=family'; const r=await fetch(url,{ headers:{'Authorization':`Bearer ${token}`} }); if(r.ok){ messages=await r.json(); await removeCompletedTaskMessages(); renderMessages(); } } catch(e){} }
         
         async function loadUsers() { 
             if(!currentUser?.familyId) return; 
