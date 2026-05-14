@@ -1162,8 +1162,7 @@
         
         window.botAction = async function(action) {
             if (action === 'help') {
-                if(welcomeShown) return;
-                welcomeShown = true;
+                // Убираем проверку welcomeShown
                 const welcomeMsg = {
                     id: 'bot_welcome_' + Date.now(),
                     user_id: BOT_ID,
@@ -1322,16 +1321,13 @@ window.switchToPrivateChat = function(user) {
     currentChat = { type: 'private', userId: user.id, userName: user.name }; 
     document.getElementById('chat-title-text').textContent = `Чат с ${user.name}`; 
     messages = []; 
-    loadMessages(); 
-    markAsRead(user.id); 
     
-    // Показываем приветствие бота при открытии чата с ним
-    if (user.id === BOT_ID) {
-        setTimeout(() => {
-            // Проверяем, нет ли уже приветствия в сообщениях
-            const hasWelcome = messages.some(m => m.user_id === BOT_ID && m.message && m.message.includes('Привет! Я бот-помощник'));
+    // Сначала загружаем сообщения из БД
+    loadMessages().then(() => {
+        // ПОСЛЕ загрузки добавляем приветствие бота
+        if (user.id === BOT_ID) {
+            const hasWelcome = messages.some(m => m.user_id === BOT_ID && m.message && m.message.includes('Привет!'));
             if (!hasWelcome) {
-                // Добавляем приветствие напрямую, не через botAction
                 const welcomeMsg = {
                     id: 'bot_welcome_' + Date.now(),
                     user_id: BOT_ID,
@@ -1345,12 +1341,13 @@ window.switchToPrivateChat = function(user) {
                         { text: '👨‍👩‍👧 Семья', action: 'stats_family' }
                     ]
                 };
-                messages.push(welcomeMsg);
+                messages.unshift(welcomeMsg); // Добавляем В НАЧАЛО
                 renderMessages();
             }
-        }, 300);
-    }
+        }
+    });
     
+    markAsRead(user.id); 
     closeSidebarOnMobile(); 
 };
         
