@@ -139,7 +139,7 @@ async function sendBotMessage(event) {
         const [result] = await db.query(`
             INSERT INTO chat_messages (id, family_id, user_id, user_name, user_avatar, message, type, recipient_id, is_read, message_type, created_at)
             VALUES (?, ?, ?, ?, ?, ?, 'private', ?, 0, 'text', NOW())
-        `, [messageId, event.familyId, null, config.botName, config.botAvatar, event.message, event.userId]);
+`, [messageId, event.familyId, config.botUserId, config.botName, config.botAvatar, event.message, event.userId]);
         
         console.log(`✅ [БОТ] Сообщение отправлено пользователю ${event.userId}, ID: ${messageId}`);
     } catch (error) {
