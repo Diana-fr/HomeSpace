@@ -116,14 +116,25 @@ async function getNewEvents() {
 
 async function sendBotMessage(event) {
     try {
+        console.log(`📨 Попытка отправить сообщение пользователю ${event.userId}`);
+        console.log(`📨 Текст: ${event.message.substring(0, 50)}...`);
+        
         const messageId = uuidv4();
-        await db.query(`
+        const query = `
             INSERT INTO chat_messages (id, family_id, user_id, user_name, user_avatar, message, type, recipient_id, is_read, message_type, created_at)
             VALUES (?, ?, ?, ?, ?, ?, 'private', ?, 0, 'text', NOW())
-        `, [messageId, event.familyId, null, config.botName, config.botAvatar, event.message, event.userId]);
-        console.log(`📨 [БОТ] Сообщение отправлено пользователю ${event.userId}`);
+        `;
+        const params = [messageId, event.familyId, null, config.botName, config.botAvatar, event.message, event.userId];
+        
+        console.log('📨 SQL:', query);
+        console.log('📨 Params:', params);
+        
+        const result = await db.query(query, params);
+        console.log(`📨 Результат:`, result);
+        console.log(`✅ [БОТ] Сообщение отправлено пользователю ${event.userId}`);
     } catch (error) {
         console.error('❌ [БОТ] Ошибка отправки:', error.message);
+        console.error('❌ Полная ошибка:', error);
     }
 }
 
