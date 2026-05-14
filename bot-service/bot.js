@@ -162,6 +162,7 @@ async function checkAndProcessEvents() {
     }
     
     lastCheckTime = new Date();
+    console.log(`🕐 Текущее время: ${new Date().toISOString()}`);
 }
 
 async function startBot() {
