@@ -1747,39 +1747,10 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             expiresAt: Date.now() + 10 * 60 * 1000
         });
 
-        // Отправка через кастомный SMTP-сервер
-        const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,  // ← берем из переменных
-            port: 8080,
-            secure: false,
-            tls: { rejectUnauthorized: false }
-        });
+        // Выводим код в логи Railway
+        console.log(`🔐 КОД ВОССТАНОВЛЕНИЯ ДЛЯ ${email}: ${code}`);
 
-        await transporter.sendMail({
-            from: '"HomeSpace" <family@homespace.app>',
-            to: email,
-            subject: 'Восстановление пароля HomeSpace',
-            html: `
-                <div style="font-family: 'Inter', Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #dcecff 0%, #d3e7ff 100%); border-radius: 32px;">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <div style="font-size: 48px;">🏠</div>
-                        <h1 style="color: #33465d; font-size: 32px;">HomeSpace</h1>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.6); border-radius: 32px; padding: 30px;">
-                        <h2 style="color: #33465d;">Восстановление пароля</h2>
-                        <p>Здравствуйте, <strong>${user.name || 'пользователь'}</strong>!</p>
-                        <p>Ваш код:</p>
-                        <div style="background: #89cff0; border-radius: 16px; padding: 20px; text-align: center;">
-                            <span style="font-size: 36px; font-weight: bold; letter-spacing: 5px; color: #2c3e50;">${code}</span>
-                        </div>
-                        <p>Код действителен 10 минут.</p>
-                    </div>
-                </div>
-            `
-        });
-
-        console.log(`✅ Код ${code} отправлен на ${email}`);
-        res.json({ success: true, message: 'Код отправлен на email' });
+        res.json({ success: true, message: 'Код восстановления отправлен' });
 
     } catch (error) {
         console.error('Ошибка forgot-password:', error);
