@@ -4,14 +4,11 @@ import mysql from 'mysql2/promise';
 import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
-console.log('🔍 Переменные окружения:');
-console.log('DB_HOST:', process.env.DB_HOST);
-console.log('DB_USER:', process.env.DB_USER);
-console.log('DB_NAME:', process.env.DB_NAME);
-console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***установлен***' : 'ОТСУТСТВУЕТ');
+
 const config = {
     db: {
         host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT) || 3306,
         user: process.env.DB_USER || 'root',
         password: process.env.DB_PASSWORD || '',
         database: process.env.DB_NAME || 'homespace family organizer'
@@ -28,6 +25,7 @@ let botInterval = null;
 
 async function connectDB() {
     try {
+        console.log(`🔌 Подключение к БД: ${config.db.host}:${config.db.port}/${config.db.database}`);
         db = await mysql.createConnection(config.db);
         console.log('✅ [БОТ] Подключен к базе данных');
         return true;
