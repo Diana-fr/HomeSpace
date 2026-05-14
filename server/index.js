@@ -1747,57 +1747,45 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             expiresAt: Date.now() + 10 * 60 * 1000
         });
 
-        // Отправка через Resend
-        const RESEND_API_KEY = process.env.RESEND_API_KEY;
-        
-        const response = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${RESEND_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                from: 'HomeSpace <onboarding@resend.dev>',
-                to: email,
-                subject: 'Восстановление пароля HomeSpace',
-                html: `
-                    <div style="font-family: 'Inter', Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #dcecff 0%, #d3e7ff 100%); border-radius: 32px;">
-                        <div style="text-align: center; margin-bottom: 20px;">
-                            <div style="font-size: 48px;">🏠</div>
-                            <h1 style="color: #33465d; font-size: 32px;">HomeSpace</h1>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.6); border-radius: 32px; padding: 30px;">
-                            <h2 style="color: #33465d;">Восстановление пароля</h2>
-                            <p>Здравствуйте, <strong>${user.name || 'пользователь'}</strong>!</p>
-                            <p>Ваш код для восстановления пароля:</p>
-                            <div style="background: #89cff0; border-radius: 16px; padding: 20px; text-align: center;">
-                                <span style="font-size: 36px; font-weight: bold; letter-spacing: 5px; color: #2c3e50;">${code}</span>
-                            </div>
-                            <p>Код действителен в течение <strong>10 минут</strong>.</p>
-                            <hr>
-                            <p style="font-size: 12px; color: #666;">Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.</p>
-                        </div>
-                    </div>
-                `
-            })
+        // Отправка через кастомный SMTP-сервер
+        const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,  // ← берем из переменных
+            port: 25,
+            secure: false,
+            tls: { rejectUnauthorized: false }
         });
 
-        if (!response.ok) {
-            const error = await response.text();
-            console.error('Resend error:', error);
-            console.log(`🔐 [DEBUG] Код для ${email}: ${code}`);
-            return res.json({ success: true, message: 'Код отправлен' });
-        }
+        await transporter.sendMail({
+            from: '"HomeSpace" <family@homespace.app>',
+            to: email,
+            subject: 'Восстановление пароля HomeSpace',
+            html: `
+                <div style="font-family: 'Inter', Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #dcecff 0%, #d3e7ff 100%); border-radius: 32px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 48px;">🏠</div>
+                        <h1 style="color: #33465d; font-size: 32px;">HomeSpace</h1>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.6); border-radius: 32px; padding: 30px;">
+                        <h2 style="color: #33465d;">Восстановление пароля</h2>
+                        <p>Здравствуйте, <strong>${user.name || 'пользователь'}</strong>!</p>
+                        <p>Ваш код:</p>
+                        <div style="background: #89cff0; border-radius: 16px; padding: 20px; text-align: center;">
+                            <span style="font-size: 36px; font-weight: bold; letter-spacing: 5px; color: #2c3e50;">${code}</span>
+                        </div>
+                        <p>Код действителен 10 минут.</p>
+                    </div>
+                </div>
+            `
+        });
 
-        console.log(`✅ Код ${code} отправлен на ${email} через Resend`);
-        res.json({ success: true, message: 'Код восстановления отправлен на почту' });
+        console.log(`✅ Код ${code} отправлен на ${email}`);
+        res.json({ success: true, message: 'Код отправлен на email' });
 
     } catch (error) {
         console.error('Ошибка forgot-password:', error);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
-
 app.post('/api/auth/reset-password', async (req, res) => {
     try {
         const { email, code, newPassword } = req.body;
