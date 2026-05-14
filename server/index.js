@@ -163,7 +163,7 @@ app.post('/api/auth/register', async (req, res) => {
         }
         
         await query(`INSERT INTO users (id, email, password_hash, name, role, avatar, family_id, bonuses) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [userId, email, passwordHash, name, role, avatar, familyId, 0]);
+            [userId, email, passwordHash, name, role, '👤', familyId, 0]);
 
         if (familyAction === 'create' && familyId) {
             await query('UPDATE families SET created_by = ? WHERE id = ?', [userId, familyId]);
