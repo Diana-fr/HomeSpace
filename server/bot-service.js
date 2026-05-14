@@ -15,7 +15,7 @@ const config = {
     botUserId: '00000000-0000-0000-0000-000000000001',
     botName: '🤖 Бот-помощник',
     botAvatar: '🤖',
-    checkInterval: 10000 // 10 секунд
+    checkInterval: 10000
 };
 
 let db = null;
@@ -51,7 +51,6 @@ async function ensureBotExists() {
 async function getNewEvents() {
     const events = [];
     try {
-        // Новые задания
         const [newTasks] = await db.query(`
             SELECT t.id, t.title, t.bonus, t.family_id, t.assigned_to, 
                    u.name as assigned_name, c.name as created_name
@@ -70,7 +69,6 @@ async function getNewEvents() {
             });
         }
         
-        // Выполненные задания
         const [completedTasks] = await db.query(`
             SELECT t.id, t.title, t.bonus, t.family_id,
                    u.name as assigned_name, c.name as completed_name
@@ -88,7 +86,6 @@ async function getNewEvents() {
             });
         }
         
-        // Желания на одобрение
         const [pendingWishes] = await db.query(`
             SELECT w.id, w.title, w.price, w.family_id, u.name as created_name
             FROM wishes w
@@ -137,7 +134,8 @@ async function checkAndProcessEvents() {
     lastCheckTime = new Date();
 }
 
-export async function startBot() {
+// ========== ЗАПУСК БОТА ==========
+async function startBot() {
     console.log('==========================================');
     console.log('🤖 Семейный бот-помощник HomeSpace');
     console.log('==========================================');
@@ -152,14 +150,10 @@ export async function startBot() {
     console.log(`🔄 Бот работает, интервал: ${config.checkInterval / 1000} сек`);
 }
 
-export function stopBot() {
-    if (botInterval) {
-        clearInterval(botInterval);
-        botInterval = null;
-    }
-    if (db) {
-        db.end();
-        db = null;
-    }
-    console.log('🛑 [БОТ] Остановлен');
+// Автозапуск при прямом вызове файла (ОДИН РАЗ!)
+if (import.meta.url === `file://${process.argv[1]}`) {
+    startBot().catch(error => {
+        console.error('❌ Ошибка запуска бота:', error);
+        process.exit(1);
+    });
 }
