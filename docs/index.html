@@ -1052,128 +1052,131 @@ async function register() {
                 window.location.href = `/${page}.html`;
             }
         }
-
-        function setupEventListeners() {
-            document.getElementById('show-register').onclick = () => showScreen('register-screen');
-            document.getElementById('show-login').onclick = () => showScreen('login-screen');
-            document.getElementById('logout-btn').onclick = logout;
-            document.getElementById('login-btn').onclick = login;
-            document.getElementById('register-btn').onclick = register;
-            document.querySelectorAll('[data-page]').forEach(btn => {
-                btn.onclick = () => navigateTo(btn.dataset.page);
-            });
-            document.querySelectorAll('.role-btn').forEach(btn => {
-                btn.onclick = () => {
-                    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    selectedRole = btn.dataset.role;
-                };
-            });
-            document.getElementById('avatar-upload-btn').onclick = () => document.getElementById('avatar-upload').click();
-            document.getElementById('avatar-upload').onchange = async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                document.getElementById('avatar-file-name').textContent = file.name;
-                try {
-                    selectedAvatar = await openCropper(file, 256);
-                } catch {
-                    showMessage('register-message', 'Не удалось обработать фото');
-                }
-            };
-            document.querySelectorAll('.family-btn').forEach(btn => {
-                btn.onclick = () => {
-                    document.querySelectorAll('.family-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    selectedFamilyAction = btn.dataset.family;
-                    if (selectedFamilyAction === 'join') {
-                        document.getElementById('family-code-modal').classList.add('active');
-                    }
-                };
-            });
-            document.getElementById('modal-cancel').onclick = () => {
-                document.getElementById('family-code-modal').classList.remove('active');
-                document.querySelector('.family-btn[data-family="none"]').click();
-            };
-            document.getElementById('modal-confirm').onclick = () => {
-                familyCodeToJoin = document.getElementById('family-code-input').value.trim().toUpperCase();
-                document.getElementById('family-code-modal').classList.remove('active');
-            };
-            document.getElementById('copy-family-code').onclick = () => {
-                const code = document.getElementById('family-code-display').textContent;
-                if (code && code !== '—') {
-                    navigator.clipboard.writeText(code);
-                    alert('Код скопирован');
-                }
-            };
-            document.getElementById('forgot-password-link').onclick = () => {
-                document.getElementById('forgot-modal').classList.add('active');
-            };
-            document.getElementById('forgot-send-code').onclick = requestResetCode;
-            document.getElementById('forgot-confirm').onclick = confirmResetPassword;
-            document.getElementById('forgot-modal').onclick = (e) => {
-                if (e.target === document.getElementById('forgot-modal')) {
-                    document.getElementById('forgot-modal').classList.remove('active');
-                }
-            };
-            document.getElementById('login-password').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') login();
-            });
-            document.getElementById('reg-password').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') register();
-            });
-
-            // Кастомные "летающие картинки"
-            const uploadBtn = document.getElementById('floating-image-upload-btn');
-            const uploadInput = document.getElementById('floating-image-upload');
-            const applyBtn = document.getElementById('floating-apply-btn');
-            const clearBtn = document.getElementById('floating-clear-btn');
-            const countInput = document.getElementById('floating-image-count');
-            if (uploadBtn && uploadInput) {
-                uploadBtn.onclick = () => uploadInput.click();
-                uploadInput.onchange = async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    floatingCustomImageFileName = file.name;
-                    try {
-                        floatingCustomImageDataUrl = await openCropper(file, 256);
-                        updateFloatingCustomUI();
-                    } catch {
-                        showMessage('login-message', 'Не удалось обработать картинку');
-                    }
-                };
+function setupEventListeners() {
+    document.getElementById('show-register').onclick = () => showScreen('register-screen');
+    document.getElementById('show-login').onclick = () => showScreen('login-screen');
+    document.getElementById('logout-btn').onclick = logout;
+    document.getElementById('login-btn').onclick = login;
+    document.getElementById('register-btn').onclick = register;
+    document.querySelectorAll('[data-page]').forEach(btn => {
+        btn.onclick = () => navigateTo(btn.dataset.page);
+    });
+    document.querySelectorAll('.role-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedRole = btn.dataset.role;
+        };
+    });
+    
+    // ↓↓↓ ЭТИ СТРОКИ УДАЛИ ИЛИ ЗАКОММЕНТИРУЙ ↓↓↓
+    // document.getElementById('avatar-upload-btn').onclick = () => document.getElementById('avatar-upload').click();
+    // document.getElementById('avatar-upload').onchange = async (e) => {
+    //     const file = e.target.files?.[0];
+    //     if (!file) return;
+    //     document.getElementById('avatar-file-name').textContent = file.name;
+    //     try {
+    //         selectedAvatar = await openCropper(file, 256);
+    //     } catch {
+    //         showMessage('register-message', 'Не удалось обработать фото');
+    //     }
+    // };
+    // ↑↑↑ ЭТИ СТРОКИ УДАЛИ ИЛИ ЗАКОММЕНТИРУЙ ↑↑↑
+    
+    document.querySelectorAll('.family-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.family-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedFamilyAction = btn.dataset.family;
+            if (selectedFamilyAction === 'join') {
+                document.getElementById('family-code-modal').classList.add('active');
             }
-            if (applyBtn) {
-                applyBtn.onclick = () => {
-                    const countRaw = Number.parseInt((countInput?.value || '0').toString(), 10);
-                    const count = Number.isFinite(countRaw) ? Math.max(0, Math.min(30, countRaw)) : 0;
-                    saveFloatingCustomConfig({
-                        dataUrl: floatingCustomImageDataUrl || '',
-                        fileName: floatingCustomImageFileName || '',
-                        count
-                    });
-                    updateFloatingCustomUI();
-                    refreshFloatingAvatars();
-                    showMessage('login-message', 'Готово! Обновила летающие картинки', false);
-                };
-            }
-            if (clearBtn) {
-                clearBtn.onclick = () => {
-                    floatingCustomImageDataUrl = '';
-                    floatingCustomImageFileName = '';
-                    if (uploadInput) uploadInput.value = '';
-                    saveFloatingCustomConfig({ dataUrl: '', fileName: '', count: 0 });
-                    updateFloatingCustomUI();
-                    refreshFloatingAvatars();
-                };
-            }
-            if (countInput) {
-                countInput.onchange = () => {
-                    const countRaw = Number.parseInt((countInput.value || '0').toString(), 10);
-                    const count = Number.isFinite(countRaw) ? Math.max(0, Math.min(30, countRaw)) : 0;
-                    countInput.value = String(count);
-                };
-            }
+        };
+    });
+    document.getElementById('modal-cancel').onclick = () => {
+        document.getElementById('family-code-modal').classList.remove('active');
+        document.querySelector('.family-btn[data-family="none"]').click();
+    };
+    document.getElementById('modal-confirm').onclick = () => {
+        familyCodeToJoin = document.getElementById('family-code-input').value.trim().toUpperCase();
+        document.getElementById('family-code-modal').classList.remove('active');
+    };
+    document.getElementById('copy-family-code').onclick = () => {
+        const code = document.getElementById('family-code-display').textContent;
+        if (code && code !== '—') {
+            navigator.clipboard.writeText(code);
+            alert('Код скопирован');
         }
+    };
+    document.getElementById('forgot-password-link').onclick = () => {
+        document.getElementById('forgot-modal').classList.add('active');
+    };
+    document.getElementById('forgot-send-code').onclick = requestResetCode;
+    document.getElementById('forgot-confirm').onclick = confirmResetPassword;
+    document.getElementById('forgot-modal').onclick = (e) => {
+        if (e.target === document.getElementById('forgot-modal')) {
+            document.getElementById('forgot-modal').classList.remove('active');
+        }
+    };
+    document.getElementById('login-password').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') login();
+    });
+    document.getElementById('reg-password').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') register();
+    });
+
+    // Кастомные "летающие картинки"
+    const uploadBtn = document.getElementById('floating-image-upload-btn');
+    const uploadInput = document.getElementById('floating-image-upload');
+    const applyBtn = document.getElementById('floating-apply-btn');
+    const clearBtn = document.getElementById('floating-clear-btn');
+    const countInput = document.getElementById('floating-image-count');
+    if (uploadBtn && uploadInput) {
+        uploadBtn.onclick = () => uploadInput.click();
+        uploadInput.onchange = async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            floatingCustomImageFileName = file.name;
+            try {
+                floatingCustomImageDataUrl = await openCropper(file, 256);
+                updateFloatingCustomUI();
+            } catch {
+                showMessage('login-message', 'Не удалось обработать картинку');
+            }
+        };
+    }
+    if (applyBtn) {
+        applyBtn.onclick = () => {
+            const countRaw = Number.parseInt((countInput?.value || '0').toString(), 10);
+            const count = Number.isFinite(countRaw) ? Math.max(0, Math.min(30, countRaw)) : 0;
+            saveFloatingCustomConfig({
+                dataUrl: floatingCustomImageDataUrl || '',
+                fileName: floatingCustomImageFileName || '',
+                count
+            });
+            updateFloatingCustomUI();
+            refreshFloatingAvatars();
+            showMessage('login-message', 'Готово! Обновила летающие картинки', false);
+        };
+    }
+    if (clearBtn) {
+        clearBtn.onclick = () => {
+            floatingCustomImageDataUrl = '';
+            floatingCustomImageFileName = '';
+            if (uploadInput) uploadInput.value = '';
+            saveFloatingCustomConfig({ dataUrl: '', fileName: '', count: 0 });
+            updateFloatingCustomUI();
+            refreshFloatingAvatars();
+        };
+    }
+    if (countInput) {
+        countInput.onchange = () => {
+            const countRaw = Number.parseInt((countInput.value || '0').toString(), 10);
+            const count = Number.isFinite(countRaw) ? Math.max(0, Math.min(30, countRaw)) : 0;
+            countInput.value = String(count);
+        };
+    }
+}
 
       if (loadCurrentUser()) {
     updateMenuUI();
