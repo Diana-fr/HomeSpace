@@ -1102,25 +1102,28 @@
             } 
         }
         
-        function renderMessages() {
-            const area = document.getElementById('messages-area'); if(!area) return;
-            if(!messages?.length){ area.innerHTML=`<div class="empty-messages"><div style="font-size:48px">💬</div><div>Нет сообщений</div></div>`; return; }
-            area.innerHTML=''; let lastDate='';
-            messages.forEach(msg=>{
-                const dateLabel=formatMessageDate(msg.created_at);
-                if(dateLabel!==lastDate){ const sep=document.createElement('div'); sep.style.cssText='text-align:center;font-size:12px;color:rgba(51,70,93,0.6);margin:6px 0 12px'; sep.textContent=dateLabel; area.appendChild(sep); lastDate=dateLabel; }
-                const isOwn=msg.user_id===currentUser?.id;
-                const isBot = msg.user_id === BOT_ID;
-                const time=new Date(msg.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-                const cleanMsg=escapeHtml(msg.message||'');
-                const displayMsg=cleanMsg.replace(/\n/g,'<br>')+(msg.is_edited&&msg.message_type!=='voice'?` <span style="font-size:10px;">(ред.)</span>`:'');
-                const senderAvatar=isBot?'🤖':(isOwn?getAvatarHtml(currentUser?.avatar,currentUser?.name):getAvatarHtml(msg.user_avatar,msg.user_name));
-                const msgDiv=document.createElement('div'); msgDiv.className=`message ${isOwn?'own':''} ${isBot?'bot':''}`;
-                
-                let buttonsHtml = '';
-                if(isBot && msg.buttons && msg.buttons.length > 0) {
-                    buttonsHtml = `<div class="bot-buttons">${msg.buttons.map(btn => `<button class="bot-btn" onclick="window.botAction('${btn.action}')">${btn.text}</button>`).join('')}</div>`;
-                }
+            function renderMessages() {
+        const area = document.getElementById('messages-area'); if(!area) return;
+        if(!messages?.length){ area.innerHTML=`<div class="empty-messages"><div style="font-size:48px">💬</div><div>Нет сообщений</div></div>`; return; }
+        area.innerHTML=''; let lastDate='';
+        messages.forEach(msg=>{
+            const dateLabel=formatMessageDate(msg.created_at);
+            if(dateLabel!==lastDate){ const sep=document.createElement('div'); sep.style.cssText='text-align:center;font-size:12px;color:rgba(51,70,93,0.6);margin:6px 0 12px'; sep.textContent=dateLabel; area.appendChild(sep); lastDate=dateLabel; }
+            const isOwn=msg.user_id===currentUser?.id;
+            const isBot = msg.user_id === BOT_ID;
+            const time=new Date(msg.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+            let cleanMsg = escapeHtml(msg.message||'');
+            // Скрываем [TASK:...] из отображения (но оставляем в данных для удаления)
+            cleanMsg = cleanMsg.replace(/\[TASK:[^\]]+\]\s*/g, '');
+            const displayMsg = cleanMsg.replace(/\n/g,'<br>') + (msg.is_edited && msg.message_type !== 'voice' ? ` <span style="font-size:10px;">(ред.)</span>` : '');
+            const senderAvatar = isBot ? '🤖' : (isOwn ? getAvatarHtml(currentUser?.avatar, currentUser?.name) : getAvatarHtml(msg.user_avatar, msg.user_name));
+            const msgDiv = document.createElement('div'); 
+            msgDiv.className = `message ${isOwn ? 'own' : ''} ${isBot ? 'bot' : ''}`;
+            
+            let buttonsHtml = '';
+            if(isBot && msg.buttons && msg.buttons.length > 0) {
+                buttonsHtml = `<div class="bot-buttons">${msg.buttons.map(btn => `<button class="bot-btn" onclick="window.botAction('${btn.action}')">${btn.text}</button>`).join('')}</div>`;
+            }
                 
                 // Для голосовых сообщений используем новую функцию с передачей кнопки
                 const voiceBtnCallback = msg.message_type === 'voice' && msg.voice_url 
