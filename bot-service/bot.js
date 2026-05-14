@@ -80,26 +80,27 @@ async function getNewEvents() {
             });
         }
         
-        // Выполненные задания
-        const [completedTasks] = await db.query(`
-            SELECT t.id, t.title, t.bonus, t.family_id,
-                   u.name as assigned_name, c.name as completed_name
-            FROM tasks t
-            JOIN users u ON t.assigned_to = u.id
-            JOIN users c ON t.completed_by = c.id
-            WHERE t.completed_at > ? AND t.status = 'completed'
-        `, [lastCheckTime]);
-        
-        console.log(`✅ Найдено выполненных заданий: ${completedTasks.length}`);
-        
-        for (const task of completedTasks) {
-            console.log(`  - Выполнено: "${task.title}" от ${task.completed_name}`);
-            events.push({
-                familyId: task.family_id,
-                userId: task.assigned_to,
-                message: `${task.completed_name} выполнил(а) "${task.title}" и получил(а) ${task.bonus} бонусов! 🎉`
-            });
-        }
+// Выполненные задания
+const [completedTasks] = await db.query(`
+    SELECT t.id, t.title, t.bonus, t.family_id, t.assigned_to,
+           u.name as assigned_name, c.name as completed_name
+    FROM tasks t
+    JOIN users u ON t.assigned_to = u.id
+    JOIN users c ON t.completed_by = c.id
+    WHERE t.completed_at > ? AND t.status = 'completed'
+`, [lastCheckTime]);
+
+console.log(`✅ Найдено выполненных заданий: ${completedTasks.length}`);
+
+for (const task of completedTasks) {
+    console.log(`  - Выполнено: "${task.title}" от ${task.completed_name}`);
+    events.push({
+        familyId: task.family_id,
+        userId: task.assigned_to,
+        taskId: task.id,  // ← ДОБАВЬ ЭТУ СТРОКУ
+        message: `${task.completed_name} выполнил(а) "${task.title}" и получил(а) ${task.bonus} бонусов! 🎉`
+    });
+}
         
         // Желания на одобрение
         const [pendingWishes] = await db.query(`
