@@ -1750,7 +1750,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         // Отправка через кастомный SMTP-сервер
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,  // ← берем из переменных
-            port: 25,
+            port: 8080,
             secure: false,
             tls: { rejectUnauthorized: false }
         });
