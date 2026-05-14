@@ -414,37 +414,7 @@ async function ensureTaskSchedulesV2Table() {
     taskSchedulesV2Ready = true;
 }
 
-// Функция отправки уведомления от бота в личный чат
-async function sendBotNotification(userId, familyId, title, message, taskId = null) {
-    try {
-        const botMessageId = generateUUID();
-        const botName = '🤖 Бот-помощник';
-        const botAvatar = '🤖';
-        
-        await query(
-            `INSERT INTO chat_messages (id, family_id, user_id, user_name, user_avatar, message, type, recipient_id, is_read, message_type, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, 'private', ?, 0, 'text', NOW())`,
-            [botMessageId, familyId, null, botName, botAvatar, message, userId]
-        );
-        
-        console.log(`🤖 Бот отправил уведомление пользователю ${userId}: ${title}`);
-        
-        // Отправляем через WebSocket если есть экземпляр io
-        if (global.io) {
-            global.io.to(`user:${userId}`).emit('new-task-notification', {
-                taskId: taskId,
-                title: title,
-                message: message,
-                type: 'task_ready'
-            });
-        }
-        
-        return true;
-    } catch (error) {
-        console.error('❌ Ошибка отправки уведомления бота:', error);
-        return false;
-    }
-}
+
 
 // ПРОЦЕССОР АВТОЗАДАНИЙ - ИСПРАВЛЕННАЯ ВЕРСИЯ
 async function processDueSchedules() {
@@ -498,11 +468,6 @@ async function processDueSchedules() {
             
             console.log(`✅ Создано задание: ${s.title} в ${new Date().toLocaleString()}`);
             
-            // Отправляем уведомление
-            if (s.assigned_to && s.assigned_to !== s.created_by) {
-                const notificationMessage = `📋 Новое задание!\n\n**${s.title}**\n💰 Бонус: ${s.bonus || 10}\n\nЗадание появилось в твоём списке!`;
-                await sendBotNotification(s.assigned_to, s.family_id, s.title, notificationMessage, taskId);
-            }
             
             // Обновляем расписание для следующего раза
             if (s.schedule_type === 'once') {
@@ -661,11 +626,6 @@ app.post('/api/tasks', authenticate, async (req, res) => {
         
         console.log(`✅ Задание создано: ${title}, ID: ${taskId}`);
         
-        // Отправляем уведомление если задание назначено кому-то кроме создателя
-        if (assignedTo && assignedTo !== req.user.id && familyId) {
-            const notificationMessage = `📋 Новое задание!\n\n**${title}**\n💰 Бонус: ${bonus || 10}\n\nЗадание появилось в твоём списке!`;
-            await sendBotNotification(assignedTo, familyId, title, notificationMessage, taskId);
-        }
         
         res.status(201).json(newTask);
         
@@ -1871,73 +1831,6 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
     } catch (error) {
         console.error('Ошибка reset-password:', error);
-        res.status(500).json({ error: 'Ошибка сервера' });
-    }
-});
-
-// =====================================================
-// БОТ: СОБЫТИЯ
-// =====================================================
-
-app.get('/api/bot/events', authenticate, async (req, res) => {
-    try {
-        const { since } = req.query;
-        const familyId = req.user.familyId;
-        if (!familyId) return res.json([]);
-
-        const sinceDate = since ? new Date(since) : new Date(Date.now() - 60000);
-        
-        let tasks = [];
-        let wishes = [];
-        
-        try {
-            const result = await query(`
-                SELECT 'task' as type, title, bonus, created_at,
-                       (SELECT name FROM users WHERE id = tasks.created_by) as creator_name,
-                       (SELECT name FROM users WHERE id = tasks.assigned_to) as assigned_name
-                FROM tasks 
-                WHERE family_id = ? AND created_at > ?
-                ORDER BY created_at DESC
-            `, [familyId, sinceDate]);
-            tasks = Array.isArray(result) ? result : [];
-        } catch (e) {
-            console.error('Ошибка загрузки заданий для бота:', e);
-        }
-        
-        try {
-            const result = await query(`
-                SELECT 'wish_pending' as type, title, price, created_at,
-                       (SELECT name FROM users WHERE id = wishes.created_by) as creator_name
-                FROM wishes 
-                WHERE family_id = ? AND status = 'pending' AND created_at > ?
-            `, [familyId, sinceDate]);
-            wishes = Array.isArray(result) ? result : [];
-        } catch (e) {
-            console.error('Ошибка загрузки желаний для бота:', e);
-        }
-
-        const events = [];
-        
-        tasks.forEach(t => {
-            if (t.assigned_name) {
-                events.push({
-                    message: `📋 **${t.creator_name}** назначил задание **"${t.title}"** для **${t.assigned_name}** (+${t.bonus}💰)`,
-                    buttons: [{ text: '📊 Статистика', action: 'stats_personal' }]
-                });
-            }
-        });
-        
-        wishes.forEach(w => {
-            events.push({
-                message: `🎁 **${w.creator_name}** хочет **"${w.title}"** за ${w.price}💰. Требуется одобрение.`,
-                buttons: [{ text: '✅ Одобрить', action: 'approve_wish' }]
-            });
-        });
-
-        res.json(events);
-        
-    } catch (error) {
-        console.error('Ошибка событий бота:', error);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
