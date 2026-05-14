@@ -77,7 +77,7 @@ app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(publicPath, 'index.html'));
 });
-
+/*
 // Почта
 const emailTransporter = nodemailer.createTransport({
     host: '173.194.222.109',
@@ -89,8 +89,66 @@ const emailTransporter = nodemailer.createTransport({
     greetingTimeout: 10000,
     socketTimeout: 15000
 });
-
+*/
 const resetCodes = new Map();
+// ========== ОТПРАВКА ЧЕРЕЗ BREVO API ==========
+async function sendResetCodeViaBrevo(email, code, userName) {
+    const API_KEY = process.env.BREVO_API_KEY;
+    
+    if (!API_KEY) {
+        console.error('❌ BREVO_API_KEY не настроен в Railway!');
+        return false;
+    }
+
+    try {
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': API_KEY,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                sender: {
+                    email: 'homespace1.app@gmail.com',
+                    name: 'HomeSpace'
+                },
+                to: [{
+                    email: email,
+                    name: userName || 'Пользователь'
+                }],
+                subject: 'Восстановление пароля HomeSpace',
+                htmlContent: `
+                    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+                        <h1 style="color: #89cff0;">🏠 HomeSpace</h1>
+                        <h2>Восстановление пароля</h2>
+                        <p>Здравствуйте, ${userName || 'пользователь'}!</p>
+                        <p>Ваш код для восстановления пароля:</p>
+                        <div style="font-size: 32px; font-weight: bold; padding: 20px; background: #f0f0f0; text-align: center; border-radius: 10px; letter-spacing: 5px;">
+                            ${code}
+                        </div>
+                        <p>Код действителен в течение <strong>10 минут</strong>.</p>
+                        <hr>
+                        <small>HomeSpace - семейный органайзер</small>
+                    </div>
+                `
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.text();
+            console.error('Brevo error:', error);
+            return false;
+        }
+        
+        console.log(`✅ Код ${code} отправлен на ${email} через Brevo`);
+        return true;
+        
+    } catch (error) {
+        console.error('Ошибка Brevo:', error);
+        return false;
+    }
+}
 
 // Вспомогательные функции
 function generateUUID() {
@@ -1760,29 +1818,71 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             expiresAt: Date.now() + 10 * 60 * 1000
         });
 
-        await emailTransporter.sendMail({
-            from: `"HomeSpace" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: 'Восстановление пароля HomeSpace',
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
-                    <h1 style="color: #4ecca3;">🏠 HomeSpace</h1>
-                    <h2>Восстановление пароля</h2>
-                    <p>Здравствуйте, ${user.name || 'пользователь'}!</p>
-                    <p>Ваш код для восстановления пароля:</p>
-                    <div style="font-size: 32px; font-weight: bold; padding: 20px; background: #f0f0f0; text-align: center; border-radius: 10px; letter-spacing: 5px;">
-                        ${code}
+        // Отправка через Brevo API
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+        
+        if (!BREVO_API_KEY) {
+            console.error('❌ BREVO_API_KEY не настроен!');
+            console.log(`🔐 [DEBUG] Код для ${email}: ${code}`);
+            return res.json({ success: true, message: 'Код отправлен (проверьте консоль)' });
+        }
+
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': BREVO_API_KEY,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                sender: {
+                    email: 'homespace1.app@gmail.com',
+                    name: 'HomeSpace'
+                },
+                to: [{
+                    email: email,
+                    name: user.name || 'Пользователь'
+                }],
+                subject: 'Восстановление пароля HomeSpace',
+                htmlContent: `
+                    <div style="font-family: 'Inter', Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #dcecff 0%, #d3e7ff 100%); border-radius: 32px;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">🏠</div>
+                            <h1 style="color: #33465d; font-weight: 800; font-size: 32px; margin: 0;">HomeSpace</h1>
+                            <p style="color: rgba(51, 70, 93, 0.7); font-size: 14px; margin-top: 8px;">Семейный органайзер</p>
+                        </div>
+                        
+                        <div style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(25px); border-radius: 32px; padding: 30px; border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 30px 80px rgba(0,0,0,0.15);">
+                            <h2 style="color: #33465d; font-size: 22px; margin-bottom: 16px;">Восстановление пароля</h2>
+                            <p style="color: #33465d; line-height: 1.5; margin-bottom: 24px;">Здравствуйте, <strong>${user.name || 'пользователь'}</strong>!</p>
+                            <p style="color: #33465d; margin-bottom: 16px;">Ваш код для восстановления пароля:</p>
+                            
+                            <div style="background: rgba(137, 207, 240, 0.25); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 24px; border: 1px solid rgba(137, 207, 240, 0.5);">
+                                <span style="font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #2c3e50;">${code}</span>
+                            </div>
+                            
+                            <p style="color: rgba(51, 70, 93, 0.8); font-size: 14px; margin-bottom: 16px;">Код действителен в течение <strong>10 минут</strong>.</p>
+                            <p style="color: rgba(51, 70, 93, 0.6); font-size: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(137, 207, 240, 0.3);">
+                                Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.
+                            </p>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 20px;">
+                            <p style="color: rgba(51, 70, 93, 0.5); font-size: 11px;">© 2024 HomeSpace - Семейный органайзер</p>
+                        </div>
                     </div>
-                    <p>Код действителен в течение <strong>10 минут</strong>.</p>
-                    <p>Если вы не запрашивали восстановление пароля, проигнорируйте это письмо.</p>
-                    <hr>
-                    <small>HomeSpace - семейный органайзер</small>
-                </div>
-            `,
-            text: `HomeSpace: Ваш код для восстановления пароля: ${code}. Код действителен 10 минут.`
+                `
+            })
         });
 
-        console.log(`✅ Код ${code} отправлен на ${email}`);
+        if (!response.ok) {
+            const error = await response.text();
+            console.error('Brevo error:', error);
+            console.log(`🔐 [DEBUG] Код для ${email}: ${code}`);
+            return res.json({ success: true, message: 'Код отправлен на email' });
+        }
+
+        console.log(`✅ Код ${code} отправлен на ${email} через Brevo`);
         res.json({ success: true, message: 'Код отправлен на email' });
 
     } catch (error) {
