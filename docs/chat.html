@@ -848,7 +848,6 @@
         let userInteracted = false;
         let isSoloMode = false;
         let currentSpeed = parseFloat(localStorage.getItem('voice_speed') || '1.0');
-        let welcomeShown = false;
         let audioContextInitialized = false;
 
         function escapeHtml(text) { if (!text) return ''; const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
@@ -1215,8 +1214,7 @@
         async function loadPersonalStats() { try { const r=await fetch(`${API_URL}/tasks?`,{headers:{'Authorization':`Bearer ${token}`}}); const tasks=r.ok?await r.json():[]; const my=tasks.filter(t=>t.assigned_to===currentUser?.id); return { totalTasks:my.length, completedTasks:my.filter(t=>t.status==='completed').length, currentBalance:currentUser?.bonuses||0 }; } catch(e){ return { totalTasks:0, completedTasks:0, currentBalance:0 }; } }
         async function loadFamilyStats() { try { const r=await fetch(`${API_URL}/families/${currentUser.familyId}/members`,{headers:{'Authorization':`Bearer ${token}`}}); const members=r.ok?await r.json():[]; const t=await fetch(`${API_URL}/tasks?`,{headers:{'Authorization':`Bearer ${token}`}}); const tasks=t.ok?await t.json():[]; const sorted=[...members].sort((a,b)=>(b.bonuses||0)-(a.bonuses||0)).slice(0,5); const top=sorted.map((m,i)=>`${i+1}. ${m.name}: ${m.bonuses||0}💰`).join('\n'); return { membersCount:members.length, totalTasks:tasks.length, completedTasks:tasks.filter(t=>t.status==='completed').length, topMembers:top }; } catch(e){ return { membersCount:0, totalTasks:0, completedTasks:0, topMembers:'' }; } }
         
-        async function sendMessage() { const inp=document.getElementById('message-input'); const msg=inp.value.trim(); if(!msg) return; inp.value=''; if(socket?.connected) socket.emit('send-message',{ familyId:currentUser.familyId, userId:currentUser.id, message:msg, type:currentChat.type, recipientId:currentChat.type==='private'?currentChat.userId:null }); else await fetch(`${API_URL}/chat`,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({message:msg, type:currentChat.type, recipientId:currentChat.type==='private'?currentChat.userId:null}) }).then(()=>loadMessages()); if(currentChat.userId===BOT_ID && !welcomeShown) setTimeout(()=>window.botAction('help'),300); }
-        
+       async function sendMessage() { const inp=document.getElementById('message-input'); const msg=inp.value.trim(); if(!msg) return; inp.value=''; if(socket?.connected) socket.emit('send-message',{ familyId:currentUser.familyId, userId:currentUser.id, message:msg, type:currentChat.type, recipientId:currentChat.type==='private'?currentChat.userId:null }); else await fetch(`${API_URL}/chat`,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({message:msg, type:currentChat.type, recipientId:currentChat.type==='private'?currentChat.userId:null}) }).then(()=>loadMessages()); if(currentChat.userId===BOT_ID) { setTimeout(() => { const hasWelcome = messages.some(m => m.user_id === BOT_ID && m.message && m.message.includes('Привет!')); if (!hasWelcome) { window.botAction('help'); } }, 300); } }
         async function editMessage(id,newMsg) { try { await fetch(`${API_URL}/chat/${id}`,{ method:'PATCH', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({message:newMsg}) }); loadMessages(); } catch(e){ alert('Ошибка'); } }
         async function deleteMessage(id,forAll) { try { await fetch(`${API_URL}/chat/${id}`,{ method:'DELETE', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({deleteForAll:forAll}) }); loadMessages(); } catch(e){ alert('Ошибка'); } }
         
@@ -1320,17 +1318,41 @@
             closeSidebarOnMobile(); 
         };
         
-        window.switchToPrivateChat = function(user) { 
-            currentChat={ type:'private', userId:user.id, userName:user.name }; 
-            document.getElementById('chat-title-text').textContent=`Чат с ${user.name}`; 
-            messages=[]; 
-            loadMessages(); 
-            markAsRead(user.id); 
-            if(user.id === BOT_ID && !welcomeShown) {
-                setTimeout(() => window.botAction('help'), 300);
+window.switchToPrivateChat = function(user) { 
+    currentChat = { type: 'private', userId: user.id, userName: user.name }; 
+    document.getElementById('chat-title-text').textContent = `Чат с ${user.name}`; 
+    messages = []; 
+    loadMessages(); 
+    markAsRead(user.id); 
+    
+    // Показываем приветствие бота при открытии чата с ним
+    if (user.id === BOT_ID) {
+        setTimeout(() => {
+            // Проверяем, нет ли уже приветствия в сообщениях
+            const hasWelcome = messages.some(m => m.user_id === BOT_ID && m.message && m.message.includes('Привет! Я бот-помощник'));
+            if (!hasWelcome) {
+                // Добавляем приветствие напрямую, не через botAction
+                const welcomeMsg = {
+                    id: 'bot_welcome_' + Date.now(),
+                    user_id: BOT_ID,
+                    user_name: '🤖 Бот-помощник',
+                    message: '👋 Привет! Я бот-помощник. Вот что я умею:',
+                    type: 'bot',
+                    created_at: new Date().toISOString(),
+                    buttons: [
+                        { text: '📊 Статистика', action: 'stats_personal' },
+                        { text: '💰 Баланс', action: 'balance' },
+                        { text: '👨‍👩‍👧 Семья', action: 'stats_family' }
+                    ]
+                };
+                messages.push(welcomeMsg);
+                renderMessages();
             }
-            closeSidebarOnMobile(); 
-        };
+        }, 300);
+    }
+    
+    closeSidebarOnMobile(); 
+};
         
         async function init() {
             await loadCurrentUser(); 
@@ -1458,7 +1480,7 @@
                 window.switchToFamilyChat();
             }
             
-            if(isSoloMode && users.length > 0 && !welcomeShown) {
+            if(isSoloMode && users.length > 0) {
                 setTimeout(() => {
                     const botUser = users.find(u => u.id === BOT_ID);
                     if(botUser && currentChat.type !== 'private') {
