@@ -1,11 +1,26 @@
 {
-  "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "cd server && npm install"
-  },
-  "deploy": {
-    "startCommand": "cd server && node index.js",
-    "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
+  "services": {
+    "server": {
+      "build": {
+        "builder": "NIXPACKS",
+        "buildCommand": "cd server && npm install"
+      },
+      "deploy": {
+        "startCommand": "cd server && node index.js",
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      }
+    },
+    "bot": {
+      "build": {
+        "builder": "NIXPACKS",
+        "buildCommand": "cd bot-service && npm install"
+      },
+      "deploy": {
+        "startCommand": "cd bot-service && node bot.js",
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      }
+    }
   }
 }
