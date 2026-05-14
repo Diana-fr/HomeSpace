@@ -54,7 +54,10 @@ async function ensureBotExists() {
 
 async function getNewEvents() {
     const events = [];
+    console.log(`🔍 Проверка событий с: ${lastCheckTime.toISOString()}`);
+    
     try {
+        // Новые задания
         const [newTasks] = await db.query(`
             SELECT t.id, t.title, t.bonus, t.family_id, t.assigned_to, 
                    u.name as assigned_name, c.name as created_name
@@ -65,7 +68,10 @@ async function getNewEvents() {
               AND t.created_by != t.assigned_to
         `, [lastCheckTime]);
         
+        console.log(`📋 Найдено новых заданий: ${newTasks.length}`);
+        
         for (const task of newTasks) {
+            console.log(`  - Задание: "${task.title}" для ${task.assigned_name}`);
             events.push({
                 familyId: task.family_id,
                 userId: task.assigned_to,
@@ -73,6 +79,7 @@ async function getNewEvents() {
             });
         }
         
+        // Выполненные задания
         const [completedTasks] = await db.query(`
             SELECT t.id, t.title, t.bonus, t.family_id,
                    u.name as assigned_name, c.name as completed_name
@@ -82,7 +89,10 @@ async function getNewEvents() {
             WHERE t.completed_at > ? AND t.status = 'completed'
         `, [lastCheckTime]);
         
+        console.log(`✅ Найдено выполненных заданий: ${completedTasks.length}`);
+        
         for (const task of completedTasks) {
+            console.log(`  - Выполнено: "${task.title}" от ${task.completed_name}`);
             events.push({
                 familyId: task.family_id,
                 userId: task.assigned_to,
@@ -90,12 +100,15 @@ async function getNewEvents() {
             });
         }
         
+        // Желания на одобрение
         const [pendingWishes] = await db.query(`
             SELECT w.id, w.title, w.price, w.family_id, u.name as created_name
             FROM wishes w
             JOIN users u ON w.created_by = u.id
             WHERE w.created_at > ? AND w.status = 'pending'
         `, [lastCheckTime]);
+        
+        console.log(`🎁 Найдено желаний на одобрение: ${pendingWishes.length}`);
         
         for (const wish of pendingWishes) {
             const [parents] = await db.query(`SELECT id FROM users WHERE family_id = ? AND role = 'parent'`, [wish.family_id]);
@@ -111,6 +124,8 @@ async function getNewEvents() {
     } catch (error) {
         console.error('❌ [БОТ] Ошибка получения событий:', error.message);
     }
+    
+    console.log(`📬 Всего событий для отправки: ${events.length}`);
     return events;
 }
 
@@ -120,32 +135,32 @@ async function sendBotMessage(event) {
         console.log(`📨 Текст: ${event.message.substring(0, 50)}...`);
         
         const messageId = uuidv4();
-        const query = `
+        
+        const [result] = await db.query(`
             INSERT INTO chat_messages (id, family_id, user_id, user_name, user_avatar, message, type, recipient_id, is_read, message_type, created_at)
             VALUES (?, ?, ?, ?, ?, ?, 'private', ?, 0, 'text', NOW())
-        `;
-        const params = [messageId, event.familyId, null, config.botName, config.botAvatar, event.message, event.userId];
+        `, [messageId, event.familyId, null, config.botName, config.botAvatar, event.message, event.userId]);
         
-        console.log('📨 SQL:', query);
-        console.log('📨 Params:', params);
-        
-        const result = await db.query(query, params);
-        console.log(`📨 Результат:`, result);
-        console.log(`✅ [БОТ] Сообщение отправлено пользователю ${event.userId}`);
+        console.log(`✅ [БОТ] Сообщение отправлено пользователю ${event.userId}, ID: ${messageId}`);
     } catch (error) {
         console.error('❌ [БОТ] Ошибка отправки:', error.message);
-        console.error('❌ Полная ошибка:', error);
+        console.error('❌ Детали ошибки:', error);
     }
 }
 
 async function checkAndProcessEvents() {
+    console.log('🔄 Проверка событий...');
     const events = await getNewEvents();
+    
     if (events.length > 0) {
-        console.log(`📬 [БОТ] Найдено ${events.length} событий`);
+        console.log(`📬 Найдено ${events.length} событий, отправляем...`);
         for (const event of events) {
             await sendBotMessage(event);
         }
+    } else {
+        console.log('📭 Новых событий нет');
     }
+    
     lastCheckTime = new Date();
 }
 
