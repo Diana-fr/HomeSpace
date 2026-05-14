@@ -101,7 +101,7 @@ async function sendResetCodeViaBrevo(email, code, userName) {
     }
 
     try {
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        const response = await fetch('https://api.brevo.com/v3/transactional/smtp/email', {
             method: 'POST',
             headers: {
                 'accept': 'application/json',
