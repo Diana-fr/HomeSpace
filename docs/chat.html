@@ -1353,11 +1353,26 @@
                 };
             }
             
-            isSoloMode=!currentUser.familyId;
+            isSoloMode = !currentUser.familyId;
             if(isSoloMode){ 
                 document.querySelector('.sidebar-header-content h2').textContent='Чат с ботом'; 
                 document.querySelector('.sidebar-header-content p').textContent='Вы без семьи — доступен только бот'; 
-                document.getElementById('voice-record-btn').style.display='none'; 
+                document.getElementById('voice-record-btn').style.display='none';
+                
+                // 👇 ДОБАВЬ ЭТО для soloMode:
+                users = [{ id: BOT_ID, name: '🤖 Бот-помощник', avatar: '🤖', role: 'bot' }];
+                const c = document.getElementById('users-list');
+                if(c) {
+                    c.innerHTML = '';
+                    users.forEach(u => {
+                        const d = document.createElement('div');
+                        d.className = 'user-item';
+                        d.dataset.chatId = u.id;
+                        d.innerHTML = `<div class="user-item-avatar">🤖</div><div class="user-item-info"><div class="user-item-name">${escapeHtml(u.name)}</div></div>`;
+                        d.onclick = () => window.switchToPrivateChat(u);
+                        c.appendChild(d);
+                    });
+                }
             }
             
             try{ const saved=localStorage.getItem(`homespace_unread_${currentUser.id}`); if(saved) unreadCounts=JSON.parse(saved); }catch(e){ unreadCounts={}; }

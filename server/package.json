@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "bot": "node bot-service.js",
-    "bot:dev": "nodemon bot-service.js"
+    "start": "node index.js & node bot-service.js",
+    "dev": "nodemon index.js & nodemon bot-service.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
