@@ -7,11 +7,11 @@ dotenv.config();
 
 const config = {
     db: {
-        host: process.env.DB_HOST || 'localhost',
-        port: parseInt(process.env.DB_PORT) || 3306,
-        user: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || '',
-        database: process.env.DB_NAME || 'homespace family organizer'
+        host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT) || 3306,
+        user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
+        password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '',
+        database: process.env.MYSQLDATABASE || process.env.DB_NAME || 'homespace family organizer'
     },
     botUserId: '00000000-0000-0000-0000-000000000001',
     botName: '🤖 Бот-помощник',
